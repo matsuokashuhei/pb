@@ -12,6 +12,22 @@ This document outlines the technical implementation details for the `pb` progres
 - Strong ecosystem for CLI applications
 - Zero-cost abstractions
 
+### Development Environment
+**Docker-based Development** - Provides:
+- Consistent development environment across platforms
+- Isolated dependency management
+- Reproducible builds
+- Volume caching for fast incremental development
+
+#### Docker Configuration
+- **Base Image**: `rust:latest`
+- **Development Tools**: rustfmt, clippy, git, vim, curl
+- **Volume Mounts**:
+  - Source code: `$(pwd):/app`
+  - Cargo cache: `pb-cargo-cache:/usr/local/cargo/registry`
+  - Target cache: `pb-target-cache:/app/target`
+- **Multi-stage Support**: Development, Builder, Production stages
+
 ### Dependencies (Crates)
 
 #### Core Dependencies
@@ -52,10 +68,18 @@ This document outlines the technical implementation details for the `pb` progres
 ```
 pb/
 ├── Cargo.toml              # Project configuration and dependencies
+├── Dockerfile              # Multi-stage Docker configuration
 ├── README.md               # Project documentation
 ├── docs/
 │   ├── specification.md    # Functional specification
-│   └── technical_specification.md  # This document
+│   ├── technical_specification.md  # This document
+│   ├── statement_of_work.md # Project phases and deliverables
+│   └── validation_report.md # Development environment validation
+├── scripts/
+│   ├── build.sh            # Build script (debug/release)
+│   ├── test.sh             # Test execution script
+│   ├── run.sh              # Application runner script
+│   └── dev.sh              # Development utilities
 ├── src/
 │   ├── main.rs            # Application entry point
 │   ├── cli.rs             # Command-line interface definition
@@ -67,6 +91,28 @@ pb/
     ├── integration_tests.rs  # End-to-end tests
     └── time_parser_tests.rs  # Time parsing unit tests
 ```
+
+## Development Scripts
+
+### `scripts/build.sh`
+- **Purpose**: Docker-based build automation
+- **Options**: `--release`, `--verbose`, `--help`
+- **Features**: Automatic Docker image management, cargo caching
+
+### `scripts/test.sh`
+- **Purpose**: Test execution with multiple options
+- **Options**: `--unit`, `--integration`, `--doc`, `--verbose`
+- **Features**: Comprehensive test coverage, CI-friendly output
+
+### `scripts/run.sh`
+- **Purpose**: Application execution in containerized environment
+- **Options**: `--release`, argument pass-through with `--`
+- **Features**: TTY support for interactive progress bars
+
+### `scripts/dev.sh`
+- **Purpose**: Development utilities and workflow management
+- **Commands**: `shell`, `clean`, `deps`, `fmt`, `clippy`, `check`
+- **Features**: Interactive development shell, code formatting, linting
 
 ## Module Responsibilities
 
