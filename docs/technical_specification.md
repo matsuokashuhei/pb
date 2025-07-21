@@ -121,10 +121,19 @@ pb/
 - High-level error handling
 - Signal handling setup (Ctrl+C)
 
-### `cli.rs`
-- Command-line argument definition using `clap`
-- Input validation
-- Help message generation
+### `cli.rs` ✅ IMPLEMENTED
+- Command-line argument definition using `clap` ✅
+- Input validation ✅
+- Help message generation ✅
+- Implementation details:
+  - `Cli` struct with derive API ✅
+  - Required arguments: `--start`, `--end` ✅
+  - Optional argument: `--interval` (default: 60 seconds) ✅
+  - Short forms: `-s`, `-e`, `-i`, `-h` ✅
+  - Argument validation with error handling ✅
+  - Integration with error handling system ✅
+  - Comprehensive test suite (11 test cases) ✅
+  - Automatic help message generation ✅
 
 ### `time_parser.rs`
 - Parse multiple time formats:

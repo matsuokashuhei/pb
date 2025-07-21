@@ -10,4 +10,5 @@ pub mod time_parser;
 
 // Re-export commonly used types
 pub use anyhow::{Context, Result as AnyhowResult};
+pub use cli::Cli;
 pub use error::{PbError, PbResult};
