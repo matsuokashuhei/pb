@@ -10,6 +10,9 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Rust components
+RUN rustup component add rustfmt clippy
+
 # Set working directory
 WORKDIR /app
 
