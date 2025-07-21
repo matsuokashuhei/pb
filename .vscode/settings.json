@@ -1,0 +1,9 @@
+{
+    "github.copilot.chat.agent.terminal.allowList": {
+        "./scripts/test.sh": true,
+        "./scripts/run.sh --help": true,
+        "./scripts/run.sh -- --help": true,
+        "./scripts/dev.sh fmt": true,
+        "./scripts/dev.sh clippy": true,
+    }
+}
