@@ -1,0 +1,35 @@
+# Docker ignore file for pb project
+
+# Rust build artifacts
+target/
+Cargo.lock
+
+# Docker volumes
+.docker-volumes/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation build
+docs/_build/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Local development
+.env
+.env.local
