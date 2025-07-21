@@ -1,0 +1,26 @@
+[package]
+name = "pb"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "A CLI progress bar tool for time-based visualization"
+license = "MIT"
+repository = "https://github.com/matsuokashuhei/pb"
+
+[dependencies]
+clap = { version = "4.0", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+colored = "2.0"
+crossterm = "0.27"
+anyhow = "1.0"
+thiserror = "1.0"
+regex = "1.0"
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.0"
+tempfile = "3.0"
+
+[[bin]]
+name = "pb"
+path = "src/main.rs"
