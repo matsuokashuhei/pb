@@ -13,4 +13,4 @@ pub use anyhow::{Context, Result as AnyhowResult};
 pub use cli::Cli;
 pub use error::{PbError, PbResult};
 pub use progress_bar::{calculate_progress, render_progress_bar, render_colored_progress_bar};
-pub use time_parser::{parse_date, parse_datetime, parse_relative_time};
+pub use time_parser::{parse_date, parse_datetime, parse_relative_time, parse_time, validate_times};

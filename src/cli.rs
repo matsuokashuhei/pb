@@ -34,6 +34,11 @@ impl Cli {
         let cli = Self::try_parse().map_err(|e| {
             // Handle clap errors and convert to our error types
             match e.kind() {
+                clap::error::ErrorKind::DisplayHelp | clap::error::ErrorKind::DisplayVersion => {
+                    // For help and version, print the message and exit successfully
+                    println!("{}", e);
+                    std::process::exit(0);
+                }
                 clap::error::ErrorKind::MissingRequiredArgument => PbError::MissingRequiredOptions,
                 _ => {
                     // For other clap errors, create an InvalidTimeFormat error
