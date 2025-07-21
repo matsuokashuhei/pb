@@ -60,8 +60,8 @@ use crate::error::PbError;
 pub fn parse_date(input: &str) -> Result<NaiveDateTime, PbError> {
     chrono::NaiveDate::parse_from_str(input, "%Y-%m-%d")
         .map(|date| date.and_hms_opt(0, 0, 0).unwrap())
-        .map_err(|_| PbError::InvalidTimeFormat { 
-            input: input.to_string() 
+        .map_err(|_| PbError::InvalidTimeFormat {
+            input: input.to_string()
         })
 }
 ```

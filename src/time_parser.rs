@@ -85,6 +85,50 @@ pub fn parse_date(input: &str) -> Result<NaiveDateTime, PbError> {
         })
 }
 
+/// Parse a datetime string in YYYY-MM-DD HH:MM:SS format
+/// 
+/// This function parses datetime strings in the format `YYYY-MM-DD HH:MM:SS`
+/// and converts them to `NaiveDateTime` objects for use in progress bar calculations.
+/// 
+/// The function enforces strict formatting requirements:
+/// - Date must be in YYYY-MM-DD format (same as parse_date)
+/// - Time must be in HH:MM:SS format with 24-hour notation
+/// - Uses space as separator between date and time
+/// - Hours: 00-23, Minutes: 00-59, Seconds: 00-59
+/// 
+/// # Arguments
+/// 
+/// * `input` - A string slice containing the datetime in YYYY-MM-DD HH:MM:SS format
+/// 
+/// # Returns
+/// 
+/// * `Ok(NaiveDateTime)` - Successfully parsed datetime
+/// * `Err(PbError)` - Invalid datetime format or invalid datetime
+/// 
+/// # Examples
+/// 
+/// ```
+/// use pb::time_parser::parse_datetime;
+/// 
+/// // Valid datetime
+/// let result = parse_datetime("2025-07-21 10:30:45");
+/// assert!(result.is_ok());
+/// 
+/// // Invalid format (missing time)
+/// let result = parse_datetime("2025-07-21");
+/// assert!(result.is_err());
+/// 
+/// // Invalid time (hour > 23)
+/// let result = parse_datetime("2025-07-21 25:00:00");
+/// assert!(result.is_err());
+/// ```
+pub fn parse_datetime(input: &str) -> Result<NaiveDateTime, PbError> {
+    chrono::NaiveDateTime::parse_from_str(input, "%Y-%m-%d %H:%M:%S")
+        .map_err(|_| PbError::InvalidTimeFormat { 
+            input: input.to_string() 
+        })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -317,5 +361,290 @@ mod tests {
         // Test far future date
         let result = parse_date("9999-12-31");
         assert!(result.is_ok());
+    }
+
+    // ========================================
+    // DateTime Parsing Tests
+    // ========================================
+
+    #[test]
+    fn test_parse_valid_datetimes() {
+        // Test basic valid datetime
+        let result = parse_datetime("2025-07-21 10:30:45");
+        assert!(result.is_ok());
+        let datetime = result.unwrap();
+        assert_eq!(datetime.date().year(), 2025);
+        assert_eq!(datetime.date().month(), 7);
+        assert_eq!(datetime.date().day(), 21);
+        assert_eq!(datetime.time().hour(), 10);
+        assert_eq!(datetime.time().minute(), 30);
+        assert_eq!(datetime.time().second(), 45);
+
+        // Test end of year datetime
+        let result = parse_datetime("2025-12-31 23:59:59");
+        assert!(result.is_ok());
+        let datetime = result.unwrap();
+        assert_eq!(datetime.date().year(), 2025);
+        assert_eq!(datetime.date().month(), 12);
+        assert_eq!(datetime.date().day(), 31);
+        assert_eq!(datetime.time().hour(), 23);
+        assert_eq!(datetime.time().minute(), 59);
+        assert_eq!(datetime.time().second(), 59);
+
+        // Test start of day (midnight)
+        let result = parse_datetime("2025-01-01 00:00:00");
+        assert!(result.is_ok());
+        let datetime = result.unwrap();
+        assert_eq!(datetime.date().year(), 2025);
+        assert_eq!(datetime.date().month(), 1);
+        assert_eq!(datetime.date().day(), 1);
+        assert_eq!(datetime.time().hour(), 0);
+        assert_eq!(datetime.time().minute(), 0);
+        assert_eq!(datetime.time().second(), 0);
+
+        // Test noon
+        let result = parse_datetime("2025-07-21 12:00:00");
+        assert!(result.is_ok());
+        let datetime = result.unwrap();
+        assert_eq!(datetime.time().hour(), 12);
+        assert_eq!(datetime.time().minute(), 0);
+        assert_eq!(datetime.time().second(), 0);
+
+        // Test leap year with time
+        let result = parse_datetime("2024-02-29 15:45:30");
+        assert!(result.is_ok());
+        let datetime = result.unwrap();
+        assert_eq!(datetime.date().year(), 2024);
+        assert_eq!(datetime.date().month(), 2);
+        assert_eq!(datetime.date().day(), 29);
+        assert_eq!(datetime.time().hour(), 15);
+        assert_eq!(datetime.time().minute(), 45);
+        assert_eq!(datetime.time().second(), 30);
+    }
+
+    #[test]
+    fn test_parse_invalid_datetime_formats() {
+        // Missing time component
+        let result = parse_datetime("2025-07-21");
+        assert!(result.is_err());
+        if let Err(PbError::InvalidTimeFormat { input }) = result {
+            assert_eq!(input, "2025-07-21");
+        } else {
+            panic!("Expected InvalidTimeFormat error");
+        }
+
+        // Missing date component
+        let result = parse_datetime("10:30:45");
+        assert!(result.is_err());
+
+        // ISO format with T separator
+        let result = parse_datetime("2025-07-21T10:30:45");
+        assert!(result.is_err());
+
+        // US date format
+        let result = parse_datetime("07/21/2025 10:30:45");
+        assert!(result.is_err());
+
+        // Wrong separator
+        let result = parse_datetime("2025-07-21_10:30:45");
+        assert!(result.is_err());
+
+        // Missing seconds
+        let result = parse_datetime("2025-07-21 10:30");
+        assert!(result.is_err());
+
+        // Extra components
+        let result = parse_datetime("2025-07-21 10:30:45:123");
+        assert!(result.is_err());
+
+        // Empty string
+        let result = parse_datetime("");
+        assert!(result.is_err());
+
+        // Non-numeric time components
+        let result = parse_datetime("2025-07-21 ab:30:45");
+        assert!(result.is_err());
+
+        let result = parse_datetime("2025-07-21 10:cd:45");
+        assert!(result.is_err());
+
+        let result = parse_datetime("2025-07-21 10:30:ef");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_invalid_time_components() {
+        // Invalid hour (> 24)
+        let result = parse_datetime("2025-07-21 25:00:00");
+        assert!(result.is_err());
+        if let Err(PbError::InvalidTimeFormat { input }) = result {
+            assert_eq!(input, "2025-07-21 25:00:00");
+        } else {
+            panic!("Expected InvalidTimeFormat error");
+        }
+
+        // Note: 24:00:00 is actually valid in ISO 8601 and represents midnight of the next day
+        // So we test with 25:00:00 instead
+
+        // Invalid minute (> 59)
+        let result = parse_datetime("2025-07-21 10:60:00");
+        assert!(result.is_err());
+
+        let result = parse_datetime("2025-07-21 10:99:00");
+        assert!(result.is_err());
+
+        // Invalid second (> 59)
+        let result = parse_datetime("2025-07-21 10:30:61");
+        assert!(result.is_err());
+
+        let result = parse_datetime("2025-07-21 10:30:99");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_datetime_edge_cases() {
+        // Test all boundary values
+        
+        // Start of day
+        let result = parse_datetime("2025-07-21 00:00:00");
+        assert!(result.is_ok());
+
+        // End of day
+        let result = parse_datetime("2025-07-21 23:59:59");
+        assert!(result.is_ok());
+
+        // Noon
+        let result = parse_datetime("2025-07-21 12:00:00");
+        assert!(result.is_ok());
+
+        // Test leap year February 29th with various times
+        let result = parse_datetime("2024-02-29 00:00:00");
+        assert!(result.is_ok());
+
+        let result = parse_datetime("2024-02-29 23:59:59");
+        assert!(result.is_ok());
+
+        // Test non-leap year February 28th (should work)
+        let result = parse_datetime("2023-02-28 12:00:00");
+        assert!(result.is_ok());
+
+        // Test non-leap year February 29th (should fail)
+        let result = parse_datetime("2023-02-29 12:00:00");
+        assert!(result.is_err());
+
+        // Test months with different day counts
+        // April has 30 days
+        let result = parse_datetime("2025-04-30 12:00:00");
+        assert!(result.is_ok());
+
+        let result = parse_datetime("2025-04-31 12:00:00");
+        assert!(result.is_err());
+
+        // February has 28 days in non-leap years
+        let result = parse_datetime("2025-02-28 12:00:00");
+        assert!(result.is_ok());
+
+        let result = parse_datetime("2025-02-29 12:00:00");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_datetime_with_invalid_dates() {
+        // Test invalid dates with valid times
+        let result = parse_datetime("2025-13-01 10:30:45");
+        assert!(result.is_err());
+
+        let result = parse_datetime("2025-00-15 10:30:45");
+        assert!(result.is_err());
+
+        let result = parse_datetime("2025-02-30 10:30:45");
+        assert!(result.is_err());
+
+        let result = parse_datetime("2025-01-32 10:30:45");
+        assert!(result.is_err());
+
+        let result = parse_datetime("2025-05-00 10:30:45");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_datetime_error_message_format() {
+        let result = parse_datetime("invalid-datetime");
+        assert!(result.is_err());
+        
+        if let Err(PbError::InvalidTimeFormat { input }) = result {
+            assert_eq!(input, "invalid-datetime");
+        } else {
+            panic!("Expected InvalidTimeFormat error with input");
+        }
+
+        // Test with specific invalid format
+        let result = parse_datetime("2025-07-21T10:30:45");
+        assert!(result.is_err());
+        
+        if let Err(PbError::InvalidTimeFormat { input }) = result {
+            assert_eq!(input, "2025-07-21T10:30:45");
+        } else {
+            panic!("Expected InvalidTimeFormat error with input");
+        }
+    }
+
+    #[test]
+    fn test_datetime_performance_repeated_parsing() {
+        use std::time::Instant;
+        
+        let start = Instant::now();
+        
+        // Parse the same datetime 1000 times
+        for _ in 0..1000 {
+            let result = parse_datetime("2025-07-21 10:30:45");
+            assert!(result.is_ok());
+        }
+        
+        let duration = start.elapsed();
+        
+        // Should complete well under 1 second for 1000 parses
+        assert!(duration.as_millis() < 1000, "DateTime parsing took too long: {:?}", duration);
+    }
+
+    #[test]
+    fn test_datetime_extreme_values() {
+        // Test very old datetime
+        let result = parse_datetime("0001-01-01 00:00:00");
+        assert!(result.is_ok());
+        
+        // Test far future datetime
+        let result = parse_datetime("9999-12-31 23:59:59");
+        assert!(result.is_ok());
+
+        // Test year boundaries with times
+        let result = parse_datetime("2020-12-31 23:59:59");
+        assert!(result.is_ok());
+        
+        let result = parse_datetime("2021-01-01 00:00:00");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_consistency_between_date_and_datetime_parsing() {
+        // Parse the same date using both functions and ensure consistency
+        let date_result = parse_date("2025-07-21").unwrap();
+        let datetime_result = parse_datetime("2025-07-21 00:00:00").unwrap();
+
+        // They should represent the same moment in time
+        assert_eq!(date_result, datetime_result);
+
+        // Check individual components
+        assert_eq!(date_result.date(), datetime_result.date());
+        assert_eq!(date_result.time(), datetime_result.time());
+    }
+
+    #[test]
+    fn test_datetime_formatting_compatibility() {
+        // Test that parsed datetime can be formatted back to the same string
+        let input = "2025-07-21 10:30:45";
+        let parsed = parse_datetime(input).unwrap();
+        let formatted = parsed.format("%Y-%m-%d %H:%M:%S").to_string();
+        assert_eq!(input, formatted);
     }
 }
