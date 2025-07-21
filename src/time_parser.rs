@@ -223,6 +223,111 @@ pub fn parse_relative_time(input: &str, base_time: NaiveDateTime) -> Result<Naiv
     }
 }
 
+/// Parse a time string in any supported format
+///
+/// This is the main entry point for time parsing that automatically detects
+/// the format and delegates to the appropriate specialized parser.
+///
+/// Supported formats:
+/// - Date: "YYYY-MM-DD" (e.g., "2025-07-21")
+/// - DateTime: "YYYY-MM-DD HH:MM:SS" (e.g., "2025-07-21 10:30:00")
+/// - Relative: "+NNu" where NN is number and u is unit (m/h/d) (e.g., "+2h", "+30m")
+///
+/// # Arguments
+///
+/// * `input` - A string slice containing the time in any supported format
+///
+/// # Returns
+///
+/// * `Ok(NaiveDateTime)` - Successfully parsed time
+/// * `Err(PbError)` - Invalid format or unable to parse
+///
+/// # Examples
+///
+/// ```
+/// use pb::time_parser::parse_time;
+/// 
+/// // Parse date
+/// let result = parse_time("2025-07-21");
+/// assert!(result.is_ok());
+/// 
+/// // Parse datetime
+/// let result = parse_time("2025-07-21 10:30:00");
+/// assert!(result.is_ok());
+/// 
+/// // Parse relative time (requires current time as base)
+/// let result = parse_time("+2h");
+/// assert!(result.is_ok());
+/// ```
+pub fn parse_time(input: &str) -> Result<NaiveDateTime, PbError> {
+    let trimmed_input = input.trim();
+    
+    if trimmed_input.is_empty() {
+        return Err(PbError::invalid_time_format("Time cannot be empty"));
+    }
+    
+    // Check for relative time format (starts with + or -)
+    if trimmed_input.starts_with('+') || trimmed_input.starts_with('-') {
+        let base_time = chrono::Local::now().naive_local();
+        let relative_input = if trimmed_input.starts_with('+') {
+            &trimmed_input[1..]  // Remove the '+' prefix
+        } else {
+            trimmed_input  // Keep the '-' prefix for negative relative times
+        };
+        return parse_relative_time(relative_input, base_time);
+    }
+    
+    // Check if it looks like a datetime (contains space and colon)
+    if trimmed_input.contains(' ') && trimmed_input.contains(':') {
+        return parse_datetime(trimmed_input);
+    }
+    
+    // Check if it looks like a date (contains hyphens but no space/colon)
+    if trimmed_input.contains('-') && !trimmed_input.contains(' ') && !trimmed_input.contains(':') {
+        return parse_date(trimmed_input);
+    }
+    
+    // If none of the above, try relative time without prefix (like "2h", "30m")
+    let base_time = chrono::Local::now().naive_local();
+    parse_relative_time(trimmed_input, base_time)
+}
+
+/// Validate that start time is before end time
+///
+/// This function ensures that the time range is valid for progress calculation.
+/// 
+/// # Arguments
+///
+/// * `start` - The start time
+/// * `end` - The end time
+///
+/// # Returns
+///
+/// * `Ok(())` - Times are valid (start <= end)
+/// * `Err(PbError)` - Start time is after end time
+///
+/// # Examples
+///
+/// ```
+/// use pb::time_parser::{parse_time, validate_times};
+/// 
+/// let start = parse_time("2025-07-21 10:00:00").unwrap();
+/// let end = parse_time("2025-07-21 12:00:00").unwrap();
+/// 
+/// let result = validate_times(start, end);
+/// assert!(result.is_ok());
+/// ```
+pub fn validate_times(start: NaiveDateTime, end: NaiveDateTime) -> Result<(), PbError> {
+    if start > end {
+        return Err(PbError::invalid_time_format(
+            format!("Start time ({}) must be before or equal to end time ({})", 
+                   start.format("%Y-%m-%d %H:%M:%S"), 
+                   end.format("%Y-%m-%d %H:%M:%S"))
+        ));
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
