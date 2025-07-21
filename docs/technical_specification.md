@@ -139,8 +139,8 @@ pb/
 - Parse multiple time formats: ✅
   - Date: `2025-07-21` ✅ (Phase 3)
   - DateTime: `2025-07-21 00:00:00` (Future)
-  - Relative: `30m`, `2h`, `1d` (Future)
-- Convert relative times to absolute timestamps (Future)
+  - Relative: `30m`, `2h`, `1d` ✅ (Phase 3)
+- Convert relative times to absolute timestamps ✅
 - Validation logic ✅
 
 #### Date Format Parsing Implementation (Phase 3) ✅
@@ -162,6 +162,31 @@ pb/
   - Edge cases (leap year validation, extreme dates) ✅
   - Performance testing (1000 parses < 1 second) ✅
   - Flexible format acceptance (single-digit months/days) ✅
+
+#### Relative Time Parsing Implementation (Phase 3) ✅
+- **Function**: `parse_relative_time(input: &str, base_time: NaiveDateTime) -> Result<NaiveDateTime, PbError>` ✅
+- **Format**: Regex pattern `^(\d+)([mhd])$` validation ✅
+  - Units: `m` (minutes), `h` (hours), `d` (days) ✅
+  - Range: 1-999 for all units ✅
+  - Strict format enforcement (no extra characters) ✅
+- **Error Handling**: ✅
+  - Invalid format patterns (e.g., "30", "m30", "30x") ✅
+  - Range violations (e.g., "0m", "1000d") ✅
+  - Overflow protection with checked arithmetic ✅
+- **Unit Conversion**: ✅
+  - Minutes: amount × 60 seconds ✅
+  - Hours: amount × 3600 seconds ✅
+  - Days: amount × 86400 seconds ✅
+- **Output**: Base time + calculated duration ✅
+- **Performance**: <1ms parsing, overflow-safe ✅
+- **Test Coverage**: 8 comprehensive test functions, 60+ test cases ✅
+  - Valid formats ("30m", "2h", "1d", boundary values) ✅
+  - Invalid formats (missing units, wrong order, spaces) ✅
+  - Range validation (zero values, excessive values) ✅
+  - Edge cases (overflow scenarios, different base times) ✅
+  - Unit conversions ("60m" == "1h", "24h" == "1d") ✅
+  - Error message consistency ✅
+  - Performance testing (1000 parses < 1 second) ✅
 
 ### `progress_bar.rs`
 - Progress calculation
@@ -199,10 +224,31 @@ chrono::NaiveDate::parse_from_str(input, "%Y-%m-%d")
 chrono::NaiveDateTime::parse_from_str(input, "%Y-%m-%d %H:%M:%S")
 ```
 
-#### Relative Time Format (`30m`, `2h`, `1d`)
+#### Relative Time Format (`30m`, `2h`, `1d`) ✅
 ```rust
-regex: r"^(\d+)([mhd])$"
-// Convert to seconds then add to current time
+use regex::Regex;
+
+let re = Regex::new(r"^(\d+)([mhd])$").unwrap();
+if let Some(captures) = re.captures(input) {
+    let amount: i64 = captures[1].parse()?;
+    let unit = &captures[2];
+    
+    if !(1..=999).contains(&amount) {
+        return Err(PbError::InvalidRelativeTimeFormat { input: input.to_string() });
+    }
+    
+    let seconds = match unit {
+        "m" => amount * 60,
+        "h" => amount * 3600, 
+        "d" => amount * 86400,
+        _ => return Err(PbError::InvalidRelativeTimeFormat { input: input.to_string() }),
+    };
+    
+    base_time.checked_add_signed(Duration::seconds(seconds))
+        .ok_or_else(|| PbError::InvalidRelativeTimeFormat { input: input.to_string() })
+} else {
+    Err(PbError::InvalidRelativeTimeFormat { input: input.to_string() })
+}
 ```
 
 ### Progress Bar Calculation
