@@ -23,7 +23,7 @@ Successfully implemented comprehensive relative time parsing functionality for t
 ```rust
 let seconds = match unit {
     "m" => amount * 60,        // minutes to seconds
-    "h" => amount * 3600,      // hours to seconds  
+    "h" => amount * 3600,      // hours to seconds
     "d" => amount * 86400,     // days to seconds
     _ => return Err(...),
 };

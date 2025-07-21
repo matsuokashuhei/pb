@@ -69,24 +69,24 @@ use crate::error::PbError;
 
 pub fn parse_relative_time(input: &str, base_time: NaiveDateTime) -> Result<NaiveDateTime, PbError> {
     let re = Regex::new(r"^(\d+)([mhd])$").unwrap();
-    
+
     if let Some(captures) = re.captures(input) {
         let amount: i64 = captures[1].parse()
             .map_err(|_| PbError::InvalidRelativeTimeFormat { input: input.to_string() })?;
         let unit = &captures[2];
-        
+
         // Validate range (1-999)
         if amount < 1 || amount > 999 {
             return Err(PbError::InvalidRelativeTimeFormat { input: input.to_string() });
         }
-        
+
         let seconds = match unit {
             "m" => amount * 60,
             "h" => amount * 3600,
             "d" => amount * 86400,
             _ => return Err(PbError::InvalidRelativeTimeFormat { input: input.to_string() }),
         };
-        
+
         base_time.checked_add_signed(Duration::seconds(seconds))
             .ok_or_else(|| PbError::InvalidRelativeTimeFormat { input: input.to_string() })
     } else {
