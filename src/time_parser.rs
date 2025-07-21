@@ -3,7 +3,8 @@
 //! This module provides functions to parse various time formats into
 //! `NaiveDateTime` objects for use in progress bar calculations.
 
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{NaiveDate, NaiveDateTime, Duration};
+use regex::Regex;
 use crate::error::PbError;
 
 /// Parse a date string in YYYY-MM-DD format
@@ -127,6 +128,99 @@ pub fn parse_datetime(input: &str) -> Result<NaiveDateTime, PbError> {
         .map_err(|_| PbError::InvalidTimeFormat { 
             input: input.to_string() 
         })
+}
+
+/// Parse a relative time string and convert to absolute timestamp
+///
+/// This function parses relative time strings in formats like `30m`, `2h`, `1d`
+/// and converts them to absolute timestamps by adding the duration to a base time.
+///
+/// Supported formats:
+/// - `30m` - 30 minutes
+/// - `2h` - 2 hours
+/// - `1d` - 1 day
+///
+/// The function enforces strict formatting requirements:
+/// - Must match pattern `^(\d+)([mhd])$` exactly
+/// - Amount must be between 1 and 999 (inclusive)
+/// - Only supports units: m (minutes), h (hours), d (days)
+///
+/// # Arguments
+///
+/// * `input` - A string slice containing the relative time (e.g., "30m", "2h", "1d")
+/// * `base_time` - The base time to add the relative duration to
+///
+/// # Returns
+///
+/// * `Ok(NaiveDateTime)` - Successfully parsed relative time added to base_time
+/// * `Err(PbError)` - Invalid relative time format or calculation overflow
+///
+/// # Examples
+///
+/// ```
+/// use pb::time_parser::parse_relative_time;
+/// use chrono::NaiveDateTime;
+///
+/// let base = NaiveDateTime::parse_from_str("2025-07-21 10:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+///
+/// // Valid relative times
+/// let result = parse_relative_time("30m", base);
+/// assert!(result.is_ok());
+///
+/// let result = parse_relative_time("2h", base);
+/// assert!(result.is_ok());
+///
+/// let result = parse_relative_time("1d", base);
+/// assert!(result.is_ok());
+///
+/// // Invalid format
+/// let result = parse_relative_time("30", base);
+/// assert!(result.is_err());
+///
+/// // Invalid unit
+/// let result = parse_relative_time("30x", base);
+/// assert!(result.is_err());
+/// ```
+pub fn parse_relative_time(input: &str, base_time: NaiveDateTime) -> Result<NaiveDateTime, PbError> {
+    // Create regex pattern for relative time formats: ^(\d+)([mhd])$
+    let re = Regex::new(r"^(\d+)([mhd])$").unwrap();
+
+    if let Some(captures) = re.captures(input) {
+        // Parse the numeric amount
+        let amount: i64 = captures[1].parse()
+            .map_err(|_| PbError::InvalidRelativeTimeFormat {
+                input: input.to_string()
+            })?;
+
+        let unit = &captures[2];
+
+        // Validate range (1-999)
+        if !(1..=999).contains(&amount) {
+            return Err(PbError::InvalidRelativeTimeFormat {
+                input: input.to_string()
+            });
+        }
+
+        // Convert to seconds based on unit
+        let seconds = match unit {
+            "m" => amount * 60,        // minutes to seconds
+            "h" => amount * 3600,      // hours to seconds
+            "d" => amount * 86400,     // days to seconds
+            _ => return Err(PbError::InvalidRelativeTimeFormat {
+                input: input.to_string()
+            }),
+        };
+
+        // Add duration to base time with overflow checking
+        base_time.checked_add_signed(Duration::seconds(seconds))
+            .ok_or_else(|| PbError::InvalidRelativeTimeFormat {
+                input: input.to_string()
+            })
+    } else {
+        Err(PbError::InvalidRelativeTimeFormat {
+            input: input.to_string()
+        })
+    }
 }
 
 #[cfg(test)]
@@ -646,5 +740,275 @@ mod tests {
         let parsed = parse_datetime(input).unwrap();
         let formatted = parsed.format("%Y-%m-%d %H:%M:%S").to_string();
         assert_eq!(input, formatted);
+    }
+
+    // ========================================
+    // Relative Time Parsing Tests
+    // ========================================
+
+    #[test]
+    fn test_parse_valid_relative_times() {
+        let base_time = NaiveDateTime::parse_from_str("2025-07-21 10:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+
+        // Test minutes
+        let result = parse_relative_time("30m", base_time);
+        assert!(result.is_ok());
+        let expected = base_time + Duration::minutes(30);
+        assert_eq!(result.unwrap(), expected);
+
+        // Test hours
+        let result = parse_relative_time("2h", base_time);
+        assert!(result.is_ok());
+        let expected = base_time + Duration::hours(2);
+        assert_eq!(result.unwrap(), expected);
+
+        // Test days
+        let result = parse_relative_time("1d", base_time);
+        assert!(result.is_ok());
+        let expected = base_time + Duration::days(1);
+        assert_eq!(result.unwrap(), expected);
+
+        // Test boundary values
+        let result = parse_relative_time("1m", base_time);
+        assert!(result.is_ok());
+
+        let result = parse_relative_time("999m", base_time);
+        assert!(result.is_ok());
+
+        let result = parse_relative_time("999h", base_time);
+        assert!(result.is_ok());
+
+        let result = parse_relative_time("999d", base_time);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_parse_invalid_relative_time_formats() {
+        let base_time = NaiveDateTime::parse_from_str("2025-07-21 10:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+
+        // Missing unit
+        let result = parse_relative_time("30", base_time);
+        assert!(result.is_err());
+        if let Err(PbError::InvalidRelativeTimeFormat { input }) = result {
+            assert_eq!(input, "30");
+        } else {
+            panic!("Expected InvalidRelativeTimeFormat error");
+        }
+
+        // Invalid unit
+        let result = parse_relative_time("30x", base_time);
+        assert!(result.is_err());
+
+        let result = parse_relative_time("30s", base_time);
+        assert!(result.is_err());
+
+        let result = parse_relative_time("30w", base_time);
+        assert!(result.is_err());
+
+        // Multiple digits and units
+        let result = parse_relative_time("30m2h", base_time);
+        assert!(result.is_err());
+
+        // Unit before number
+        let result = parse_relative_time("m30", base_time);
+        assert!(result.is_err());
+
+        // Spaces
+        let result = parse_relative_time(" 30m", base_time);
+        assert!(result.is_err());
+
+        let result = parse_relative_time("30m ", base_time);
+        assert!(result.is_err());
+
+        let result = parse_relative_time("30 m", base_time);
+        assert!(result.is_err());
+
+        // Empty string
+        let result = parse_relative_time("", base_time);
+        assert!(result.is_err());
+
+        // Non-numeric amount
+        let result = parse_relative_time("abcm", base_time);
+        assert!(result.is_err());
+
+        // Decimal numbers
+        let result = parse_relative_time("1.5h", base_time);
+        assert!(result.is_err());
+
+        // Negative numbers
+        let result = parse_relative_time("-30m", base_time);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_relative_time_range_validation() {
+        let base_time = NaiveDateTime::parse_from_str("2025-07-21 10:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+
+        // Zero values not allowed
+        let result = parse_relative_time("0m", base_time);
+        assert!(result.is_err());
+        if let Err(PbError::InvalidRelativeTimeFormat { input }) = result {
+            assert_eq!(input, "0m");
+        } else {
+            panic!("Expected InvalidRelativeTimeFormat error");
+        }
+
+        let result = parse_relative_time("0h", base_time);
+        assert!(result.is_err());
+
+        let result = parse_relative_time("0d", base_time);
+        assert!(result.is_err());
+
+        // Values over 999 not allowed
+        let result = parse_relative_time("1000m", base_time);
+        assert!(result.is_err());
+
+        let result = parse_relative_time("1000h", base_time);
+        assert!(result.is_err());
+
+        let result = parse_relative_time("1000d", base_time);
+        assert!(result.is_err());
+
+        // Very large numbers
+        let result = parse_relative_time("99999d", base_time);
+        assert!(result.is_err());
+
+        // Boundary tests - valid
+        let result = parse_relative_time("1m", base_time);
+        assert!(result.is_ok());
+
+        let result = parse_relative_time("999m", base_time);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_parse_relative_time_edge_cases() {
+        let _base_time = NaiveDateTime::parse_from_str("2025-07-21 10:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+
+        // Test with different base times
+        let early_base = NaiveDateTime::parse_from_str("2000-01-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+        let result = parse_relative_time("1d", early_base);
+        assert!(result.is_ok());
+
+        let late_base = NaiveDateTime::parse_from_str("2999-12-31 23:59:59", "%Y-%m-%d %H:%M:%S").unwrap();
+        let result = parse_relative_time("1m", late_base);
+        // This might overflow, and that's OK - the function should handle it gracefully
+        // We don't assert success/failure because it depends on the datetime implementation limits
+        let _result = result;
+
+        // Test edge of year boundaries
+        let year_end = NaiveDateTime::parse_from_str("2025-12-31 23:59:59", "%Y-%m-%d %H:%M:%S").unwrap();
+        let result = parse_relative_time("1m", year_end);
+        assert!(result.is_ok());
+        let new_time = result.unwrap();
+        assert_eq!(new_time.year(), 2026);
+        assert_eq!(new_time.month(), 1);
+        assert_eq!(new_time.day(), 1);
+        assert_eq!(new_time.hour(), 0);
+        assert_eq!(new_time.minute(), 0);
+        assert_eq!(new_time.second(), 59);
+    }
+
+    #[test]
+    fn test_parse_relative_time_unit_conversions() {
+        let base_time = NaiveDateTime::parse_from_str("2025-07-21 10:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+
+        // Test minute conversion (30 minutes = 1800 seconds)
+        let result = parse_relative_time("30m", base_time);
+        assert!(result.is_ok());
+        let expected_time = base_time + Duration::seconds(30 * 60);
+        assert_eq!(result.unwrap(), expected_time);
+
+        // Test hour conversion (2 hours = 7200 seconds)
+        let result = parse_relative_time("2h", base_time);
+        assert!(result.is_ok());
+        let expected_time = base_time + Duration::seconds(2 * 3600);
+        assert_eq!(result.unwrap(), expected_time);
+
+        // Test day conversion (1 day = 86400 seconds)
+        let result = parse_relative_time("1d", base_time);
+        assert!(result.is_ok());
+        let expected_time = base_time + Duration::seconds(1 * 86400);
+        assert_eq!(result.unwrap(), expected_time);
+
+        // Verify exact calculations
+        let result_1h = parse_relative_time("1h", base_time).unwrap();
+        let result_60m = parse_relative_time("60m", base_time).unwrap();
+        assert_eq!(result_1h, result_60m);
+
+        let result_1d = parse_relative_time("1d", base_time).unwrap();
+        let result_24h = parse_relative_time("24h", base_time).unwrap();
+        assert_eq!(result_1d, result_24h);
+    }
+
+    #[test]
+    fn test_parse_relative_time_different_units() {
+        let base_time = NaiveDateTime::parse_from_str("2025-07-21 10:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+
+        // Test all supported units with same number
+        let result_5m = parse_relative_time("5m", base_time);
+        assert!(result_5m.is_ok());
+        let time_5m = result_5m.unwrap();
+        assert_eq!(time_5m.minute(), 5);
+
+        let result_5h = parse_relative_time("5h", base_time);
+        assert!(result_5h.is_ok());
+        let time_5h = result_5h.unwrap();
+        assert_eq!(time_5h.hour(), 15); // 10 + 5 = 15
+
+        let result_5d = parse_relative_time("5d", base_time);
+        assert!(result_5d.is_ok());
+        let time_5d = result_5d.unwrap();
+        assert_eq!(time_5d.day(), 26); // 21 + 5 = 26
+
+        // Verify they are all different
+        assert_ne!(time_5m, time_5h);
+        assert_ne!(time_5h, time_5d);
+        assert_ne!(time_5m, time_5d);
+    }
+
+    #[test]
+    fn test_parse_relative_time_error_messages() {
+        let base_time = NaiveDateTime::parse_from_str("2025-07-21 10:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+
+        // Test that error messages contain the input
+        let test_cases = vec![
+            "30",           // Missing unit
+            "30x",          // Invalid unit
+            "0m",           // Zero not allowed
+            "1000m",        // Too large
+            " 30m",         // Leading space
+            "30m ",         // Trailing space
+            "abc",          // Not a number
+            "",             // Empty
+        ];
+
+        for input in test_cases {
+            let result = parse_relative_time(input, base_time);
+            assert!(result.is_err());
+            if let Err(PbError::InvalidRelativeTimeFormat { input: error_input }) = result {
+                assert_eq!(error_input, input);
+            } else {
+                panic!("Expected InvalidRelativeTimeFormat error for input: {}", input);
+            }
+        }
+    }
+
+    #[test]
+    fn test_parse_relative_time_performance() {
+        let base_time = NaiveDateTime::parse_from_str("2025-07-21 10:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+
+        // Test performance with repeated parsing
+        let start = std::time::Instant::now();
+
+        for _ in 0..1000 {
+            let result = parse_relative_time("30m", base_time);
+            assert!(result.is_ok());
+        }
+
+        let duration = start.elapsed();
+
+        // Should complete within reasonable time for 1000 parses (allowing for Docker overhead)
+        assert!(duration.as_millis() < 2000, "Relative time parsing took too long: {:?}", duration);
     }
 }
