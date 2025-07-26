@@ -36,6 +36,8 @@ Session.vim
 ## Tool
 .valgrindrc
 .cargo
+# But include cargo project configuration
+!.cargo/config.toml
 
 ## Build
 /dist/
