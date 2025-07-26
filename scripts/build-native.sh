@@ -83,6 +83,32 @@ else
     echo -e "${YELLOW}Building pb for default target${NC}"
 fi
 
+# Check if cargo is available, if not try to source the Rust environment
+if ! command -v cargo >/dev/null 2>&1; then
+    echo -e "${YELLOW}cargo command not found. Attempting to source Rust environment...${NC}"
+    
+    # Try to source the standard cargo environment
+    if [ -f "$HOME/.cargo/env" ]; then
+        echo -e "${YELLOW}Sourcing $HOME/.cargo/env${NC}"
+        source "$HOME/.cargo/env"
+    elif [ -f "$HOME/.bashrc" ] && grep -q "cargo" "$HOME/.bashrc"; then
+        echo -e "${YELLOW}Sourcing $HOME/.bashrc for cargo environment${NC}"
+        source "$HOME/.bashrc"
+    fi
+    
+    # Check again if cargo is now available
+    if ! command -v cargo >/dev/null 2>&1; then
+        echo -e "${RED}Error: cargo command not found!${NC}"
+        echo -e "${RED}Please install Rust and Cargo using one of the following methods:${NC}"
+        echo -e "${YELLOW}  1. Install via rustup (recommended): curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh${NC}"
+        echo -e "${YELLOW}  2. Install via package manager (varies by OS)${NC}"
+        echo -e "${YELLOW}  3. Make sure ~/.cargo/bin is in your PATH${NC}"
+        exit 1
+    else
+        echo -e "${GREEN}cargo is now available!${NC}"
+    fi
+fi
+
 echo -e "${YELLOW}Building pb in ${BUILD_TYPE} mode...${NC}"
 echo -e "${YELLOW}Build command: cargo build $BUILD_ARGS${NC}"
 
