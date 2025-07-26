@@ -32,7 +32,14 @@ fn test_cli_validation_empty_end_time() {
 fn test_cli_validation_zero_interval() {
     // Test validation failure for zero interval
     let mut cmd = Command::cargo_bin("pb").unwrap();
-    cmd.args(&["--start", "10:00:00", "--end", "12:00:00", "--interval", "0"]);
+    cmd.args(&[
+        "--start",
+        "10:00:00",
+        "--end",
+        "12:00:00",
+        "--interval",
+        "0",
+    ]);
 
     cmd.assert()
         .failure()
@@ -65,7 +72,12 @@ fn test_cli_validation_invalid_end_time() {
 fn test_cli_validation_start_after_end() {
     // Test validation failure when start time is after end time
     let mut cmd = Command::cargo_bin("pb").unwrap();
-    cmd.args(&["--start", "2025-07-21 12:00:00", "--end", "2025-07-21 10:00:00"]);
+    cmd.args(&[
+        "--start",
+        "2025-07-21 12:00:00",
+        "--end",
+        "2025-07-21 10:00:00",
+    ]);
 
     cmd.assert()
         .failure()
@@ -79,7 +91,7 @@ fn test_cli_help_display() {
     cmd.arg("--help");
 
     cmd.assert()
-        .success()  // Help should exit successfully
+        .success() // Help should exit successfully
         .stdout(predicate::str::contains("CLI progress bar tool"));
 }
 
@@ -90,8 +102,8 @@ fn test_cli_version_display() {
     cmd.arg("--version");
 
     cmd.assert()
-        .success()  // Version should exit successfully
-        .stdout(predicate::str::contains("pb 0.1.0"));
+        .success() // Version should exit successfully
+        .stdout(predicate::str::contains("pb 1.0.0"));
 }
 
 #[test]
@@ -143,8 +155,7 @@ fn test_cli_successful_validation() {
 
         // Should either succeed or timeout (since these are past/future times)
         // We just want to ensure the validation passes
-        cmd.timeout(std::time::Duration::from_secs(3))
-            .assert(); // Don't check success/failure, just that it doesn't crash immediately
+        cmd.timeout(std::time::Duration::from_secs(3)).assert(); // Don't check success/failure, just that it doesn't crash immediately
     }
 }
 
@@ -152,28 +163,40 @@ fn test_cli_successful_validation() {
 fn test_cli_edge_case_intervals() {
     // Test edge case intervals
     let mut cmd = Command::cargo_bin("pb").unwrap();
-    cmd.args(&["--start", "2025-07-21 10:00:00", "--end", "2025-07-21 12:00:00", "--interval", "1"]);
+    cmd.args(&[
+        "--start",
+        "2025-07-21 10:00:00",
+        "--end",
+        "2025-07-21 12:00:00",
+        "--interval",
+        "1",
+    ]);
 
     // Should work with interval of 1
-    cmd.timeout(std::time::Duration::from_secs(2))
-        .assert();
+    cmd.timeout(std::time::Duration::from_secs(2)).assert();
 
     // Test very large interval
     let mut cmd = Command::cargo_bin("pb").unwrap();
-    cmd.args(&["--start", "2025-07-21 10:00:00", "--end", "2025-07-21 12:00:00", "--interval", "3600"]);
+    cmd.args(&[
+        "--start",
+        "2025-07-21 10:00:00",
+        "--end",
+        "2025-07-21 12:00:00",
+        "--interval",
+        "3600",
+    ]);
 
-    cmd.timeout(std::time::Duration::from_secs(2))
-        .assert();
+    cmd.timeout(std::time::Duration::from_secs(2)).assert();
 }
 
 #[test]
 fn test_cli_unicode_and_special_characters() {
     // Test handling of unicode and special characters in input
     let invalid_inputs = vec![
-        "2025-07-21🕐10:00:00",    // Emoji
+        "2025-07-21🕐10:00:00",              // Emoji
         "２０２５-０７-２１ １０:００:００", // Full-width characters
-        "2025-07-21\t10:00:00",    // Tab character
-        "2025-07-21\n10:00:00",    // Newline character
+        "2025-07-21\t10:00:00",              // Tab character
+        "2025-07-21\n10:00:00",              // Newline character
     ];
 
     for invalid_input in invalid_inputs {
@@ -191,7 +214,7 @@ fn test_cli_whitespace_handling() {
     // Test handling of whitespace in time inputs
     // Note: Some whitespace might be accepted by the time parser
     let invalid_input = "10:  00:00"; // Internal spaces should be invalid
-    
+
     let mut cmd = Command::cargo_bin("pb").unwrap();
     cmd.args(&["--start", invalid_input, "--end", "12:00:00"]);
 

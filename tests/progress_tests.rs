@@ -352,7 +352,7 @@ mod render_colored_progress_bar_tests {
         // Test behavior when NO_COLOR environment variable is set
         // Save original value if it exists
         let original_no_color = std::env::var("NO_COLOR").ok();
-        
+
         std::env::set_var("NO_COLOR", "1");
 
         let result = render_colored_progress_bar(150.0);
@@ -366,7 +366,10 @@ mod render_colored_progress_bar_tests {
         } else {
             // If colors still appear, check if they contain the expected content
             let stripped = strip_ansi_codes(&result);
-            assert_eq!(stripped, expected, "Stripped colors should match expected output");
+            assert_eq!(
+                stripped, expected,
+                "Stripped colors should match expected output"
+            );
         }
 
         // Clean up - restore original value or remove if it didn't exist

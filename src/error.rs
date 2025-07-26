@@ -61,7 +61,10 @@ mod tests {
     #[test]
     fn test_start_after_end_error_message() {
         let error = PbError::StartAfterEnd;
-        assert_eq!(error.to_string(), "Start time must be before or equal to end time");
+        assert_eq!(
+            error.to_string(),
+            "Start time must be before or equal to end time"
+        );
     }
 
     #[test]
@@ -109,7 +112,7 @@ mod tests {
     #[test]
     fn test_error_debug_format() {
         let error = PbError::invalid_time_format("test");
-        let debug_str = format!("{:?}", error);
+        let debug_str = format!("{error:?}");
         assert!(debug_str.contains("InvalidTimeFormat"));
         assert!(debug_str.contains("test"));
     }
@@ -121,11 +124,15 @@ mod tests {
 
         assert!(success.is_ok());
         assert!(failure.is_err());
-        assert_eq!(success.unwrap(), 42);
-        assert_eq!(
-            failure.unwrap_err().to_string(),
-            "Start time must be before or equal to end time"
-        );
+        if let Ok(val) = success {
+            assert_eq!(val, 42);
+        }
+        if let Err(err) = failure {
+            assert_eq!(
+                err.to_string(),
+                "Start time must be before or equal to end time"
+            );
+        }
     }
 
     #[test]

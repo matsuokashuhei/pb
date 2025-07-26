@@ -18,7 +18,10 @@ mod error_type_tests {
         let error = PbError::StartAfterEnd;
 
         // Test display message
-        assert_eq!(error.to_string(), "Start time must be before or equal to end time");
+        assert_eq!(
+            error.to_string(),
+            "Start time must be before or equal to end time"
+        );
 
         // Test that it implements Error trait
         assert!(error.source().is_none()); // No underlying cause
@@ -169,7 +172,10 @@ mod pb_result_tests {
         assert!(error.is_err());
 
         let err = error.unwrap_err();
-        assert_eq!(err.to_string(), "Start time must be before or equal to end time");
+        assert_eq!(
+            err.to_string(),
+            "Start time must be before or equal to end time"
+        );
     }
 
     #[test]
@@ -237,7 +243,8 @@ mod anyhow_integration_tests {
         assert!(error_str.contains("Failed to parse user input"));
 
         // To check the inner error, we need to use the chain
-        let has_invalid_time_format = error.chain()
+        let has_invalid_time_format = error
+            .chain()
             .any(|e| e.to_string().contains("Invalid time format: test"));
         assert!(has_invalid_time_format);
     }
@@ -288,7 +295,10 @@ mod error_message_tests {
     #[test]
     fn test_error_messages_are_user_friendly() {
         let error_cases = vec![
-            (PbError::StartAfterEnd, "Start time must be before or equal to end time"),
+            (
+                PbError::StartAfterEnd,
+                "Start time must be before or equal to end time",
+            ),
             (
                 PbError::invalid_time_format("2025-13-40"),
                 "Invalid time format: 2025-13-40",
@@ -374,7 +384,10 @@ mod error_trait_implementation_tests {
 
         // Test that it implements std::error::Error
         let error_trait: &dyn std::error::Error = &error;
-        assert_eq!(error_trait.to_string(), "Start time must be before or equal to end time");
+        assert_eq!(
+            error_trait.to_string(),
+            "Start time must be before or equal to end time"
+        );
 
         // Test source() method (should return None for our simple errors)
         assert!(error_trait.source().is_none());
@@ -430,7 +443,10 @@ mod error_pattern_matching_tests {
         for error in errors {
             match error {
                 PbError::StartAfterEnd => {
-                    assert_eq!(error.to_string(), "Start time must be before or equal to end time");
+                    assert_eq!(
+                        error.to_string(),
+                        "Start time must be before or equal to end time"
+                    );
                 }
                 PbError::InvalidTimeFormat { input } => {
                     assert_eq!(input, "test");
@@ -578,11 +594,13 @@ mod error_usage_patterns_tests {
         assert!(error_msg.contains("Application initialization failed"));
 
         // Check the error chain for deeper errors
-        let has_config_parsing_error = error.chain()
+        let has_config_parsing_error = error
+            .chain()
             .any(|e| e.to_string().contains("Failed to parse configuration file"));
         assert!(has_config_parsing_error);
 
-        let has_invalid_time_format = error.chain()
+        let has_invalid_time_format = error
+            .chain()
             .any(|e| e.to_string().contains("Invalid time format: invalid"));
         assert!(has_invalid_time_format);
     }

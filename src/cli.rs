@@ -36,7 +36,7 @@ impl Cli {
             match e.kind() {
                 clap::error::ErrorKind::DisplayHelp | clap::error::ErrorKind::DisplayVersion => {
                     // For help and version, print the message and exit successfully
-                    println!("{}", e);
+                    println!("{e}");
                     std::process::exit(0);
                 }
                 clap::error::ErrorKind::MissingRequiredArgument => PbError::MissingRequiredOptions,
@@ -228,7 +228,7 @@ mod tests {
         // Test that the debug output is reasonable
         let args = vec!["pb", "--start", "10:00", "--end", "12:00"];
         let cli = Cli::try_parse_from(args).unwrap();
-        let debug_str = format!("{:?}", cli);
+        let debug_str = format!("{cli:?}");
 
         assert!(debug_str.contains("start: \"10:00\""));
         assert!(debug_str.contains("end: \"12:00\""));

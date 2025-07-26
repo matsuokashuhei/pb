@@ -9,7 +9,7 @@ fn main() -> Result<()> {
     let cli = match Cli::parse_args() {
         Ok(cli) => cli,
         Err(e) => {
-            eprintln!("Error: {}", e);
+            eprintln!("Error: {e}");
             std::process::exit(1);
         }
     };
@@ -18,7 +18,7 @@ fn main() -> Result<()> {
     let start_time = match parse_time(cli.start()) {
         Ok(time) => time,
         Err(e) => {
-            eprintln!("Error parsing start time '{}': {}", cli.start(), e);
+            eprintln!("Error parsing start time '{}': {e}", cli.start());
             std::process::exit(1);
         }
     };
@@ -26,14 +26,14 @@ fn main() -> Result<()> {
     let end_time = match parse_time(cli.end()) {
         Ok(time) => time,
         Err(e) => {
-            eprintln!("Error parsing end time '{}': {}", cli.end(), e);
+            eprintln!("Error parsing end time '{}': {e}", cli.end());
             std::process::exit(1);
         }
     };
 
     // Validate time relationship
     if let Err(e) = validate_times(start_time, end_time) {
-        eprintln!("Error: {}", e);
+        eprintln!("Error: {e}");
         std::process::exit(1);
     }
 
@@ -81,7 +81,7 @@ fn main() -> Result<()> {
             Ok(())
         }
         Err(e) => {
-            eprintln!("Error during progress monitoring: {}", e);
+            eprintln!("Error during progress monitoring: {e}");
             std::process::exit(1);
         }
     }
@@ -108,11 +108,11 @@ fn run_progress_loop(
         // Update display
         if is_tty {
             // In TTY mode, clear line and show new progress
-            print!("\r{}", bar);
+            print!("\r{bar}");
             io::stdout().flush()?;
         } else {
             // In non-TTY mode, just print the progress bar
-            println!("{}", bar);
+            println!("{bar}");
         }
 
         // Check if we've completed (progress >= 100%)
