@@ -56,7 +56,7 @@ impl Cli {
     ///
     /// Performs basic validation on the parsed arguments.
     /// More detailed time parsing validation will be handled by the time_parser module.
-    fn validate(&self) -> PbResult<()> {
+    pub fn validate(&self) -> PbResult<()> {
         // Basic validation - more detailed validation will be in time_parser
         if self.start.trim().is_empty() {
             return Err(PbError::invalid_time_format("Start time cannot be empty"));

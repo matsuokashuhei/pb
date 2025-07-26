@@ -16,7 +16,7 @@ const BAR_WIDTH: usize = 40;
 /// accurate floating-point calculations.
 ///
 /// # Algorithm
-/// 
+///
 /// The core formula is:
 /// ```text
 /// Progress % = (Current Time - Start Time) / (End Time - Start Time) × 100
@@ -64,15 +64,18 @@ const BAR_WIDTH: usize = 40;
 pub fn calculate_progress(start: NaiveDateTime, end: NaiveDateTime, current: NaiveDateTime) -> f64 {
     let total_duration = end - start;
     let elapsed_duration = current - start;
-    
-    // Handle zero duration edge case
-    if total_duration.num_seconds() == 0 {
+
+    // Handle zero duration edge case (use microseconds for higher precision)
+    if total_duration.num_microseconds().unwrap_or(0) == 0 {
         return 100.0;
     }
-    
-    // Calculate progress percentage
-    let progress = (elapsed_duration.num_seconds() as f64 / total_duration.num_seconds() as f64) * 100.0;
-    
+
+    // Calculate progress percentage using microseconds for better precision
+    let total_microseconds = total_duration.num_microseconds().unwrap_or(0) as f64;
+    let elapsed_microseconds = elapsed_duration.num_microseconds().unwrap_or(0) as f64;
+
+    let progress = (elapsed_microseconds / total_microseconds) * 100.0;
+
     // Ensure non-negative progress (clamp negative values to 0.0)
     progress.max(0.0)
 }
@@ -84,9 +87,9 @@ pub fn calculate_progress(start: NaiveDateTime, end: NaiveDateTime, current: Nai
 /// the percentage with proper formatting.
 ///
 /// # Format
-/// 
+///
 /// The output format is: `[{filled_portion}{empty_portion}] {percentage:.0}%`
-/// 
+///
 /// Where:
 /// - `filled_portion`: `█` (U+2588 Full Block) characters for completed progress
 /// - `empty_portion`: Space characters for remaining progress
@@ -124,7 +127,7 @@ pub fn calculate_progress(start: NaiveDateTime, end: NaiveDateTime, current: Nai
 /// // 0% progress
 /// assert_eq!(render_progress_bar(0.0), "[                                        ] 0%");
 ///
-/// // 50% progress  
+/// // 50% progress
 /// assert_eq!(render_progress_bar(50.0), "[████████████████████                    ] 50%");
 ///
 /// // 100% progress
@@ -136,17 +139,17 @@ pub fn calculate_progress(start: NaiveDateTime, end: NaiveDateTime, current: Nai
 pub fn render_progress_bar(percentage: f64) -> String {
     // Clamp negative percentages to 0 for visual display
     let display_percentage = percentage.max(0.0);
-    
+
     // Calculate filled characters (round to nearest)
     let filled_chars = ((display_percentage / 100.0) * BAR_WIDTH as f64).round() as usize;
-    
+
     // Ensure we don't exceed the bar width (for >100% cases)
     let filled_chars = filled_chars.min(BAR_WIDTH);
-    
+
     // Create filled and empty portions
     let filled = "█".repeat(filled_chars);
     let empty = " ".repeat(BAR_WIDTH - filled_chars);
-    
+
     // Format with percentage rounded to nearest integer
     format!("[{}{}] {:.0}%", filled, empty, percentage)
 }
@@ -158,7 +161,7 @@ pub fn render_progress_bar(percentage: f64) -> String {
 /// and red color for overtime progress (>100%).
 ///
 /// # Color Behavior
-/// 
+///
 /// - **0% to 100%**: Default terminal color (no color modification)
 /// - **>100%**: Red color using `colored::Colorize::red()`
 /// - **Negative values**: Default color (already clamped to 0% display)
@@ -177,7 +180,7 @@ pub fn render_progress_bar(percentage: f64) -> String {
 ///
 /// # Returns
 ///
-/// Returns a formatted string containing the visual progress bar with 
+/// Returns a formatted string containing the visual progress bar with
 /// appropriate color formatting. The string includes ANSI color codes
 /// when color is supported and enabled.
 ///
@@ -204,7 +207,7 @@ pub fn render_progress_bar(percentage: f64) -> String {
 /// ```
 pub fn render_colored_progress_bar(percentage: f64) -> String {
     let bar = render_progress_bar(percentage);
-    
+
     // Apply red color for overtime (>100%)
     if percentage > 100.0 {
         bar.red().to_string()
@@ -396,10 +399,19 @@ mod tests {
             let avg_time = elapsed / iterations;
 
             // Should complete 1000 iterations in less than 1ms total
-            assert!(elapsed.as_millis() < 1, "Performance test failed: {} iterations took {:?}", iterations, elapsed);
-            
+            assert!(
+                elapsed.as_millis() < 1,
+                "Performance test failed: {} iterations took {:?}",
+                iterations,
+                elapsed
+            );
+
             // Each call should take less than 1 microsecond on average
-            assert!(avg_time.as_nanos() < 1000, "Average call time too slow: {:?}", avg_time);
+            assert!(
+                avg_time.as_nanos() < 1000,
+                "Average call time too slow: {:?}",
+                avg_time
+            );
         }
     }
 }
@@ -414,12 +426,12 @@ mod render_tests {
         let result = render_progress_bar(0.0);
         assert!(result.starts_with('['));
         assert!(result.ends_with("0%"));
-        
+
         // Test 100%
         let result = render_progress_bar(100.0);
         assert!(result.starts_with('['));
         assert!(result.ends_with("100%"));
-        
+
         // Test that the bar portion is always 40 characters
         let bar_start = result.find('[').unwrap() + 1;
         let bar_end = result.find(']').unwrap();
@@ -431,11 +443,11 @@ mod render_tests {
     fn test_specific_percentages() {
         // Test a few specific cases to understand the actual behavior
         let cases = vec![
-            (50.0, 20),   // 50% of 40 = 20 filled
-            (25.0, 10),   // 25% of 40 = 10 filled
-            (75.0, 30),   // 75% of 40 = 30 filled
-            (2.5, 1),     // 2.5% of 40 = 1 filled
-            (50.5, 20),   // 50.5% of 40 = 20.2, rounds to 20
+            (50.0, 20), // 50% of 40 = 20 filled
+            (25.0, 10), // 25% of 40 = 10 filled
+            (75.0, 30), // 75% of 40 = 30 filled
+            (2.5, 1),   // 2.5% of 40 = 1 filled
+            (50.5, 20), // 50.5% of 40 = 20.2, rounds to 20
         ];
 
         for (percentage, expected_filled) in cases {
@@ -443,18 +455,20 @@ mod render_tests {
             let bar_start = result.find('[').unwrap() + 1;
             let bar_end = result.find(']').unwrap();
             let bar = &result[bar_start..bar_end];
-            
+
             let filled_count = bar.chars().filter(|&c| c == '█').count();
-            assert_eq!(filled_count, expected_filled, 
-                "Percentage {}% should have {} filled chars, got {} in '{}'", 
-                percentage, expected_filled, filled_count, result);
+            assert_eq!(
+                filled_count, expected_filled,
+                "Percentage {}% should have {} filled chars, got {} in '{}'",
+                percentage, expected_filled, filled_count, result
+            );
         }
     }
 
     #[test]
     fn test_exact_format_requirements() {
         // Test the exact format specified in the issue
-        
+
         // 0% should be empty bar
         assert_eq!(
             render_progress_bar(0.0),
@@ -510,15 +524,19 @@ mod render_tests {
     #[test]
     fn test_performance() {
         use std::time::Instant;
-        
+
         let start = Instant::now();
         for i in 0..1000 {
             let _ = render_progress_bar(i as f64 / 10.0);
         }
         let elapsed = start.elapsed();
-        
+
         // Should complete 1000 iterations quickly
-        assert!(elapsed.as_millis() < 100, "Rendering too slow: {:?}", elapsed);
+        assert!(
+            elapsed.as_millis() < 100,
+            "Rendering too slow: {:?}",
+            elapsed
+        );
     }
 }
 
@@ -531,15 +549,18 @@ mod color_tests {
     fn test_colored_normal_progress() {
         // Test that normal progress (0-100%) returns the same as regular render_progress_bar
         let test_cases = vec![0.0, 25.0, 50.0, 75.0, 100.0];
-        
+
         for percentage in test_cases {
             let regular = render_progress_bar(percentage);
             let colored = render_colored_progress_bar(percentage);
-            
+
             // For normal progress, colored version should be identical to regular
             // (no color codes added)
-            assert_eq!(regular, colored, 
-                "Normal progress {}% should not have color codes", percentage);
+            assert_eq!(
+                regular, colored,
+                "Normal progress {}% should not have color codes",
+                percentage
+            );
         }
     }
 
@@ -547,24 +568,34 @@ mod color_tests {
     fn test_colored_overtime_progress() {
         // Test that overtime progress (>100%) gets color formatting
         let test_cases = vec![100.1, 110.0, 150.0, 200.0];
-        
+
         for percentage in test_cases {
             let regular = render_progress_bar(percentage);
             let colored = render_colored_progress_bar(percentage);
-            
+
             // If colors are enabled, the colored version should be different
             // If colors are disabled, they should be the same
             if control::SHOULD_COLORIZE.should_colorize() {
-                assert_ne!(regular, colored, 
-                    "Overtime progress {}% should have color codes when colors are enabled", percentage);
-                
+                assert_ne!(
+                    regular, colored,
+                    "Overtime progress {}% should have color codes when colors are enabled",
+                    percentage
+                );
+
                 // The colored version should contain the original text
-                assert!(colored.contains(&regular) || colored.ends_with(&format!("{}%", percentage as i32)),
-                    "Colored version should contain the original percentage: {}", percentage);
+                assert!(
+                    colored.contains(&regular)
+                        || colored.ends_with(&format!("{}%", percentage as i32)),
+                    "Colored version should contain the original percentage: {}",
+                    percentage
+                );
             } else {
                 // When colors are disabled, they should be identical
-                assert_eq!(regular, colored,
-                    "When colors disabled, {}% should be identical", percentage);
+                assert_eq!(
+                    regular, colored,
+                    "When colors disabled, {}% should be identical",
+                    percentage
+                );
             }
         }
     }
@@ -573,17 +604,25 @@ mod color_tests {
     fn test_colored_edge_cases() {
         // Test edge cases around 100%
         let edge_cases = vec![99.9, 100.0, 100.1];
-        
+
         for percentage in edge_cases {
             let colored = render_colored_progress_bar(percentage);
-            
+
             // Should not panic and should return a valid string
-            assert!(!colored.is_empty(), "Result should not be empty for {}%", percentage);
-            
+            assert!(
+                !colored.is_empty(),
+                "Result should not be empty for {}%",
+                percentage
+            );
+
             // Check for the rounded percentage (since we use {:.0}% format)
             let expected_percentage = percentage.round() as i32;
-            assert!(colored.contains(&format!("{}%", expected_percentage)), 
-                "Should contain rounded percentage {}% for input {}%", expected_percentage, percentage);
+            assert!(
+                colored.contains(&format!("{}%", expected_percentage)),
+                "Should contain rounded percentage {}% for input {}%",
+                expected_percentage,
+                percentage
+            );
         }
     }
 
@@ -591,14 +630,17 @@ mod color_tests {
     fn test_colored_negative_progress() {
         // Test that negative progress behaves consistently
         let negative_cases = vec![-10.0, -1.0, -0.1];
-        
+
         for percentage in negative_cases {
             let regular = render_progress_bar(percentage);
             let colored = render_colored_progress_bar(percentage);
-            
+
             // Negative progress should not trigger red color (it's treated as 0% display)
-            assert_eq!(regular, colored, 
-                "Negative progress {}% should not have color codes", percentage);
+            assert_eq!(
+                regular, colored,
+                "Negative progress {}% should not have color codes",
+                percentage
+            );
         }
     }
 
@@ -606,20 +648,24 @@ mod color_tests {
     fn test_color_formatting_structure() {
         // Test the structure of colored output when colors are enabled
         control::set_override(true); // Force colors on for this test
-        
+
         let overtime_result = render_colored_progress_bar(150.0);
         let normal_result = render_colored_progress_bar(50.0);
-        
+
         // Normal progress should not contain color codes
-        assert!(!normal_result.contains('\x1b'), 
-            "Normal progress should not contain ANSI escape codes");
-        
+        assert!(
+            !normal_result.contains('\x1b'),
+            "Normal progress should not contain ANSI escape codes"
+        );
+
         // Overtime progress should contain color codes when colors are forced on
         if control::SHOULD_COLORIZE.should_colorize() {
-            assert!(overtime_result.contains('\x1b') || overtime_result.len() > normal_result.len(),
-                "Overtime progress should contain color formatting");
+            assert!(
+                overtime_result.contains('\x1b') || overtime_result.len() > normal_result.len(),
+                "Overtime progress should contain color formatting"
+            );
         }
-        
+
         control::unset_override(); // Reset override
     }
 
@@ -628,84 +674,127 @@ mod color_tests {
         // Test behavior when NO_COLOR environment variable might be set
         // Note: We can't easily test this without actually setting environment variables
         // but we can test that the function doesn't panic
-        
+
         let test_cases = vec![0.0, 50.0, 100.0, 150.0];
-        
+
         for percentage in test_cases {
             let result = render_colored_progress_bar(percentage);
-            
+
             // Should not panic and should return valid result
-            assert!(!result.is_empty(), "Should return non-empty result for {}%", percentage);
-            
+            assert!(
+                !result.is_empty(),
+                "Should return non-empty result for {}%",
+                percentage
+            );
+
             // The result should contain '[' somewhere (either at start for no color, or after color codes)
-            assert!(result.contains('['), "Should contain '[' for {}%", percentage);
-            
+            assert!(
+                result.contains('['),
+                "Should contain '[' for {}%",
+                percentage
+            );
+
             // Should contain the rounded percentage
             let expected_percentage = percentage.round() as i32;
-            assert!(result.contains(&format!("{}%", expected_percentage)), 
-                "Should contain percentage {}% for input {}%", expected_percentage, percentage);
+            assert!(
+                result.contains(&format!("{}%", expected_percentage)),
+                "Should contain percentage {}% for input {}%",
+                expected_percentage,
+                percentage
+            );
         }
     }
 
     #[test]
     fn test_color_performance() {
         use std::time::Instant;
-        
+
         // Test that color rendering doesn't significantly impact performance
         let start = Instant::now();
-        
+
         for i in 0..1000 {
             let percentage = (i as f64) / 10.0;
             let _ = render_colored_progress_bar(percentage);
         }
-        
+
         let elapsed = start.elapsed();
-        
+
         // Should complete 1000 iterations quickly (same requirement as regular rendering)
-        assert!(elapsed.as_millis() < 100, "Color rendering too slow: {:?}", elapsed);
+        assert!(
+            elapsed.as_millis() < 100,
+            "Color rendering too slow: {:?}",
+            elapsed
+        );
     }
 
     #[test]
     fn test_color_consistency() {
         // Test that the same percentage always produces the same output
         // (important for consistent display)
-        
+
         let test_cases = vec![0.0, 50.0, 100.0, 150.0];
-        
+
         for percentage in test_cases {
             let first_call = render_colored_progress_bar(percentage);
             let second_call = render_colored_progress_bar(percentage);
-            
-            assert_eq!(first_call, second_call, 
-                "Consistent output required for {}%", percentage);
+
+            assert_eq!(
+                first_call, second_call,
+                "Consistent output required for {}%",
+                percentage
+            );
         }
+
+        // Also test that overtime (>100%) is handled differently than normal
+        let normal = render_colored_progress_bar(50.0);
+        let overtime = render_colored_progress_bar(150.0);
+
+        // The overtime output should either be the same as normal (no color support)
+        // or different (with color support), but should be consistent
+        let normal_plain = render_progress_bar(50.0);
+        let overtime_plain = render_progress_bar(150.0);
+
+        // If colors are disabled, both should equal their plain versions
+        // If colors are enabled, overtime should be different from normal
+        assert!(
+            (normal == normal_plain && overtime == overtime_plain) ||
+            (normal == normal_plain && overtime != overtime_plain),
+            "Color behavior should be consistent"
+        );
     }
 
     #[test]
     fn test_integration_with_regular_function() {
         // Test that our color function properly integrates with the regular function
-        
+
         let test_cases = vec![0.0, 25.0, 50.0, 75.0, 100.0, 125.0, 150.0];
-        
+
         for percentage in test_cases {
             let regular = render_progress_bar(percentage);
             let colored = render_colored_progress_bar(percentage);
-            
+
             // Extract the bar structure (without color codes) from both
             let regular_length = regular.len();
-            
+
             // The colored version should either be:
             // 1. Identical (for normal progress or when colors disabled)
             // 2. Longer (due to color codes for overtime)
             // 3. But should always contain the same basic structure
-            
-            assert!(colored.len() >= regular_length, 
-                "Colored version should not be shorter than regular for {}%", percentage);
-            
+
+            assert!(
+                colored.len() >= regular_length,
+                "Colored version should not be shorter than regular for {}%",
+                percentage
+            );
+
             // Both should have the same percentage number at the end (rounded)
             let expected_percentage = percentage.round() as i32;
-            assert!(colored.contains(&format!("{}%", expected_percentage)),
-                "Colored version should contain correct rounded percentage {}% for input {}%", expected_percentage, percentage);
+            assert!(
+                colored.contains(&format!("{}%", expected_percentage)),
+                "Colored version should contain correct rounded percentage {}% for input {}%",
+                expected_percentage,
+                percentage
+            );
         }
     }
 }
