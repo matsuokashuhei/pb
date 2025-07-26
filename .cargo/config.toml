@@ -1,0 +1,48 @@
+# Cargo configuration for pb project
+# This ensures proper target selection and prevents cross-compilation issues
+
+[build]
+# Uncomment and set a specific target if needed for your environment
+# This overrides the default target selection
+# target = "x86_64-unknown-linux-gnu"  # Linux x86_64
+# target = "aarch64-apple-darwin"      # macOS ARM64 (Apple Silicon)
+# target = "x86_64-apple-darwin"       # macOS x86_64 (Intel)
+# target = "aarch64-unknown-linux-gnu" # Linux ARM64
+
+# Build configuration
+incremental = true
+pipelining = true
+
+[target.x86_64-unknown-linux-gnu]
+# Linux x86_64 specific configuration
+rustflags = ["-C", "link-arg=-s"]  # Strip symbols in release builds
+
+[target.aarch64-apple-darwin]
+# macOS ARM64 (Apple Silicon) specific configuration  
+rustflags = ["-C", "link-arg=-Wl,-dead_strip"]  # Strip dead code
+
+[target.x86_64-apple-darwin]
+# macOS x86_64 (Intel) specific configuration
+rustflags = ["-C", "link-arg=-Wl,-dead_strip"]  # Strip dead code
+
+[target.aarch64-unknown-linux-gnu]
+# Linux ARM64 specific configuration (requires cross-compilation toolchain)
+linker = "aarch64-linux-gnu-gcc"
+rustflags = ["-C", "link-arg=-s"]  # Strip symbols in release builds
+
+[target.x86_64-pc-windows-msvc]
+# Windows x86_64 specific configuration
+rustflags = []
+
+[target.x86_64-pc-windows-gnu]
+# Windows x86_64 with MinGW specific configuration  
+rustflags = []
+
+# Registry settings
+[registry]
+default = "crates-io"
+
+# Net settings for better downloads
+[net]
+retry = 3
+git-fetch-with-cli = true
