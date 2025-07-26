@@ -11,8 +11,8 @@ use thiserror::Error;
 /// time parsing, validation, and progress bar operation.
 #[derive(Error, Debug)]
 pub enum PbError {
-    /// Start time is later than end time
-    #[error("Start time is later than end time")]
+    /// Start time must be before or equal to end time
+    #[error("Start time must be before or equal to end time")]
     StartAfterEnd,
 
     /// Invalid time format with the problematic input
@@ -61,7 +61,7 @@ mod tests {
     #[test]
     fn test_start_after_end_error_message() {
         let error = PbError::StartAfterEnd;
-        assert_eq!(error.to_string(), "Start time is later than end time");
+        assert_eq!(error.to_string(), "Start time must be before or equal to end time");
     }
 
     #[test]
@@ -102,7 +102,7 @@ mod tests {
         let anyhow_error: anyhow::Error = pb_error.into();
         assert_eq!(
             anyhow_error.to_string(),
-            "Start time is later than end time"
+            "Start time must be before or equal to end time"
         );
     }
 
@@ -124,7 +124,7 @@ mod tests {
         assert_eq!(success.unwrap(), 42);
         assert_eq!(
             failure.unwrap_err().to_string(),
-            "Start time is later than end time"
+            "Start time must be before or equal to end time"
         );
     }
 

@@ -77,3 +77,6 @@ flake.lock
 ## Test artifacts
 test_render
 test_render.exe
+
+## Debug files
+debug_*

@@ -1,8 +1,8 @@
 use anyhow::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
+use pb::{calculate_progress, parse_time, render_colored_progress_bar, validate_times, Cli};
 use std::io::{self, Write};
 use std::time::Duration;
-use pb::{Cli, parse_time, validate_times, calculate_progress, render_colored_progress_bar};
 
 fn main() -> Result<()> {
     // Parse command line arguments
@@ -45,7 +45,7 @@ fn main() -> Result<()> {
 
     // Check if we're in a TTY environment
     let is_tty = crossterm::tty::IsTty::is_tty(&std::io::stdout());
-    
+
     // Enable raw mode for signal detection only if we're in a TTY
     if is_tty {
         crossterm::terminal::enable_raw_mode()?;
@@ -74,7 +74,7 @@ fn main() -> Result<()> {
 
     // Cleanup and handle result
     cleanup();
-    
+
     match result {
         Ok(_) => {
             println!("Progress monitoring completed successfully.");
@@ -88,18 +88,23 @@ fn main() -> Result<()> {
 }
 
 /// Run the main progress monitoring loop
-fn run_progress_loop(start_time: chrono::NaiveDateTime, end_time: chrono::NaiveDateTime, interval_seconds: u64, is_tty: bool) -> Result<()> {
+fn run_progress_loop(
+    start_time: chrono::NaiveDateTime,
+    end_time: chrono::NaiveDateTime,
+    interval_seconds: u64,
+    is_tty: bool,
+) -> Result<()> {
     let interval_duration = Duration::from_secs(interval_seconds);
     let poll_duration = Duration::from_millis(100); // Check for Ctrl+C every 100ms
-    
+
     loop {
         // Get current time and calculate progress
         let current_time = chrono::Local::now().naive_local();
         let progress = calculate_progress(start_time, end_time, current_time);
-        
+
         // Render progress bar
         let bar = render_colored_progress_bar(progress);
-        
+
         // Update display
         if is_tty {
             // In TTY mode, clear line and show new progress
@@ -109,7 +114,7 @@ fn run_progress_loop(start_time: chrono::NaiveDateTime, end_time: chrono::NaiveD
             // In non-TTY mode, just print the progress bar
             println!("{}", bar);
         }
-        
+
         // Check if we've completed (progress >= 100%)
         if progress >= 100.0 {
             if !is_tty {
@@ -119,26 +124,27 @@ fn run_progress_loop(start_time: chrono::NaiveDateTime, end_time: chrono::NaiveD
             }
             break;
         }
-        
+
         // Sleep with periodic Ctrl+C checking (only in TTY mode)
         if is_tty {
             let mut remaining_sleep = interval_duration;
             while remaining_sleep > Duration::ZERO {
                 let sleep_chunk = remaining_sleep.min(poll_duration);
-                
+
                 // Check for Ctrl+C
                 if event::poll(sleep_chunk)? {
-                    if let Event::Key(KeyEvent { 
-                        code: KeyCode::Char('c'), 
-                        modifiers: KeyModifiers::CONTROL, 
-                        .. 
-                    }) = event::read()? {
+                    if let Event::Key(KeyEvent {
+                        code: KeyCode::Char('c'),
+                        modifiers: KeyModifiers::CONTROL,
+                        ..
+                    }) = event::read()?
+                    {
                         println!("\nReceived Ctrl+C, exiting gracefully...");
                         return Ok(());
                     }
                     // Ignore other key events
                 }
-                
+
                 remaining_sleep = remaining_sleep.saturating_sub(sleep_chunk);
             }
         } else {
@@ -146,6 +152,6 @@ fn run_progress_loop(start_time: chrono::NaiveDateTime, end_time: chrono::NaiveD
             std::thread::sleep(interval_duration);
         }
     }
-    
+
     Ok(())
 }
