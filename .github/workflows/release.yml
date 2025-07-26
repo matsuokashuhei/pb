@@ -1,3 +1,4 @@
+---
 name: Release
 
 on:
@@ -39,115 +40,120 @@ jobs:
             artifact_name: pb-macos-aarch64
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Rust toolchain
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        toolchain: stable
-        targets: ${{ matrix.target }}
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
 
-    - name: Cache Cargo dependencies
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          target/
-        key: ${{ runner.os }}-cargo-release-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-release-${{ matrix.target }}-
-          ${{ runner.os }}-cargo-release-
-          ${{ runner.os }}-cargo-
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: >-
+            ${{ runner.os }}-cargo-release-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-release-${{ matrix.target }}-
+            ${{ runner.os }}-cargo-release-
+            ${{ runner.os }}-cargo-
 
-    - name: Install cross-compilation tools (Linux aarch64)
-      if: matrix.target == 'aarch64-unknown-linux-gnu'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y gcc-aarch64-linux-gnu
+      - name: Install cross-compilation tools (Linux aarch64)
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
 
-    - name: Build release binary
-      run: cargo build --release --target ${{ matrix.target }}
-      env:
-        CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.target }}
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
 
-    - name: Strip binary (Unix)
-      if: runner.os != 'Windows'
-      run: |
-        strip target/${{ matrix.target }}/release/pb
+      - name: Strip binary (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          strip target/${{ matrix.target }}/release/pb
 
-    - name: Rename binary (Unix)
-      if: runner.os != 'Windows'
-      run: |
-        cp target/${{ matrix.target }}/release/pb target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+      - name: Rename binary (Unix)
+        if: runner.os != 'Windows'
+        run: >-
+          cp target/${{ matrix.target }}/release/pb
+          target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
 
-    - name: Rename binary (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        copy target\${{ matrix.target }}\release\pb.exe target\${{ matrix.target }}\release\${{ matrix.artifact_name }}
+      - name: Rename binary (Windows)
+        if: runner.os == 'Windows'
+        run: >-
+          copy target\${{ matrix.target }}\release\pb.exe
+          target\${{ matrix.target }}\release\${{ matrix.artifact_name }}
 
-    - name: Test binary functionality (Unix)
-      if: runner.os != 'Windows' && matrix.target != 'aarch64-unknown-linux-gnu'
-      run: |
-        ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }} --help
+      - name: Test binary functionality (Unix)
+        if: >-
+          runner.os != 'Windows' && matrix.target != 'aarch64-unknown-linux-gnu'
+        run: >-
+          ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }} --help
 
-    - name: Test binary functionality (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        target\${{ matrix.target }}\release\${{ matrix.artifact_name }} --help
+      - name: Test binary functionality (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          target\${{ matrix.target }}\release\${{ matrix.artifact_name }} --help
 
-    - name: Get tag name
-      id: get_tag
-      run: |
-        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-          echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
-        else
-          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-        fi
-      shell: bash
+      - name: Get tag name
+        id: get_tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
 
-    - name: Upload Release Asset
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: ${{ steps.get_tag.outputs.tag }}
-        name: Release ${{ steps.get_tag.outputs.tag }}
-        body: |
-          ## Changes in ${{ steps.get_tag.outputs.tag }}
-          
-          - Build artifacts for multiple platforms
-          - Cross-platform compatibility
-          - Performance improvements and bug fixes
-          
-          ## Installation
-          
-          Download the appropriate binary for your platform from the assets below.
-          
-          ### Linux
-          - `pb-linux-x86_64` - For 64-bit Intel/AMD processors
-          - `pb-linux-aarch64` - For 64-bit ARM processors (e.g., Raspberry Pi 4, AWS Graviton)
-          
-          ### macOS
-          - `pb-macos-x86_64` - For Intel-based Macs
-          - `pb-macos-aarch64` - For Apple Silicon Macs (M1, M2, etc.)
-          
-          ### Windows
-          - `pb-windows-x86_64.exe` - For 64-bit Windows systems
-          
-          ## Usage
-          
-          After downloading, make the binary executable (Linux/macOS):
-          ```bash
-          chmod +x pb-*
-          ./pb-* --help
-          ```
-          
-          Or run directly on Windows:
-          ```cmd
-          pb-windows-x86_64.exe --help
-          ```
-        files: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
-        draft: false
-        prerelease: false
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_tag.outputs.tag }}
+          name: Release ${{ steps.get_tag.outputs.tag }}
+          body: |
+            ## Changes in ${{ steps.get_tag.outputs.tag }}
+
+            - Build artifacts for multiple platforms
+            - Cross-platform compatibility
+            - Performance improvements and bug fixes
+
+            ## Installation
+
+            Download the appropriate binary for your platform from the assets below.
+
+            ### Linux
+            - `pb-linux-x86_64` - For 64-bit Intel/AMD processors
+            - `pb-linux-aarch64` - For 64-bit ARM processors
+              (e.g., Raspberry Pi 4, AWS Graviton)
+
+            ### macOS
+            - `pb-macos-x86_64` - For Intel-based Macs
+            - `pb-macos-aarch64` - For Apple Silicon Macs (M1, M2, etc.)
+
+            ### Windows
+            - `pb-windows-x86_64.exe` - For 64-bit Windows systems
+
+            ## Usage
+
+            After downloading, make the binary executable (Linux/macOS):
+            ```bash
+            chmod +x pb-*
+            ./pb-* --help
+            ```
+
+            Or run directly on Windows:
+            ```cmd
+            pb-windows-x86_64.exe --help
+            ```
+          files: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+          draft: false
+          prerelease: false
