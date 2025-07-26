@@ -29,7 +29,7 @@ usage() {
 }
 
 # Parse command line arguments
-PB_ARGS=""
+PB_ARGS=()
 while [[ $# -gt 0 ]]; do
     case $1 in
         -r|--release)
@@ -41,7 +41,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         --)
             shift
-            PB_ARGS="$@"
+            PB_ARGS=("$@")
             break
             ;;
         *)
@@ -75,4 +75,4 @@ docker run --rm -it \
     -v pb-target-cache:/app/target \
     -w /app \
     $IMAGE_NAME \
-    $BINARY_PATH $PB_ARGS
+    $BINARY_PATH "${PB_ARGS[@]}"
