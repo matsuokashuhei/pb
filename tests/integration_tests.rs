@@ -22,7 +22,7 @@ fn test_cli_version() {
 
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("pb 0.1.0"));
+        .stdout(predicate::str::contains("pb 1.0.0"));
 }
 
 #[test]
