@@ -1,6 +1,6 @@
 use anyhow::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
-use pb::{calculate_progress, parse_time, render_colored_progress_bar, validate_times, Cli};
+use pb::{calculate_progress, get_current_time, parse_time, render_colored_progress_bar, validate_times, Cli};
 use std::io::{self, Write};
 use std::time::Duration;
 
@@ -98,8 +98,8 @@ fn run_progress_loop(
     let poll_duration = Duration::from_millis(100); // Check for Ctrl+C every 100ms
 
     loop {
-        // Get current time and calculate progress
-        let current_time = chrono::Local::now().naive_local();
+        // Get current time and calculate progress (using centralized time function)
+        let current_time = get_current_time();
         let progress = calculate_progress(start_time, end_time, current_time);
 
         // Render progress bar

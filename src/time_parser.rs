@@ -4,8 +4,28 @@
 //! `NaiveDateTime` objects for use in progress bar calculations.
 
 use crate::error::PbError;
-use chrono::{Duration, NaiveDate, NaiveDateTime};
+use chrono::{Duration, Local, NaiveDate, NaiveDateTime};
 use regex::Regex;
+
+/// Get current time consistently across the application
+///
+/// This function provides a centralized way to get the current time
+/// that is consistent with the timezone assumptions used throughout
+/// the application. All absolute timestamps are interpreted as local time,
+/// so the current time should also be in local time for consistency.
+///
+/// # Returns
+///
+/// Returns the current local time as a `NaiveDateTime`, which matches
+/// the format used for parsed absolute timestamps.
+///
+/// # Usage
+///
+/// This function should be used everywhere in the application where
+/// we need to get the current time, to ensure timezone consistency.
+pub fn get_current_time() -> NaiveDateTime {
+    Local::now().naive_local()
+}
 
 /// Parse a date string in YYYY-MM-DD format
 ///
@@ -319,8 +339,8 @@ fn parse_time_only(input: &str) -> Result<NaiveDateTime, PbError> {
         }
     })?;
 
-    // Use today's date
-    let today = chrono::Local::now().naive_local().date();
+    // Use today's date (consistent with get_current_time)
+    let today = get_current_time().date();
     Ok(today.and_time(time))
 }
 
@@ -369,7 +389,7 @@ pub fn parse_time(input: &str) -> Result<NaiveDateTime, PbError> {
 
     // Check for relative time format (starts with + or -)
     if trimmed_input.starts_with('+') || trimmed_input.starts_with('-') {
-        let base_time = chrono::Local::now().naive_local();
+        let base_time = get_current_time();
         let relative_input = if let Some(stripped) = trimmed_input.strip_prefix('+') {
             stripped // Remove the '+' prefix
         } else {
@@ -394,7 +414,7 @@ pub fn parse_time(input: &str) -> Result<NaiveDateTime, PbError> {
     }
 
     // If none of the above, try relative time without prefix (like "2h", "30m")
-    let base_time = chrono::Local::now().naive_local();
+    let base_time = get_current_time();
     parse_relative_time(trimmed_input, base_time)
 }
 
