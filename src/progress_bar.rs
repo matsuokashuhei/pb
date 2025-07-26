@@ -761,7 +761,7 @@ mod color_tests {
             normal == normal_plain,
             "Color behavior should be consistent - normal should match plain version"
         );
-        
+
         // Additional check: if overtime has color, it should be different than plain
         // This is acceptable whether colors are on or off
     }
