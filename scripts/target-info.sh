@@ -31,7 +31,7 @@ if command -v rustc &> /dev/null; then
     echo "Rust version: $(rustc --version)"
     echo "Default host target: $(rustc -vV | grep 'host:' | cut -d' ' -f2)"
     echo
-    
+
     echo "Installed targets:"
     rustup target list --installed | while read target; do
         echo "  - $target"
@@ -82,7 +82,7 @@ if [ -f "target/release/pb" ]; then
     echo "  - Size: $(ls -lh target/release/pb | awk '{print $5}')"
     echo "  - File type: $(file target/release/pb | cut -d: -f2- | sed 's/^ *//')"
     echo
-    
+
     # Test if binary works
     echo -e "${YELLOW}Binary Test:${NC}"
     if ./target/release/pb --version >/dev/null 2>&1; then
@@ -93,7 +93,7 @@ if [ -f "target/release/pb" ]; then
     fi
 else
     echo -e "${YELLOW}No release binary found at target/release/pb${NC}"
-    echo "Run 'cargo build --release' or './scripts/build-native.sh --release' to build"
+    echo "Run 'cargo build --release' or './scripts/build.sh --release' to build"
 fi
 echo
 
@@ -116,12 +116,12 @@ echo
 echo -e "${YELLOW}Recommendations:${NC}"
 echo "1. To build for current system:"
 echo "   cargo build --release"
-echo 
+echo
 echo "2. To build for specific target:"
 echo "   cargo build --release --target $current_target"
 echo
-echo "3. To use the native build script:"
-echo "   ./scripts/build-native.sh --release"
+echo "3. To use the build script:"
+echo "   ./scripts/build.sh --release"
 echo
 echo "4. To verify binary compatibility:"
 echo "   file target/release/pb"

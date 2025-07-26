@@ -17,7 +17,7 @@ pb requires minimal system resources and dependencies:
 
 - **Operating System**: Linux, macOS, Windows, or any Unix-like system
 - **Terminal**: Any terminal emulator with ANSI color support (recommended)
-- **System Requirements**: 
+- **System Requirements**:
   - 10MB available disk space
   - 10MB available RAM during execution
 
@@ -242,7 +242,7 @@ sudo mv pb /usr/local/bin/
    ```bash
    # Debug build (faster compilation, larger binary)
    cargo build
-   
+
    # Release build (optimized, smaller binary)
    cargo build --release
    ```
@@ -251,7 +251,7 @@ sudo mv pb /usr/local/bin/
    ```bash
    # Install to ~/.cargo/bin (ensure it's in your PATH)
    cargo install --path .
-   
+
    # Or copy the binary to a system directory
    sudo cp target/release/pb /usr/local/bin/
    ```
@@ -287,26 +287,26 @@ sudo apt-get install gcc-aarch64-linux-gnu
 cargo build --release --target aarch64-unknown-linux-gnu
 ```
 
-#### Using the Native Build Script
+#### Using the Build Script
 
-The repository includes a native build script that simplifies target selection:
+The repository includes a build script that simplifies target selection:
 
 ```bash
 # Build for default target
-./scripts/build-native.sh --release
+./scripts/build.sh --release
 
 # Build for specific target (will auto-install target if needed)
-./scripts/build-native.sh --release --target aarch64-apple-darwin
+./scripts/build.sh --release --target aarch64-apple-darwin
 
 # See all options
-./scripts/build-native.sh --help
+./scripts/build.sh --help
 ```
 
 #### Avoiding Target Configuration Issues
 
 If you encounter issues where `cargo build` produces binaries for the wrong target (e.g., Linux ARM64 instead of macOS ARM64), check:
 
-1. **Rust toolchain default target**: 
+1. **Rust toolchain default target**:
    ```bash
    rustup show
    ```
@@ -416,34 +416,34 @@ chmod +x /path/to/pb
    ```bash
    # For macOS ARM64 (Apple Silicon)
    cargo build --release --target aarch64-apple-darwin
-   
+
    # For macOS x86_64 (Intel)
    cargo build --release --target x86_64-apple-darwin
-   
+
    # For Linux x86_64
    cargo build --release --target x86_64-unknown-linux-gnu
-   
+
    # For Linux ARM64
    cargo build --release --target aarch64-unknown-linux-gnu
    ```
 
-3. **Use the native build script**:
+3. **Use the build script**:
    ```bash
    # Auto-detects and builds for current platform
-   ./scripts/build-native.sh --release
-   
+   ./scripts/build.sh --release
+
    # Or specify target explicitly
-   ./scripts/build-native.sh --release --target aarch64-apple-darwin
+   ./scripts/build.sh --release --target aarch64-apple-darwin
    ```
 
 4. **Check Rust toolchain configuration**:
    ```bash
    # Check default target
    rustup show
-   
+
    # Check if target is available
    rustup target list --installed
-   
+
    # Add missing target
    rustup target add aarch64-apple-darwin
    ```
