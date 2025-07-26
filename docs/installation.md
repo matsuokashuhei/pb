@@ -258,19 +258,74 @@ sudo mv pb /usr/local/bin/
 
 ### Cross-Compilation
 
-To build for different platforms:
+To build for different platforms, you need to install the appropriate targets and configure cross-compilation tools.
+
+#### Installing Targets
 
 ```bash
 # Add target architectures
 rustup target add x86_64-pc-windows-gnu
 rustup target add x86_64-apple-darwin
 rustup target add aarch64-apple-darwin
+rustup target add aarch64-unknown-linux-gnu
+```
 
+#### Building for Specific Targets
+
+For simple targets (same architecture family):
+```bash
 # Build for specific targets
 cargo build --release --target x86_64-pc-windows-gnu
 cargo build --release --target x86_64-apple-darwin
 cargo build --release --target aarch64-apple-darwin
 ```
+
+For cross-architecture compilation, you may need additional tools:
+```bash
+# For ARM64 on x86_64 Linux (requires cross-compilation toolchain)
+sudo apt-get install gcc-aarch64-linux-gnu
+cargo build --release --target aarch64-unknown-linux-gnu
+```
+
+#### Using the Native Build Script
+
+The repository includes a native build script that simplifies target selection:
+
+```bash
+# Build for default target
+./scripts/build-native.sh --release
+
+# Build for specific target (will auto-install target if needed)
+./scripts/build-native.sh --release --target aarch64-apple-darwin
+
+# See all options
+./scripts/build-native.sh --help
+```
+
+#### Avoiding Target Configuration Issues
+
+If you encounter issues where `cargo build` produces binaries for the wrong target (e.g., Linux ARM64 instead of macOS ARM64), check:
+
+1. **Rust toolchain default target**: 
+   ```bash
+   rustup show
+   ```
+
+2. **Cargo configuration**: Check `.cargo/config.toml` for target overrides
+
+3. **Environment variables**: Check for `CARGO_BUILD_TARGET` or similar
+
+4. **Use explicit target**: Always specify the target explicitly:
+   ```bash
+   cargo build --release --target $(rustc -vV | sed -n 's|host: ||p')
+   ```
+
+5. **Verify binary after build**:
+   ```bash
+   file target/release/pb
+   # or
+   file target/$(rustc -vV | sed -n 's|host: ||p')/release/pb
+   ```
 
 ### Development Build with Docker
 
@@ -342,6 +397,58 @@ chmod +x /path/to/pb
 - Ensure you downloaded the correct architecture (x86_64 vs arm64)
 - Install required libraries: `sudo apt-get install libc6` (Ubuntu/Debian)
 - Consider building from source for better compatibility
+
+#### Binary compatibility issue: Wrong target architecture
+**Cause**: Binary was compiled for wrong target (e.g., Linux ARM64 binary on macOS ARM64).
+
+**Symptoms**:
+- `zsh: exec format error: ./pb` on macOS
+- `cannot execute binary file: Exec format error` on Linux
+- `file pb` shows wrong architecture/format
+
+**Solutions**:
+1. **Check the current binary**:
+   ```bash
+   file ./target/release/pb
+   ```
+
+2. **Rebuild for correct target**:
+   ```bash
+   # For macOS ARM64 (Apple Silicon)
+   cargo build --release --target aarch64-apple-darwin
+   
+   # For macOS x86_64 (Intel)
+   cargo build --release --target x86_64-apple-darwin
+   
+   # For Linux x86_64
+   cargo build --release --target x86_64-unknown-linux-gnu
+   
+   # For Linux ARM64
+   cargo build --release --target aarch64-unknown-linux-gnu
+   ```
+
+3. **Use the native build script**:
+   ```bash
+   # Auto-detects and builds for current platform
+   ./scripts/build-native.sh --release
+   
+   # Or specify target explicitly
+   ./scripts/build-native.sh --release --target aarch64-apple-darwin
+   ```
+
+4. **Check Rust toolchain configuration**:
+   ```bash
+   # Check default target
+   rustup show
+   
+   # Check if target is available
+   rustup target list --installed
+   
+   # Add missing target
+   rustup target add aarch64-apple-darwin
+   ```
+
+5. **Verify `.cargo/config.toml`**: Ensure no incorrect target overrides
 
 #### Windows Defender or antivirus blocking pb
 **Cause**: Some antivirus software may flag unknown binaries.
