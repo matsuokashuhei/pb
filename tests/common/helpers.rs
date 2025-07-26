@@ -7,8 +7,10 @@ use assert_cmd::Command;
 use chrono::{Duration, NaiveDateTime};
 
 /// Test data generator for common time formats
+#[allow(dead_code)]
 pub struct TimeTestData;
 
+#[allow(dead_code)]
 impl TimeTestData {
     /// Generate test cases for date format parsing
     pub fn date_format_cases() -> Vec<(&'static str, bool)> {
@@ -253,7 +255,7 @@ impl ProgressBarTestUtils {
         ]
     }
 
-        /// Verify that a progress bar string has the correct format
+    /// Verify that a progress bar string has the correct format
     pub fn verify_progress_bar_format(bar: &str) -> bool {
         // Check basic format: [40 chars] percentage%
         if bar.chars().count() < 45 {

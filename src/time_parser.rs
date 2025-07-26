@@ -125,7 +125,10 @@ pub fn parse_date(input: &str) -> Result<NaiveDateTime, PbError> {
 /// ```
 pub fn parse_datetime(input: &str) -> Result<NaiveDateTime, PbError> {
     // Validate that input contains only ASCII characters, spaces, hyphens, and colons
-    if !input.chars().all(|c| c.is_ascii() && (c.is_ascii_digit() || c == '-' || c == ' ' || c == ':')) {
+    if !input
+        .chars()
+        .all(|c| c.is_ascii() && (c.is_ascii_digit() || c == '-' || c == ' ' || c == ':'))
+    {
         return Err(PbError::InvalidTimeFormat {
             input: input.to_string(),
         });
@@ -310,10 +313,11 @@ fn parse_time_only(input: &str) -> Result<NaiveDateTime, PbError> {
     }
 
     // Try to parse as time
-    let time = chrono::NaiveTime::parse_from_str(input, "%H:%M:%S")
-        .map_err(|_| PbError::InvalidTimeFormat {
+    let time = chrono::NaiveTime::parse_from_str(input, "%H:%M:%S").map_err(|_| {
+        PbError::InvalidTimeFormat {
             input: input.to_string(),
-        })?;
+        }
+    })?;
 
     // Use today's date
     let today = chrono::Local::now().naive_local().date();
@@ -366,8 +370,8 @@ pub fn parse_time(input: &str) -> Result<NaiveDateTime, PbError> {
     // Check for relative time format (starts with + or -)
     if trimmed_input.starts_with('+') || trimmed_input.starts_with('-') {
         let base_time = chrono::Local::now().naive_local();
-        let relative_input = if trimmed_input.starts_with('+') {
-            &trimmed_input[1..] // Remove the '+' prefix
+        let relative_input = if let Some(stripped) = trimmed_input.strip_prefix('+') {
+            stripped // Remove the '+' prefix
         } else {
             trimmed_input // Keep the '-' prefix for negative relative times
         };

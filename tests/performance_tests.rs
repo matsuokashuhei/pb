@@ -626,7 +626,6 @@ mod stress_tests {
 
     #[test]
     fn test_concurrent_operations() {
-        use std::sync::Arc;
         use std::thread;
 
         let num_threads = 4;

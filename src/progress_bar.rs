@@ -151,7 +151,7 @@ pub fn render_progress_bar(percentage: f64) -> String {
     let empty = " ".repeat(BAR_WIDTH - filled_chars);
 
     // Format with percentage rounded to nearest integer
-    format!("[{}{}] {:.0}%", filled, empty, percentage)
+    format!("[{filled}{empty}] {percentage:.0}%")
 }
 
 /// Render a visual progress bar with color support
@@ -747,20 +747,23 @@ mod color_tests {
 
         // Also test that overtime (>100%) is handled differently than normal
         let normal = render_colored_progress_bar(50.0);
-        let overtime = render_colored_progress_bar(150.0);
+        let _overtime = render_colored_progress_bar(150.0);
 
         // The overtime output should either be the same as normal (no color support)
         // or different (with color support), but should be consistent
         let normal_plain = render_progress_bar(50.0);
-        let overtime_plain = render_progress_bar(150.0);
+        let _overtime_plain = render_progress_bar(150.0);
 
-        // If colors are disabled, both should equal their plain versions
-        // If colors are enabled, overtime should be different from normal
+        // Color behavior should be consistent:
+        // Either both normal and overtime equal their plain versions (no color),
+        // or normal equals plain but overtime has color applied
         assert!(
-            (normal == normal_plain && overtime == overtime_plain) ||
-            (normal == normal_plain && overtime != overtime_plain),
-            "Color behavior should be consistent"
+            normal == normal_plain,
+            "Color behavior should be consistent - normal should match plain version"
         );
+        
+        // Additional check: if overtime has color, it should be different than plain
+        // This is acceptable whether colors are on or off
     }
 
     #[test]

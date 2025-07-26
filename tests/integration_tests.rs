@@ -273,7 +273,12 @@ mod comprehensive_cli_integration_tests {
             ),
             // Time relationship errors
             (
-                vec!["--start", "2025-01-01 12:00:00", "--end", "2025-01-01 10:00:00"],
+                vec![
+                    "--start",
+                    "2025-01-01 12:00:00",
+                    "--end",
+                    "2025-01-01 10:00:00",
+                ],
                 "must be before",
             ),
             (
@@ -530,7 +535,12 @@ mod error_message_quality_tests {
                 vec!["Invalid", "end time", "25:70:80"],
             ),
             (
-                vec!["--start", "2025-01-01 12:00:00", "--end", "2025-01-01 10:00:00"],
+                vec![
+                    "--start",
+                    "2025-01-01 12:00:00",
+                    "--end",
+                    "2025-01-01 10:00:00",
+                ],
                 vec!["before", "equal to"],
             ),
         ];
