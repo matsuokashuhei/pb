@@ -15,73 +15,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  create-release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-      release_id: ${{ steps.create_release.outputs.id }}
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Get tag name
-      id: get_tag
-      run: |
-        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-          echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
-        else
-          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-        fi
-
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ steps.get_tag.outputs.tag }}
-        release_name: Release ${{ steps.get_tag.outputs.tag }}
-        body: |
-          ## Changes in ${{ steps.get_tag.outputs.tag }}
-          
-          - Build artifacts for multiple platforms
-          - Cross-platform compatibility
-          - Performance improvements and bug fixes
-          
-          ## Installation
-          
-          Download the appropriate binary for your platform from the assets below.
-          
-          ### Linux
-          - `pb-linux-x86_64` - For 64-bit Intel/AMD processors
-          - `pb-linux-aarch64` - For 64-bit ARM processors (e.g., Raspberry Pi 4, AWS Graviton)
-          
-          ### macOS
-          - `pb-macos-x86_64` - For Intel-based Macs
-          - `pb-macos-aarch64` - For Apple Silicon Macs (M1, M2, etc.)
-          
-          ### Windows
-          - `pb-windows-x86_64.exe` - For 64-bit Windows systems
-          
-          ## Usage
-          
-          After downloading, make the binary executable (Linux/macOS):
-          ```bash
-          chmod +x pb-*
-          ./pb-* --help
-          ```
-          
-          Or run directly on Windows:
-          ```cmd
-          pb-windows-x86_64.exe --help
-          ```
-        draft: false
-        prerelease: false
-
   build-release:
     name: Build Release Assets
-    needs: create-release
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -90,23 +25,18 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             artifact_name: pb-linux-x86_64
-            asset_name: pb-linux-x86_64
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             artifact_name: pb-linux-aarch64
-            asset_name: pb-linux-aarch64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             artifact_name: pb-windows-x86_64.exe
-            asset_name: pb-windows-x86_64.exe
           - os: macos-latest
             target: x86_64-apple-darwin
             artifact_name: pb-macos-x86_64
-            asset_name: pb-macos-x86_64
           - os: macos-latest
             target: aarch64-apple-darwin
             artifact_name: pb-macos-aarch64
-            asset_name: pb-macos-aarch64
 
     steps:
     - name: Checkout code
@@ -119,7 +49,7 @@ jobs:
         targets: ${{ matrix.target }}
 
     - name: Cache Cargo dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.cargo/bin/
@@ -169,36 +99,55 @@ jobs:
       run: |
         target\${{ matrix.target }}\release\${{ matrix.artifact_name }} --help
 
+    - name: Get tag name
+      id: get_tag
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+        else
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+      shell: bash
+
     - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v2
       with:
-        upload_url: ${{ needs.create-release.outputs.upload_url }}
-        asset_path: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
-        asset_name: ${{ matrix.asset_name }}
-        asset_content_type: application/octet-stream
-
-  validate-release:
-    name: Validate Release
-    needs: [create-release, build-release]
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Download all release assets
-      run: |
-        # Get the release ID and download assets
-        RELEASE_ID="${{ needs.create-release.outputs.release_id }}"
-        echo "Validating release $RELEASE_ID"
-        
-        # This is a placeholder for additional validation
-        # In a real scenario, you might download and test the assets
-        echo "✅ Release validation completed"
-
-    - name: Update release notes
-      run: |
-        echo "📦 Release artifacts created successfully"
-        echo "🧪 All binaries validated"
-        echo "🎉 Release is ready for use"
+        tag_name: ${{ steps.get_tag.outputs.tag }}
+        name: Release ${{ steps.get_tag.outputs.tag }}
+        body: |
+          ## Changes in ${{ steps.get_tag.outputs.tag }}
+          
+          - Build artifacts for multiple platforms
+          - Cross-platform compatibility
+          - Performance improvements and bug fixes
+          
+          ## Installation
+          
+          Download the appropriate binary for your platform from the assets below.
+          
+          ### Linux
+          - `pb-linux-x86_64` - For 64-bit Intel/AMD processors
+          - `pb-linux-aarch64` - For 64-bit ARM processors (e.g., Raspberry Pi 4, AWS Graviton)
+          
+          ### macOS
+          - `pb-macos-x86_64` - For Intel-based Macs
+          - `pb-macos-aarch64` - For Apple Silicon Macs (M1, M2, etc.)
+          
+          ### Windows
+          - `pb-windows-x86_64.exe` - For 64-bit Windows systems
+          
+          ## Usage
+          
+          After downloading, make the binary executable (Linux/macOS):
+          ```bash
+          chmod +x pb-*
+          ./pb-* --help
+          ```
+          
+          Or run directly on Windows:
+          ```cmd
+          pb-windows-x86_64.exe --help
+          ```
+        files: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+        draft: false
+        prerelease: false
