@@ -167,11 +167,11 @@ mod render_progress_bar_tests {
     #[test]
     fn test_render_progress_bar_basic_cases() {
         let test_cases = vec![
-            (0.0, "[                                        ] 0%"),
-            (25.0, "[██████████                              ] 25%"),
-            (50.0, "[████████████████████                    ] 50%"),
-            (75.0, "[██████████████████████████████          ] 75%"),
-            (100.0, "[████████████████████████████████████████] 100%"),
+            (0.0, "[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0.0%"),
+            (25.0, "[██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 25.0%"),
+            (50.0, "[████████████████████░░░░░░░░░░░░░░░░░░░░] 50.0%"),
+            (75.0, "[██████████████████████████████░░░░░░░░░░] 75.0%"),
+            (100.0, "[████████████████████████████████████████] 100.0%"),
         ];
 
         for (percentage, expected) in test_cases {
@@ -184,12 +184,12 @@ mod render_progress_bar_tests {
     fn test_render_progress_bar_edge_cases() {
         // Test edge cases
         let edge_cases = vec![
-            (-10.0, "[                                        ] -10%"), // Negative values
-            (150.0, "[████████████████████████████████████████] 150%"), // Overtime
-            (0.1, "[                                        ] 0%"), // Small values (rounds down)
-            (99.9, "[████████████████████████████████████████] 100%"), // Near 100% (rounds up)
-            (0.5, "[                                        ] 0%"), // Rounding behavior
-            (99.4, "[████████████████████████████████████████] 99%"), // Rounding behavior
+            (-10.0, "[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] -10.0%"), // Negative values
+            (150.0, "[████████████████████████████████████████] 150.0%"), // Overtime
+            (0.1, "[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0.1%"), // Small values
+            (99.9, "[████████████████████████████████████████] 99.9%"), // Near 100%
+            (0.5, "[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0.5%"), // Rounding behavior
+            (99.4, "[████████████████████████████████████████] 99.4%"), // Rounding behavior
         ];
 
         for (percentage, expected) in edge_cases {
@@ -236,7 +236,7 @@ mod render_progress_bar_tests {
 
             // Count filled and empty characters
             let filled_count = bar_part.chars().filter(|&c| c == '█').count();
-            let empty_count = bar_part.chars().filter(|&c| c == ' ').count();
+            let empty_count = bar_part.chars().filter(|&c| c == '░').count();
 
             assert_eq!(
                 filled_count + empty_count,
