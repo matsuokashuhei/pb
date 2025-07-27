@@ -30,9 +30,6 @@ jobs:
             target: aarch64-unknown-linux-gnu
             artifact_name: pb-linux-aarch64
           - os: macos-latest
-            target: x86_64-apple-darwin
-            artifact_name: pb-macos-x86_64
-          - os: macos-latest
             target: aarch64-apple-darwin
             artifact_name: pb-macos-aarch64
 
@@ -119,7 +116,6 @@ jobs:
               (e.g., Raspberry Pi 4, AWS Graviton)
 
             ### macOS
-            - `pb-macos-x86_64` - For Intel-based Macs
             - `pb-macos-aarch64` - For Apple Silicon Macs (M1, M2, etc.)
 
             ## Usage
