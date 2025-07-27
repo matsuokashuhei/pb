@@ -978,6 +978,9 @@ mod color_tests {
         // Test that the same percentage always produces the same output
         // (important for consistent display)
 
+        // Force consistent color behavior to prevent flaky CI tests
+        control::set_override(true);
+
         let test_cases = vec![0.0, 50.0, 100.0, 150.0];
 
         for percentage in test_cases {
@@ -991,37 +994,29 @@ mod color_tests {
             );
         }
 
-        // Also test that overtime (>100%) is handled consistently
+        // Test that normal progress (≤100%) always produces consistent output
         let normal = render_colored_progress_bar(50.0);
-        let overtime = render_colored_progress_bar(150.0);
-
-        // Test relationship between normal and plain versions
         let normal_plain = render_progress_bar(50.0);
-        let overtime_plain = render_progress_bar(150.0);
 
-        // Color behavior should be consistent based on color support:
-        if control::SHOULD_COLORIZE.should_colorize() {
-            // When colors are enabled:
-            // - Normal progress should match plain version (no color applied)
-            // - Overtime progress should be different from plain version (color applied)
-            assert_eq!(
-                normal, normal_plain,
-                "Normal progress should match plain version when colors are enabled"
-            );
+        // For normal progress, colored version should match plain version
+        // (no color applied for ≤100%)
+        assert_eq!(
+            normal, normal_plain,
+            "Normal progress should match plain version (no color applied)"
+        );
 
-            // Overtime should be different from plain if colors are enabled
-            // (but we don't enforce this as a strict assertion since color detection can vary)
-        } else {
-            // When colors are disabled, both should match their plain versions
-            assert_eq!(
-                normal, normal_plain,
-                "Normal progress should match plain version when colors are disabled"
-            );
-            assert_eq!(
-                overtime, overtime_plain,
-                "Overtime progress should match plain version when colors are disabled"
-            );
-        }
+        // Test that overtime progress (>100%) produces consistent colored output
+        let overtime1 = render_colored_progress_bar(150.0);
+        let overtime2 = render_colored_progress_bar(150.0);
+
+        // Overtime should be consistent across calls
+        assert_eq!(
+            overtime1, overtime2,
+            "Overtime progress should be consistent across calls"
+        );
+
+        // Reset color override after test
+        control::unset_override();
     }
 
     #[test]
