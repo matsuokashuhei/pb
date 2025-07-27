@@ -266,8 +266,16 @@ pub fn parse_relative_time(
 
         let unit = &captures[2];
 
-        // Validate range (1-99999)
-        if !(1..=99999).contains(&amount) {
+        // Validate range based on unit
+        let max_value = match unit {
+            "s" => 86400,        // Max 1 day worth of seconds
+            "m" => 999,          // Max 999 minutes
+            "h" => 999,          // Max 999 hours
+            "d" => 999,          // Max 999 days
+            _ => unreachable!(), // Regex ensures only valid units
+        };
+
+        if !(1..=max_value).contains(&amount) {
             return Err(PbError::InvalidRelativeTimeFormat {
                 input: input.to_string(),
             });
@@ -418,7 +426,10 @@ pub fn parse_time(input: &str) -> Result<NaiveDateTime, PbError> {
 /// assert!(result.is_ok());
 /// // This will give 2025-01-27 16:00:00 (2 hours after start_time)
 /// ```
-pub fn parse_time_with_base(input: &str, base_time: Option<NaiveDateTime>) -> Result<NaiveDateTime, PbError> {
+pub fn parse_time_with_base(
+    input: &str,
+    base_time: Option<NaiveDateTime>,
+) -> Result<NaiveDateTime, PbError> {
     let trimmed_input = input.trim();
 
     if trimmed_input.is_empty() {
@@ -1132,14 +1143,17 @@ mod tests {
         let result = parse_relative_time("0d", base_time);
         assert!(result.is_err());
 
-        // Values over 99999 not allowed
-        let result = parse_relative_time("100000m", base_time);
+        // Values over unit-specific limits not allowed
+        let result = parse_relative_time("1000m", base_time); // Over 999 limit for minutes
         assert!(result.is_err());
 
-        let result = parse_relative_time("100000h", base_time);
+        let result = parse_relative_time("1000h", base_time); // Over 999 limit for hours
         assert!(result.is_err());
 
-        let result = parse_relative_time("100000d", base_time);
+        let result = parse_relative_time("1000d", base_time); // Over 999 limit for days
+        assert!(result.is_err());
+
+        let result = parse_relative_time("86401s", base_time); // Over 86400 limit for seconds
         assert!(result.is_err());
 
         // Very large numbers
@@ -1150,7 +1164,10 @@ mod tests {
         let result = parse_relative_time("1m", base_time);
         assert!(result.is_ok());
 
-        let result = parse_relative_time("99999m", base_time);
+        let result = parse_relative_time("999m", base_time);
+        assert!(result.is_ok());
+
+        let result = parse_relative_time("86400s", base_time); // Max seconds (1 day)
         assert!(result.is_ok());
     }
 
@@ -1253,14 +1270,14 @@ mod tests {
 
         // Test that error messages contain the input
         let test_cases = vec![
-            "30",      // Missing unit
-            "30x",     // Invalid unit
-            "0m",      // Zero not allowed
-            "100000m", // Too large
-            " 30m",    // Leading space
-            "30m ",    // Trailing space  
-            "abc",     // Not a number
-            "",        // Empty
+            "30",    // Missing unit
+            "30x",   // Invalid unit
+            "0m",    // Zero not allowed
+            "1000m", // Too large (over 999 limit for minutes)
+            " 30m",  // Leading space
+            "30m ",  // Trailing space
+            "abc",   // Not a number
+            "",      // Empty
         ];
 
         for input in test_cases {
