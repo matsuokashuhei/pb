@@ -114,6 +114,16 @@ jobs:
           fi
         shell: bash
 
+      - name: Set artifact path
+        id: artifact_path
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            echo "path=target\\${{ matrix.target }}\\release\\${{ matrix.artifact_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "path=target/${{ matrix.target }}/release/${{ matrix.artifact_name }}" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         with:
@@ -154,6 +164,6 @@ jobs:
             ```cmd
             pb-windows-x86_64.exe --help
             ```
-          files: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+          files: ${{ steps.artifact_path.outputs.path }}
           draft: false
           prerelease: false
