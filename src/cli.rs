@@ -14,7 +14,7 @@ use clap::Parser;
 pub struct Cli {
     /// Start time (e.g., "2023-12-01 10:00:00", "10:00", "+1h")
     #[arg(short, long, help = "Start time")]
-    pub start: String,
+    pub start: Option<String>,
 
     /// End time (e.g., "2023-12-01 12:00:00", "12:00", "+3h")
     #[arg(short, long, help = "End time")]
@@ -39,7 +39,6 @@ impl Cli {
                     println!("{e}");
                     std::process::exit(0);
                 }
-                clap::error::ErrorKind::MissingRequiredArgument => PbError::MissingRequiredOptions,
                 _ => {
                     // For other clap errors, create an InvalidTimeFormat error
                     // This is a fallback - in practice, most validation will be done elsewhere
@@ -58,8 +57,10 @@ impl Cli {
     /// More detailed time parsing validation will be handled by the time_parser module.
     pub fn validate(&self) -> PbResult<()> {
         // Basic validation - more detailed validation will be in time_parser
-        if self.start.trim().is_empty() {
-            return Err(PbError::invalid_time_format("Start time cannot be empty"));
+        if let Some(start) = &self.start {
+            if start.trim().is_empty() {
+                return Err(PbError::invalid_time_format("Start time cannot be empty"));
+            }
         }
 
         if self.end.trim().is_empty() {
@@ -76,8 +77,8 @@ impl Cli {
     }
 
     /// Get start time as string
-    pub fn start(&self) -> &str {
-        &self.start
+    pub fn start(&self) -> Option<&str> {
+        self.start.as_deref()
     }
 
     /// Get end time as string
@@ -108,7 +109,7 @@ mod tests {
         let args = vec!["pb", "--start", "10:00", "--end", "12:00"];
         let cli = Cli::try_parse_from(args).unwrap();
 
-        assert_eq!(cli.start(), "10:00");
+        assert_eq!(cli.start(), Some("10:00"));
         assert_eq!(cli.end(), "12:00");
         assert_eq!(cli.interval(), 60); // default value
     }
@@ -119,7 +120,7 @@ mod tests {
         let args = vec!["pb", "-s", "10:00", "-e", "12:00", "-i", "30"];
         let cli = Cli::try_parse_from(args).unwrap();
 
-        assert_eq!(cli.start(), "10:00");
+        assert_eq!(cli.start(), Some("10:00"));
         assert_eq!(cli.end(), "12:00");
         assert_eq!(cli.interval(), 30);
     }
@@ -138,7 +139,7 @@ mod tests {
         ];
         let cli = Cli::try_parse_from(args).unwrap();
 
-        assert_eq!(cli.start(), "2023-12-01 10:00:00");
+        assert_eq!(cli.start(), Some("2023-12-01 10:00:00"));
         assert_eq!(cli.end(), "2023-12-01 12:00:00");
         assert_eq!(cli.interval(), 120);
     }
@@ -148,11 +149,16 @@ mod tests {
         // Test that missing required arguments are handled
         let args = vec!["pb"];
         let result = Cli::try_parse_from(args);
-        assert!(result.is_err());
+        assert!(result.is_err()); // --end is still required
 
-        let args = vec!["pb", "--start", "10:00"];
+        // --start is now optional, so this should succeed
+        let args = vec!["pb", "--end", "12:00"];
         let result = Cli::try_parse_from(args);
-        assert!(result.is_err());
+        assert!(result.is_ok());
+        
+        let cli = result.unwrap();
+        assert_eq!(cli.start(), None); // start should be None when not provided
+        assert_eq!(cli.end(), "12:00");
     }
 
     #[test]
@@ -230,7 +236,7 @@ mod tests {
         let cli = Cli::try_parse_from(args).unwrap();
         let debug_str = format!("{cli:?}");
 
-        assert!(debug_str.contains("start: \"10:00\""));
+        assert!(debug_str.contains("start: Some(\"10:00\")"));
         assert!(debug_str.contains("end: \"12:00\""));
         assert!(debug_str.contains("interval: 60"));
     }
@@ -249,7 +255,7 @@ mod tests {
         ];
         let cli = Cli::try_parse_from(args).unwrap();
 
-        assert_eq!(cli.start(), "10:00");
+        assert_eq!(cli.start(), Some("10:00"));
         assert_eq!(cli.end(), "12:00");
         assert_eq!(cli.interval(), 30);
     }

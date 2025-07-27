@@ -467,6 +467,52 @@ pub fn parse_time_with_base(
     parse_relative_time(trimmed_input, base)
 }
 
+/// Determine appropriate start time based on the end time format
+///
+/// This function implements the logic for when start time is omitted:
+/// - If end time contains time components (datetime/time-only/relative): use current time
+/// - If end time is date-only: use today at 00:00:00
+///
+/// # Arguments
+///
+/// * `end_time_input` - The end time string as provided by the user
+///
+/// # Returns
+///
+/// * `NaiveDateTime` - The appropriate start time to use
+///
+/// # Examples
+///
+/// ```
+/// use pb::time_parser::determine_start_time_for_end;
+///
+/// // For datetime or time-only end times, use current time
+/// let start = determine_start_time_for_end("2025-07-27 17:00:00");
+/// let start = determine_start_time_for_end("17:00:00");
+/// let start = determine_start_time_for_end("2h");
+///
+/// // For date-only end times, use today at 00:00:00
+/// let start = determine_start_time_for_end("2025-12-31");
+/// ```
+pub fn determine_start_time_for_end(end_time_input: &str) -> NaiveDateTime {
+    let trimmed_input = end_time_input.trim();
+    
+    // Check if it's a date-only format (YYYY-MM-DD pattern without time components)
+    // This should match dates but not datetimes, times, or relative times
+    if trimmed_input.contains('-') 
+        && !trimmed_input.contains(' ') 
+        && !trimmed_input.contains(':') 
+        && !trimmed_input.starts_with('+') 
+        && !trimmed_input.starts_with('-') {
+        // Looks like date-only format - use today at 00:00:00
+        let today = get_current_time().date();
+        today.and_hms_opt(0, 0, 0).unwrap()
+    } else {
+        // For all other formats (datetime, time-only, relative), use current time
+        get_current_time()
+    }
+}
+
 /// Validate that start time is before end time
 ///
 /// This function ensures that the time range is valid for progress calculation.

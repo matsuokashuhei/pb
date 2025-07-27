@@ -454,7 +454,7 @@ mod end_to_end_performance {
                 // Note: validate() is private, so we skip validation in this benchmark
 
                 // Parse times
-                let start_time = parse_time(cli.start()).unwrap();
+                let start_time = parse_time(cli.start().unwrap()).unwrap();
                 let end_time = parse_time(cli.end()).unwrap();
 
                 // Validate times

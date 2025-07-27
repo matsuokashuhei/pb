@@ -17,6 +17,6 @@ pub use progress_bar::{
     render_colored_progress_bar_with_time, render_progress_bar, render_progress_bar_with_time,
 };
 pub use time_parser::{
-    get_current_time, parse_date, parse_datetime, parse_relative_time, parse_time,
+    determine_start_time_for_end, get_current_time, parse_date, parse_datetime, parse_relative_time, parse_time,
     parse_time_with_base, validate_times,
 };

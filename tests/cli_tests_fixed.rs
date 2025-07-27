@@ -34,7 +34,7 @@ mod cli_parsing_tests {
 
             if should_pass {
                 let cli = Cli::try_parse_from(args.clone()).unwrap();
-                assert_eq!(cli.start, args[2]);
+                assert_eq!(cli.start, Some(args[2].to_string()));
                 assert_eq!(cli.end, args[4]);
                 assert_eq!(cli.interval, 60); // default value
             } else {
@@ -100,7 +100,7 @@ mod cli_validation_tests {
         for (start, end) in basic_cases {
             let cli = Cli::try_parse_from(vec!["pb", "--start", start, "--end", end]).unwrap();
             // Since validate() is private, we just check the fields are set
-            assert!(!cli.start().is_empty());
+            assert!(cli.start().is_some() && !cli.start().unwrap().is_empty());
             assert!(!cli.end().is_empty());
             assert!(cli.interval() > 0);
         }
@@ -112,7 +112,7 @@ mod cli_validation_tests {
         let cli = Cli::try_parse_from(vec!["pb", "--start", "", "--end", "12:00"]).unwrap();
         // We can't call validate() directly since it's private
         // But we can check that empty strings are present
-        assert_eq!(cli.start(), "");
+        assert_eq!(cli.start(), Some(""));
         assert_eq!(cli.end(), "12:00");
     }
 
@@ -285,7 +285,7 @@ mod cli_field_access_tests {
         ])
         .unwrap();
 
-        assert_eq!(cli.start(), "10:00");
+        assert_eq!(cli.start(), Some("10:00"));
         assert_eq!(cli.end(), "12:00");
         assert_eq!(cli.interval(), 30);
     }
