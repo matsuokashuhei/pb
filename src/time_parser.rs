@@ -196,18 +196,19 @@ pub fn parse_datetime(input: &str) -> Result<NaiveDateTime, PbError> {
 
 /// Parse a relative time string and convert to absolute timestamp
 ///
-/// This function parses relative time strings in formats like `30m`, `2h`, `1d`
+/// This function parses relative time strings in formats like `30s`, `30m`, `2h`, `1d`
 /// and converts them to absolute timestamps by adding the duration to a base time.
 ///
 /// Supported formats:
+/// - `30s` - 30 seconds
 /// - `30m` - 30 minutes
 /// - `2h` - 2 hours
 /// - `1d` - 1 day
 ///
 /// The function enforces strict formatting requirements:
-/// - Must match pattern `^(\d+)([mhd])$` exactly
-/// - Amount must be between 1 and 999 (inclusive)
-/// - Only supports units: m (minutes), h (hours), d (days)
+/// - Must match pattern `^(\d+)([smhd])$` exactly
+/// - Amount must be between 1 and 99999 (inclusive)
+/// - Only supports units: s (seconds), m (minutes), h (hours), d (days)
 ///
 /// # Arguments
 ///
@@ -228,6 +229,9 @@ pub fn parse_datetime(input: &str) -> Result<NaiveDateTime, PbError> {
 /// let base = NaiveDateTime::parse_from_str("2025-07-21 10:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
 ///
 /// // Valid relative times
+/// let result = parse_relative_time("30s", base);
+/// assert!(result.is_ok());
+///
 /// let result = parse_relative_time("30m", base);
 /// assert!(result.is_ok());
 ///
@@ -249,8 +253,8 @@ pub fn parse_relative_time(
     input: &str,
     base_time: NaiveDateTime,
 ) -> Result<NaiveDateTime, PbError> {
-    // Create regex pattern for relative time formats: ^(\d+)([mhd])$
-    let re = Regex::new(r"^(\d+)([mhd])$").unwrap();
+    // Create regex pattern for relative time formats: ^(\d+)([smhd])$
+    let re = Regex::new(r"^(\d+)([smhd])$").unwrap();
 
     if let Some(captures) = re.captures(input) {
         // Parse the numeric amount
@@ -262,8 +266,8 @@ pub fn parse_relative_time(
 
         let unit = &captures[2];
 
-        // Validate range (1-999)
-        if !(1..=999).contains(&amount) {
+        // Validate range (1-99999)
+        if !(1..=99999).contains(&amount) {
             return Err(PbError::InvalidRelativeTimeFormat {
                 input: input.to_string(),
             });
@@ -271,6 +275,7 @@ pub fn parse_relative_time(
 
         // Convert to seconds based on unit
         let seconds = match unit {
+            "s" => amount,         // seconds
             "m" => amount * 60,    // minutes to seconds
             "h" => amount * 3600,  // hours to seconds
             "d" => amount * 86400, // days to seconds
@@ -1036,9 +1041,6 @@ mod tests {
         let result = parse_relative_time("30x", base_time);
         assert!(result.is_err());
 
-        let result = parse_relative_time("30s", base_time);
-        assert!(result.is_err());
-
         let result = parse_relative_time("30w", base_time);
         assert!(result.is_err());
 
@@ -1097,25 +1099,25 @@ mod tests {
         let result = parse_relative_time("0d", base_time);
         assert!(result.is_err());
 
-        // Values over 999 not allowed
-        let result = parse_relative_time("1000m", base_time);
+        // Values over 99999 not allowed
+        let result = parse_relative_time("100000m", base_time);
         assert!(result.is_err());
 
-        let result = parse_relative_time("1000h", base_time);
+        let result = parse_relative_time("100000h", base_time);
         assert!(result.is_err());
 
-        let result = parse_relative_time("1000d", base_time);
+        let result = parse_relative_time("100000d", base_time);
         assert!(result.is_err());
 
         // Very large numbers
-        let result = parse_relative_time("99999d", base_time);
+        let result = parse_relative_time("999999d", base_time);
         assert!(result.is_err());
 
         // Boundary tests - valid
         let result = parse_relative_time("1m", base_time);
         assert!(result.is_ok());
 
-        let result = parse_relative_time("999m", base_time);
+        let result = parse_relative_time("99999m", base_time);
         assert!(result.is_ok());
     }
 
@@ -1218,14 +1220,14 @@ mod tests {
 
         // Test that error messages contain the input
         let test_cases = vec![
-            "30",    // Missing unit
-            "30x",   // Invalid unit
-            "0m",    // Zero not allowed
-            "1000m", // Too large
-            " 30m",  // Leading space
-            "30m ",  // Trailing space
-            "abc",   // Not a number
-            "",      // Empty
+            "30",      // Missing unit
+            "30x",     // Invalid unit
+            "0m",      // Zero not allowed
+            "100000m", // Too large
+            " 30m",    // Leading space
+            "30m ",    // Trailing space  
+            "abc",     // Not a number
+            "",        // Empty
         ];
 
         for input in test_cases {
