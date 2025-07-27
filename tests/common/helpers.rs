@@ -350,8 +350,7 @@ impl AssertionHelpers {
         let diff = (a - b).abs();
         if diff > tolerance {
             panic!(
-                "Values are not approximately equal: {} vs {} (diff: {}, tolerance: {})",
-                a, b, diff, tolerance
+                "Values are not approximately equal: {a} vs {b} (diff: {diff}, tolerance: {tolerance})"
             );
         }
     }
@@ -367,8 +366,7 @@ impl AssertionHelpers {
                 let error_msg = e.to_string();
                 if !error_msg.contains(expected_fragment) {
                     panic!(
-                        "Error message '{}' does not contain expected fragment '{}'",
-                        error_msg, expected_fragment
+                        "Error message '{error_msg}' does not contain expected fragment '{expected_fragment}'"
                     );
                 }
             }

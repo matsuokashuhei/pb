@@ -92,14 +92,13 @@ mod issue_fix_tests {
 
         for (input, expected_str) in test_cases {
             let result = parse_time_with_base(input, Some(base_time));
-            assert!(result.is_ok(), "{} should be valid", input);
+            assert!(result.is_ok(), "{input} should be valid");
             let expected =
                 NaiveDateTime::parse_from_str(expected_str, "%Y-%m-%d %H:%M:%S").unwrap();
             assert_eq!(
                 result.unwrap(),
                 expected,
-                "{} should produce correct result",
-                input
+                "{input} should produce correct result"
             );
         }
     }

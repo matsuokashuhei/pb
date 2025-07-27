@@ -155,7 +155,7 @@ mod tests {
         let args = vec!["pb", "--end", "12:00"];
         let result = Cli::try_parse_from(args);
         assert!(result.is_ok());
-        
+
         let cli = result.unwrap();
         assert_eq!(cli.start(), None); // start should be None when not provided
         assert_eq!(cli.end(), "12:00");

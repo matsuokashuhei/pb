@@ -22,8 +22,7 @@ fn test_demonstrate_timezone_inconsistency_issue() {
     // Should be exactly 50% since we're exactly halfway
     assert!(
         (progress - 50.0).abs() < 0.01,
-        "Expected 50% progress, got {:.2}%",
-        progress
+        "Expected 50% progress, got {progress:.2}%"
     );
 }
 
@@ -59,9 +58,7 @@ fn test_relative_time_parsing_timezone_consistency() {
 
     assert!(
         (actual_seconds - expected_seconds).abs() < 60,
-        "Expected ~2 hours - 1 minute ({} seconds) between relative times, got {} seconds",
-        expected_seconds,
-        actual_seconds
+        "Expected ~2 hours - 1 minute ({expected_seconds} seconds) between relative times, got {actual_seconds} seconds"
     );
 }
 
@@ -84,7 +81,7 @@ fn test_absolute_time_parsing_assumptions() {
     let offset_seconds = (current_local - current_utc).num_seconds().abs();
 
     if offset_seconds > 0 {
-        println!("Timezone offset detected: {} seconds", offset_seconds);
+        println!("Timezone offset detected: {offset_seconds} seconds");
 
         // Calculate progress using both current time methods
         let end_time = parsed_time + Duration::hours(2);
@@ -94,8 +91,7 @@ fn test_absolute_time_parsing_assumptions() {
         // If there's a significant difference, we have a timezone inconsistency
         if (progress_local - progress_utc).abs() > 1.0 {
             panic!(
-                "Timezone inconsistency detected! Progress with local time: {:.2}%, with UTC: {:.2}%",
-                progress_local, progress_utc
+                "Timezone inconsistency detected! Progress with local time: {progress_local:.2}%, with UTC: {progress_utc:.2}%"
             );
         }
     }
@@ -118,7 +114,7 @@ fn test_current_behavior_with_future_times() {
 
     // In 2024 (current), this should be 0% since times are in future
     // But if there's a timezone issue, it might show a weird percentage
-    println!("Progress with future times: {:.2}%", progress);
+    println!("Progress with future times: {progress:.2}%");
 
     // The progress should be 0% since the times are in the future
     // (this assumes the test is run in 2024, before the specified dates)

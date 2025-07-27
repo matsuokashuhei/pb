@@ -112,8 +112,7 @@ mod calculate_progress_tests {
         // Should be roughly 50% (middle of the year)
         assert!(
             result > 49.0 && result < 51.0,
-            "Large duration calculation incorrect: {}",
-            result
+            "Large duration calculation incorrect: {result}"
         );
     }
 
@@ -176,7 +175,7 @@ mod render_progress_bar_tests {
 
         for (percentage, expected) in test_cases {
             let result = render_progress_bar(percentage);
-            assert_eq!(result, expected, "Incorrect rendering for {}%", percentage);
+            assert_eq!(result, expected, "Incorrect rendering for {percentage}%");
         }
     }
 
@@ -194,7 +193,7 @@ mod render_progress_bar_tests {
 
         for (percentage, expected) in edge_cases {
             let result = render_progress_bar(percentage);
-            assert_eq!(result, expected, "Incorrect rendering for {}%", percentage);
+            assert_eq!(result, expected, "Incorrect rendering for {percentage}%");
         }
     }
 
@@ -207,9 +206,7 @@ mod render_progress_bar_tests {
             let result = render_progress_bar(percentage);
             assert!(
                 ProgressBarTestUtils::verify_progress_bar_format(&result),
-                "Invalid format for {}%: '{}'",
-                percentage,
-                result
+                "Invalid format for {percentage}%: '{result}'"
             );
         }
     }
@@ -230,8 +227,7 @@ mod render_progress_bar_tests {
             assert_eq!(
                 bar_part.chars().count(),
                 40,
-                "Bar width incorrect for {}%",
-                percentage
+                "Bar width incorrect for {percentage}%"
             );
 
             // Count filled and empty characters
@@ -241,8 +237,7 @@ mod render_progress_bar_tests {
             assert_eq!(
                 filled_count + empty_count,
                 40,
-                "Total character count incorrect for {}%",
-                percentage
+                "Total character count incorrect for {percentage}%"
             );
         }
     }
@@ -252,7 +247,7 @@ mod render_progress_bar_tests {
         // Test using comprehensive test data
         for (percentage, expected) in ProgressBarTestUtils::rendering_cases() {
             let result = render_progress_bar(percentage);
-            assert_eq!(result, expected, "Incorrect rendering for {}%", percentage);
+            assert_eq!(result, expected, "Incorrect rendering for {percentage}%");
         }
     }
 
@@ -277,8 +272,7 @@ mod render_progress_bar_tests {
 
             assert_eq!(
                 filled_count, expected_filled,
-                "Incorrect filled count for {}%: expected {}, got {}",
-                percentage, expected_filled, filled_count
+                "Incorrect filled count for {percentage}%: expected {expected_filled}, got {filled_count}"
             );
         }
     }
@@ -300,9 +294,8 @@ mod render_colored_progress_bar_tests {
             // For normal range, colored version should match non-colored version
             // (when no color is applied, they should be identical)
             assert!(
-                result.contains(&format!("{:.1}%", percentage)),
-                "Colored bar should contain percentage for {}%",
-                percentage
+                result.contains(&format!("{percentage:.1}%")),
+                "Colored bar should contain percentage for {percentage}%"
             );
         }
     }
@@ -317,9 +310,8 @@ mod render_colored_progress_bar_tests {
 
             // For overtime, the result should contain red color codes or be formatted differently
             assert!(
-                result.contains(&format!("{:.1}%", percentage)),
-                "Colored bar should contain percentage for {}%",
-                percentage
+                result.contains(&format!("{percentage:.1}%")),
+                "Colored bar should contain percentage for {percentage}%"
             );
 
             // Verify it's different from the non-colored version (when color is enabled)
@@ -340,9 +332,7 @@ mod render_colored_progress_bar_tests {
             let stripped = strip_ansi_codes(&colored_result);
             assert!(
                 ProgressBarTestUtils::verify_progress_bar_format(&stripped),
-                "Invalid format for colored bar at {}%: '{}'",
-                percentage,
-                stripped
+                "Invalid format for colored bar at {percentage}%: '{stripped}'"
             );
         }
     }
@@ -477,8 +467,7 @@ mod performance_tests {
         // Memory increase should be reasonable (less than 10MB for 10k iterations)
         assert!(
             memory_increase < 10_000_000,
-            "Excessive memory usage: {} bytes",
-            memory_increase
+            "Excessive memory usage: {memory_increase} bytes"
         );
     }
 
@@ -511,15 +500,13 @@ mod edge_case_tests {
             let result = std::panic::catch_unwind(|| render_progress_bar(percentage));
             assert!(
                 result.is_ok(),
-                "render_progress_bar panicked with extreme value: {}",
-                percentage
+                "render_progress_bar panicked with extreme value: {percentage}"
             );
 
             let result = std::panic::catch_unwind(|| render_colored_progress_bar(percentage));
             assert!(
                 result.is_ok(),
-                "render_colored_progress_bar panicked with extreme value: {}",
-                percentage
+                "render_colored_progress_bar panicked with extreme value: {percentage}"
             );
         }
     }
@@ -602,8 +589,7 @@ mod edge_case_tests {
         let result = calculate_progress(start, end, current);
         assert!(
             result > 49.0 && result < 51.0,
-            "200-year duration should work: {}",
-            result
+            "200-year duration should work: {result}"
         );
     }
 }

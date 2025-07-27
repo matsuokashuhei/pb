@@ -496,14 +496,15 @@ pub fn parse_time_with_base(
 /// ```
 pub fn determine_start_time_for_end(end_time_input: &str) -> NaiveDateTime {
     let trimmed_input = end_time_input.trim();
-    
+
     // Check if it's a date-only format (YYYY-MM-DD pattern without time components)
     // This should match dates but not datetimes, times, or relative times
-    if trimmed_input.contains('-') 
-        && !trimmed_input.contains(' ') 
-        && !trimmed_input.contains(':') 
-        && !trimmed_input.starts_with('+') 
-        && !trimmed_input.starts_with('-') {
+    if trimmed_input.contains('-')
+        && !trimmed_input.contains(' ')
+        && !trimmed_input.contains(':')
+        && !trimmed_input.starts_with('+')
+        && !trimmed_input.starts_with('-')
+    {
         // Looks like date-only format - use today at 00:00:00
         let today = get_current_time().date();
         today.and_hms_opt(0, 0, 0).unwrap()
@@ -767,8 +768,7 @@ mod tests {
         // Should complete well under 1 second for 1000 parses
         assert!(
             duration.as_millis() < 1000,
-            "Parsing took too long: {:?}",
-            duration
+            "Parsing took too long: {duration:?}"
         );
     }
 
@@ -1026,8 +1026,7 @@ mod tests {
         // Should complete well under 1 second for 1000 parses
         assert!(
             duration.as_millis() < 1000,
-            "DateTime parsing took too long: {:?}",
-            duration
+            "DateTime parsing took too long: {duration:?}"
         );
     }
 
@@ -1269,7 +1268,7 @@ mod tests {
         // Test day conversion (1 day = 86400 seconds)
         let result = parse_relative_time("1d", base_time);
         assert!(result.is_ok());
-        let expected_time = base_time + Duration::seconds(1 * 86400);
+        let expected_time = base_time + Duration::seconds(86400);
         assert_eq!(result.unwrap(), expected_time);
 
         // Verify exact calculations
@@ -1332,10 +1331,7 @@ mod tests {
             if let Err(PbError::InvalidRelativeTimeFormat { input: error_input }) = result {
                 assert_eq!(error_input, input);
             } else {
-                panic!(
-                    "Expected InvalidRelativeTimeFormat error for input: {}",
-                    input
-                );
+                panic!("Expected InvalidRelativeTimeFormat error for input: {input}");
             }
         }
     }
@@ -1358,8 +1354,7 @@ mod tests {
         // Should complete within reasonable time for 1000 parses (allowing for Docker overhead)
         assert!(
             duration.as_millis() < 5000, // Increased from 2000ms to 5000ms for CI stability
-            "Relative time parsing took too long: {:?}",
-            duration
+            "Relative time parsing took too long: {duration:?}"
         );
     }
 }
