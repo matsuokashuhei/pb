@@ -61,7 +61,7 @@ jobs:
       - name: Run integration tests
         run: cargo test --test '*' --verbose
 
-      - name: Run doc tests  
+      - name: Run doc tests
         run: cargo test --doc --verbose
 
       - name: Test CLI functionality
@@ -219,8 +219,8 @@ jobs:
             ${{ runner.os }}-cargo-coverage-
             ${{ runner.os }}-cargo-
 
-      - name: Install cargo-tarpaulin
-        run: cargo install cargo-tarpaulin
+      # - name: Install cargo-tarpaulin
+      #   run: cargo install cargo-tarpaulin
 
       - name: Generate code coverage
         run: >-
