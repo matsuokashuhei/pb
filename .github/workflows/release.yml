@@ -12,6 +12,9 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -52,8 +55,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: >-
-            ${{ runner.os }}-cargo-release-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-release-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-release-${{ matrix.target }}-
             ${{ runner.os }}-cargo-release-
@@ -75,14 +77,11 @@ jobs:
           strip target/${{ matrix.target }}/release/pb
 
       - name: Rename binary
-        run: >-
-          cp target/${{ matrix.target }}/release/pb
-          target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+        run: cp target/${{ matrix.target }}/release/pb target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
 
       - name: Test binary functionality
         if: matrix.target != 'aarch64-unknown-linux-gnu'
-        run: >-
-          ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }} --help
+        run: ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }} --help
 
       - name: Get tag name
         id: get_tag
