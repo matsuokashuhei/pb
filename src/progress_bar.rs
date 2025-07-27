@@ -3,7 +3,7 @@
 //! This module provides progress calculation and rendering functionality
 //! for time-based progress visualization with color support.
 
-use chrono::{NaiveDateTime, Duration};
+use chrono::{Duration, NaiveDateTime};
 use colored::*;
 
 /// Fixed width for the progress bar display
@@ -302,15 +302,18 @@ pub fn render_progress_bar_with_time(
     current: NaiveDateTime,
 ) -> String {
     let base_bar = render_progress_bar(percentage);
-    
+
     // Calculate elapsed and remaining time
     let elapsed_duration = current - start;
     let remaining_duration = end - current;
-    
+
     let elapsed_str = format_duration(elapsed_duration);
     let remaining_str = format_duration(remaining_duration);
-    
-    format!("{} ({} elapsed, {} remaining)", base_bar, elapsed_str, remaining_str)
+
+    format!(
+        "{} ({} elapsed, {} remaining)",
+        base_bar, elapsed_str, remaining_str
+    )
 }
 
 /// Render a visual progress bar with color support and time information
@@ -352,22 +355,31 @@ mod format_duration_tests {
     #[test]
     fn test_format_duration_basic_cases() {
         // Test hours and minutes
-        assert_eq!(format_duration(Duration::hours(2) + Duration::minutes(36)), "2h 36m");
-        assert_eq!(format_duration(Duration::hours(1) + Duration::minutes(0)), "1h 0m");
-        assert_eq!(format_duration(Duration::hours(5) + Duration::minutes(24)), "5h 24m");
-        
+        assert_eq!(
+            format_duration(Duration::hours(2) + Duration::minutes(36)),
+            "2h 36m"
+        );
+        assert_eq!(
+            format_duration(Duration::hours(1) + Duration::minutes(0)),
+            "1h 0m"
+        );
+        assert_eq!(
+            format_duration(Duration::hours(5) + Duration::minutes(24)),
+            "5h 24m"
+        );
+
         // Test minutes only
         assert_eq!(format_duration(Duration::minutes(45)), "45m");
         assert_eq!(format_duration(Duration::minutes(1)), "1m");
         assert_eq!(format_duration(Duration::minutes(90)), "1h 30m"); // Should convert to hours
-        
+
         // Test less than a minute
         assert_eq!(format_duration(Duration::seconds(30)), "0m");
         assert_eq!(format_duration(Duration::seconds(59)), "0m");
-        
+
         // Test zero duration
         assert_eq!(format_duration(Duration::zero()), "0m");
-        
+
         // Test negative duration
         assert_eq!(format_duration(Duration::minutes(-10)), "0m");
     }
@@ -375,11 +387,14 @@ mod format_duration_tests {
     #[test]
     fn test_format_duration_edge_cases() {
         // Large durations
-        assert_eq!(format_duration(Duration::hours(100) + Duration::minutes(30)), "100h 30m");
+        assert_eq!(
+            format_duration(Duration::hours(100) + Duration::minutes(30)),
+            "100h 30m"
+        );
         assert_eq!(format_duration(Duration::hours(24)), "24h 0m");
-        
+
         // Exactly at boundaries
-        assert_eq!(format_duration(Duration::minutes(60)), "1h 0m"); // 1 hour 
+        assert_eq!(format_duration(Duration::minutes(60)), "1h 0m"); // 1 hour
         assert_eq!(format_duration(Duration::hours(1)), "1h 0m"); // 1 hour as hours
     }
 }
@@ -398,9 +413,9 @@ mod render_with_time_tests {
         let start = create_test_datetime("2025-01-27 09:00:00");
         let end = create_test_datetime("2025-01-27 17:00:00"); // 8 hours
         let current = create_test_datetime("2025-01-27 11:36:00"); // 2h 36m elapsed
-        
+
         let result = render_progress_bar_with_time(32.5, start, end, current);
-        
+
         // Should contain the progress bar part
         assert!(result.contains("[█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░] 32.5%"));
         // Should contain elapsed time
@@ -414,9 +429,9 @@ mod render_with_time_tests {
         let start = create_test_datetime("2025-01-27 09:00:00");
         let end = create_test_datetime("2025-01-27 17:00:00");
         let current = create_test_datetime("2025-01-27 11:00:00"); // 25% progress
-        
+
         let result = render_colored_progress_bar_with_time(25.0, start, end, current);
-        
+
         // For normal progress, should be same as non-colored version
         let expected = render_progress_bar_with_time(25.0, start, end, current);
         assert_eq!(result, expected);
@@ -427,9 +442,9 @@ mod render_with_time_tests {
         let start = create_test_datetime("2025-01-27 09:00:00");
         let end = create_test_datetime("2025-01-27 17:00:00");
         let current = create_test_datetime("2025-01-27 19:00:00"); // 2 hours past end
-        
+
         let result = render_colored_progress_bar_with_time(125.0, start, end, current);
-        
+
         // Should contain the bar and percentage
         assert!(result.contains("125.0%"));
         // Should contain time information
@@ -442,9 +457,9 @@ mod render_with_time_tests {
         let start = create_test_datetime("2025-01-27 10:00:00");
         let end = create_test_datetime("2025-01-27 12:00:00"); // 2 hours
         let current = create_test_datetime("2025-01-27 10:45:00"); // 45 minutes elapsed
-        
+
         let result = render_progress_bar_with_time(37.5, start, end, current);
-        
+
         assert!(result.contains("45m elapsed"));
         assert!(result.contains("1h 15m remaining"));
     }

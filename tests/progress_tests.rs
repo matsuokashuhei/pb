@@ -186,10 +186,10 @@ mod render_progress_bar_tests {
         let edge_cases = vec![
             (-10.0, "[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] -10.0%"), // Negative values
             (150.0, "[████████████████████████████████████████] 150.0%"), // Overtime
-            (0.1, "[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0.1%"), // Small values
-            (99.9, "[████████████████████████████████████████] 99.9%"), // Near 100%
-            (0.5, "[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0.5%"), // Rounding behavior
-            (99.4, "[████████████████████████████████████████] 99.4%"), // Rounding behavior
+            (0.1, "[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0.1%"),     // Small values
+            (99.9, "[████████████████████████████████████████] 99.9%"),   // Near 100%
+            (0.5, "[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0.5%"),     // Rounding behavior
+            (99.4, "[████████████████████████████████████████] 99.4%"),   // Rounding behavior
         ];
 
         for (percentage, expected) in edge_cases {
@@ -300,7 +300,7 @@ mod render_colored_progress_bar_tests {
             // For normal range, colored version should match non-colored version
             // (when no color is applied, they should be identical)
             assert!(
-                result.contains(&format!("{}%", percentage as i32)),
+                result.contains(&format!("{:.1}%", percentage)),
                 "Colored bar should contain percentage for {}%",
                 percentage
             );
@@ -317,7 +317,7 @@ mod render_colored_progress_bar_tests {
 
             // For overtime, the result should contain red color codes or be formatted differently
             assert!(
-                result.contains(&format!("{}%", percentage as i32)),
+                result.contains(&format!("{:.1}%", percentage)),
                 "Colored bar should contain percentage for {}%",
                 percentage
             );

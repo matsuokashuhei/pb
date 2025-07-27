@@ -107,7 +107,8 @@ fn run_progress_loop(
         let progress = calculate_progress(start_time, end_time, current_time);
 
         // Render progress bar with time information
-        let bar = render_colored_progress_bar_with_time(progress, start_time, end_time, current_time);
+        let bar =
+            render_colored_progress_bar_with_time(progress, start_time, end_time, current_time);
 
         // Update display
         if is_tty {

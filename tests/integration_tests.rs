@@ -121,7 +121,7 @@ fn test_relative_time_parsing() {
 
     let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
     assert!(stdout.contains("pb - Progress Bar Tool"));
-    assert!(stdout.contains("[                                        ] 0%"));
+    assert!(stdout.contains("[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0.0%"));
 }
 
 #[test]
