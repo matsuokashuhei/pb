@@ -11,14 +11,17 @@ A command-line progress bar tool for time-based visualization. Track time betwee
 ## Quick Start
 
 ```bash
-# Track an 8-hour work day
+# Track an 8-hour work day (traditional usage)
 pb --start "2025-01-27 09:00:00" --end "2025-01-27 17:00:00"
 
-# Monitor a 1-hour meeting with 30-second updates
-pb --start "2025-01-27 14:00:00" --end "1h" --interval 30
+# Track remaining work day (start from now)
+pb --end "17:00:00"
 
-# Create a countdown to a deadline
-pb --start "2025-01-27" --end "2025-02-15" --interval 3600
+# Monitor a 2-hour meeting timer (start from now)
+pb --end "2h" --interval 30
+
+# Create a countdown to a deadline (start from today 00:00:00)
+pb --end "2025-02-15" --interval 3600
 ```
 
 ## Features
@@ -85,8 +88,12 @@ For detailed installation instructions for all platforms, see [Installation Guid
 ### Basic Syntax
 
 ```bash
-pb --start START_TIME --end END_TIME [--interval SECONDS]
+pb [--start START_TIME] --end END_TIME [--interval SECONDS]
 ```
+
+**Note**: The `--start` parameter is optional. When omitted, pb automatically determines the start time based on the end time format:
+- **Time-containing formats** (e.g., "17:00:00", "2h", "+30m") → Start from current time
+- **Date-only formats** (e.g., "2025-12-31") → Start from today at 00:00:00
 
 ### Time Formats
 
@@ -111,13 +118,36 @@ pb --start "2025-01-27 14:00:00" --end "90m"   # 90 minutes
 pb --start "2025-01-27" --end "7d"             # 7 days
 pb --start "2025-01-27 14:00:00" --end "3600s" # 3600 seconds
 ```
+*Supports hours (h), minutes (m), days (d), and seconds (s)*
+
+### Automatic Start Time Detection
+
+When the `--start` parameter is omitted, pb automatically determines the appropriate start time based on the end time format:
+
+#### Time-containing end formats → Current time as start
+```bash
+pb --end "17:00:00"             # Work day tracking - start from now
+pb --end "2025-07-27 17:00:00"  # Datetime format - start from now  
+pb --end "2h"                   # Meeting timer - 2 hours from now
+pb --end "+30m"                 # Study session - 30 minutes from now
+```
+
+#### Date-only end formats → Today 00:00:00 as start
+```bash
+pb --end "2025-12-31"           # Project deadline - track from start of today
+```
+
+This feature makes pb more intuitive for common use cases while maintaining backward compatibility.
 
 ### Common Use Cases
 
 #### Work Day Tracking
 ```bash
-# Standard 8-hour work day
+# Standard 8-hour work day (traditional usage)
 pb --start "2025-01-27 09:00:00" --end "2025-01-27 17:00:00"
+
+# Track remaining work day from now
+pb --end "17:00:00"
 
 # Flexible start with relative end time
 pb --start "$(date '+%Y-%m-%d 09:00:00')" --end "8h"
@@ -125,23 +155,35 @@ pb --start "$(date '+%Y-%m-%d 09:00:00')" --end "8h"
 
 #### Meeting Timer
 ```bash
-# 1-hour meeting with minute-by-minute updates
+# 1-hour meeting with minute-by-minute updates (traditional usage)
 pb --start "2025-01-27 14:00:00" --end "1h" --interval 60
+
+# 2-hour meeting starting now
+pb --end "2h" --interval 60
+
+# 30-minute quick meeting starting now
+pb --end "30m" --interval 30
 ```
 
 #### Project Deadline
 ```bash
-# Track progress to deadline with daily updates
+# Track progress to deadline with daily updates (traditional usage)
 pb --start "2025-01-20" --end "2025-02-15" --interval 86400
+
+# Track remaining time to deadline from today
+pb --end "2025-02-15" --interval 86400
 ```
 
 #### Study/Focus Sessions
 ```bash
-# Pomodoro timer (25 minutes)
+# Pomodoro timer (25 minutes) - traditional usage
 pb --start "$(date '+%Y-%m-%d %H:%M:%S')" --end "25m" --interval 60
 
+# Pomodoro timer starting now
+pb --end "25m" --interval 60
+
 # 2-hour study session
-pb --start "2025-01-27 10:00:00" --end "2h" --interval 300
+pb --end "2h" --interval 300
 ```
 
 ### Output Examples
@@ -159,7 +201,13 @@ Press Ctrl+C to exit
 
 #### Piped Output (Non-TTY Mode)
 ```bash
+# Traditional usage with explicit start time
 pb --start "2025-01-27 09:00:00" --end "8h" | while read line; do
+    echo "$(date): $line" >> progress.log
+done
+
+# New usage with auto-determined start time
+pb --end "8h" | while read line; do
     echo "$(date): $line" >> progress.log
 done
 ```
@@ -173,7 +221,7 @@ done
 
 | Option | Short | Description | Default |
 |--------|-------|-------------|---------|
-| `--start` | `-s` | Start time (required) | - |
+| `--start` | `-s` | Start time (optional) | Auto-determined from end time |
 | `--end` | `-e` | End time (required) | - |
 | `--interval` | `-i` | Update interval in seconds | 60 |
 | `--help` | `-h` | Show help message | - |
@@ -185,7 +233,7 @@ done
 
 ```bash
 #!/bin/bash
-# Track work day and send notifications
+# Track work day and send notifications (traditional usage)
 
 pb --start "2025-01-27 09:00:00" --end "8h" --interval 300 | while read -r line; do
     percentage=$(echo "$line" | grep -o '[0-9]*\.[0-9]*%')
@@ -195,23 +243,42 @@ pb --start "2025-01-27 09:00:00" --end "8h" --interval 300 | while read -r line;
         "100.0%") notify-send "Work Complete" "Time to go home!" ;;
     esac
 done
+
+# Or use the simplified version starting from now
+pb --end "8h" --interval 300 | while read -r line; do
+    percentage=$(echo "$line" | grep -o '[0-9]*\.[0-9]*%')
+    
+    case $percentage in
+        "50.0%") notify-send "Work Progress" "Halfway through the work session!" ;;
+        "100.0%") notify-send "Work Complete" "Session finished!" ;;
+    esac
+done
 ```
 
 ### Background Monitoring
 
 ```bash
-# Start pb in background and monitor with logs
+# Start pb in background and monitor with logs (traditional usage)
 pb --start "2025-01-27 09:00:00" --end "8h" > work_progress.log 2>&1 &
+tail -f work_progress.log
+
+# Or start tracking from now
+pb --end "8h" > work_progress.log 2>&1 &
 tail -f work_progress.log
 ```
 
 ### Multiple Timers
 
 ```bash
-# Track multiple time periods simultaneously
+# Track multiple time periods simultaneously (traditional usage)
 pb --start "2025-01-27 09:00:00" --end "8h" > work.log &
 pb --start "2025-01-27 12:00:00" --end "1h" > lunch.log &
 pb --start "2025-01-27 14:00:00" --end "2h" > meeting.log &
+
+# Or use simplified syntax where appropriate
+pb --end "8h" > work.log &           # Work session from now
+pb --end "1h" > lunch.log &          # 1-hour timer from now  
+pb --end "2h" > meeting.log &        # 2-hour timer from now
 ```
 
 ## Documentation
@@ -238,8 +305,11 @@ cd pb
 cargo build
 cargo test
 
-# Run with sample data
+# Run with sample data (traditional usage)
 cargo run -- --start "2025-01-27 12:00:00" --end "2025-01-27 13:00:00" --interval 5
+
+# Run with simplified syntax
+cargo run -- --end "1h" --interval 5
 ```
 
 ### Docker Development Environment
