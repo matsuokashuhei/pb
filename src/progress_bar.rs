@@ -3,11 +3,61 @@
 //! This module provides progress calculation and rendering functionality
 //! for time-based progress visualization with color support.
 
-use chrono::NaiveDateTime;
+use chrono::{Duration, NaiveDateTime};
 use colored::*;
 
 /// Fixed width for the progress bar display
 const BAR_WIDTH: usize = 40;
+
+/// Format a duration as human-readable time (e.g., "2h 36m", "45m", "1h")
+///
+/// This function converts a chrono::Duration into a human-readable format
+/// showing hours and minutes, with smart formatting rules.
+///
+/// # Formatting Rules
+///
+/// - Durations >= 1 hour: Show as "Xh Ym" (e.g., "2h 36m", "1h 0m")
+/// - Durations < 1 hour but >= 1 minute: Show as "Xm" (e.g., "45m", "1m")
+/// - Durations < 1 minute: Show as "0m"
+/// - Negative durations: Return "0m"
+///
+/// # Arguments
+///
+/// * `duration` - The duration to format
+///
+/// # Returns
+///
+/// A formatted string representing the duration in human-readable form
+///
+/// # Examples
+///
+/// ```
+/// use chrono::Duration;
+/// use pb::progress_bar::format_duration;
+///
+/// assert_eq!(format_duration(Duration::hours(2) + Duration::minutes(36)), "2h 36m");
+/// assert_eq!(format_duration(Duration::minutes(45)), "45m");
+/// assert_eq!(format_duration(Duration::hours(1)), "1h 0m");
+/// assert_eq!(format_duration(Duration::seconds(30)), "0m");
+/// ```
+pub fn format_duration(duration: Duration) -> String {
+    // Handle negative durations
+    if duration.num_seconds() < 0 {
+        return "0m".to_string();
+    }
+
+    let total_minutes = duration.num_minutes();
+    let hours = total_minutes / 60;
+    let minutes = total_minutes % 60;
+
+    if hours > 0 {
+        format!("{}h {}m", hours, minutes)
+    } else if minutes > 0 {
+        format!("{}m", minutes)
+    } else {
+        "0m".to_string()
+    }
+}
 
 /// Calculate progress percentage based on elapsed time
 ///
@@ -88,18 +138,18 @@ pub fn calculate_progress(start: NaiveDateTime, end: NaiveDateTime, current: Nai
 ///
 /// # Format
 ///
-/// The output format is: `[{filled_portion}{empty_portion}] {percentage:.0}%`
+/// The output format is: `[{filled_portion}{empty_portion}] {percentage:.1}%`
 ///
 /// Where:
 /// - `filled_portion`: `█` (U+2588 Full Block) characters for completed progress
-/// - `empty_portion`: Space characters for remaining progress
-/// - `percentage`: Rounded to nearest integer for display
+/// - `empty_portion`: `░` (U+2591 Light Shade) characters for remaining progress
+/// - `percentage`: Formatted to one decimal place for display
 ///
 /// # Edge Cases
 ///
-/// - **0% Progress**: Shows empty bar: `[                                        ] 0%`
-/// - **100% Progress**: Shows full bar: `[████████████████████████████████████████] 100%`
-/// - **>100% Progress**: Shows full bar with actual percentage: `[████████████████████████████████████████] 150%`
+/// - **0% Progress**: Shows empty bar: `[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0.0%`
+/// - **100% Progress**: Shows full bar: `[████████████████████████████████████████] 100.0%`
+/// - **>100% Progress**: Shows full bar with actual percentage: `[████████████████████████████████████████] 150.0%`
 /// - **Negative Progress**: Clamped to 0% (same as 0% case)
 /// - **Fractional Progress**: Rounds to nearest character position
 ///
@@ -110,7 +160,7 @@ pub fn calculate_progress(start: NaiveDateTime, end: NaiveDateTime, current: Nai
 /// # Returns
 ///
 /// Returns a formatted string containing the visual progress bar with percentage display.
-/// The total length is always 45 characters: `[` + 40 characters + `] ` + percentage + `%`
+/// The total length varies: `[` + 40 characters + `] ` + percentage + `%`
 ///
 /// # Performance
 ///
@@ -125,16 +175,16 @@ pub fn calculate_progress(start: NaiveDateTime, end: NaiveDateTime, current: Nai
 /// use pb::progress_bar::render_progress_bar;
 ///
 /// // 0% progress
-/// assert_eq!(render_progress_bar(0.0), "[                                        ] 0%");
+/// assert_eq!(render_progress_bar(0.0), "[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0.0%");
 ///
 /// // 50% progress
-/// assert_eq!(render_progress_bar(50.0), "[████████████████████                    ] 50%");
+/// assert_eq!(render_progress_bar(50.0), "[████████████████████░░░░░░░░░░░░░░░░░░░░] 50.0%");
 ///
 /// // 100% progress
-/// assert_eq!(render_progress_bar(100.0), "[████████████████████████████████████████] 100%");
+/// assert_eq!(render_progress_bar(100.0), "[████████████████████████████████████████] 100.0%");
 ///
 /// // Overtime (>100%)
-/// assert_eq!(render_progress_bar(150.0), "[████████████████████████████████████████] 150%");
+/// assert_eq!(render_progress_bar(150.0), "[████████████████████████████████████████] 150.0%");
 /// ```
 pub fn render_progress_bar(percentage: f64) -> String {
     // Clamp negative percentages to 0 for visual display
@@ -148,10 +198,10 @@ pub fn render_progress_bar(percentage: f64) -> String {
 
     // Create filled and empty portions
     let filled = "█".repeat(filled_chars);
-    let empty = " ".repeat(BAR_WIDTH - filled_chars);
+    let empty = "░".repeat(BAR_WIDTH - filled_chars);
 
-    // Format with percentage rounded to nearest integer
-    format!("[{filled}{empty}] {percentage:.0}%")
+    // Format with percentage to one decimal place
+    format!("[{filled}{empty}] {percentage:.1}%")
 }
 
 /// Render a visual progress bar with color support
@@ -199,11 +249,11 @@ pub fn render_progress_bar(percentage: f64) -> String {
 ///
 /// // Normal progress - default color
 /// let normal = render_colored_progress_bar(50.0);
-/// // Contains: "[████████████████████                    ] 50%"
+/// // Contains: "[████████████████████░░░░░░░░░░░░░░░░░░░░] 50.0%"
 ///
 /// // Overtime progress - red color (if terminal supports color)
 /// let overtime = render_colored_progress_bar(150.0);
-/// // Contains red-colored: "[████████████████████████████████████████] 150%"
+/// // Contains red-colored: "[████████████████████████████████████████] 150.0%"
 /// ```
 pub fn render_colored_progress_bar(percentage: f64) -> String {
     let bar = render_progress_bar(percentage);
@@ -216,8 +266,206 @@ pub fn render_colored_progress_bar(percentage: f64) -> String {
     }
 }
 
+/// Render a visual progress bar with time information
+///
+/// This function creates a visual progress bar with elapsed and remaining time
+/// information in the format: `[bar] percentage (elapsed elapsed, remaining remaining)`
+///
+/// # Arguments
+///
+/// * `percentage` - The progress percentage as a floating-point number
+/// * `start` - The start time for calculating elapsed time
+/// * `end` - The end time for calculating remaining time  
+/// * `current` - The current time for calculations
+///
+/// # Returns
+///
+/// Returns a formatted string with progress bar and time information
+///
+/// # Examples
+///
+/// ```
+/// use chrono::NaiveDateTime;
+/// use pb::progress_bar::render_progress_bar_with_time;
+///
+/// let start = NaiveDateTime::parse_from_str("2025-01-27 09:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+/// let end = NaiveDateTime::parse_from_str("2025-01-27 17:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+/// let current = NaiveDateTime::parse_from_str("2025-01-27 11:36:00", "%Y-%m-%d %H:%M:%S").unwrap();
+///
+/// let result = render_progress_bar_with_time(32.5, start, end, current);
+/// // Contains: "[████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 32.5% (2h 36m elapsed, 5h 24m remaining)"
+/// ```
+pub fn render_progress_bar_with_time(
+    percentage: f64,
+    start: NaiveDateTime,
+    end: NaiveDateTime,
+    current: NaiveDateTime,
+) -> String {
+    let base_bar = render_progress_bar(percentage);
+
+    // Calculate elapsed and remaining time
+    let elapsed_duration = current - start;
+    let remaining_duration = end - current;
+
+    let elapsed_str = format_duration(elapsed_duration);
+    let remaining_str = format_duration(remaining_duration);
+
+    format!(
+        "{} ({} elapsed, {} remaining)",
+        base_bar, elapsed_str, remaining_str
+    )
+}
+
+/// Render a visual progress bar with color support and time information
+///
+/// This function combines color management with time information display.
+/// For normal progress (0-100%), shows default color. For overtime (>100%),
+/// applies red color and shows appropriate time information.
+///
+/// # Arguments
+///
+/// * `percentage` - The progress percentage as a floating-point number
+/// * `start` - The start time for calculating elapsed time
+/// * `end` - The end time for calculating remaining time
+/// * `current` - The current time for calculations
+///
+/// # Returns
+///
+/// Returns a formatted string with colored progress bar and time information
+pub fn render_colored_progress_bar_with_time(
+    percentage: f64,
+    start: NaiveDateTime,
+    end: NaiveDateTime,
+    current: NaiveDateTime,
+) -> String {
+    let bar = render_progress_bar_with_time(percentage, start, end, current);
+
+    // Apply red color for overtime (>100%)
+    if percentage > 100.0 {
+        bar.red().to_string()
+    } else {
+        bar
+    }
+}
+
 #[cfg(test)]
-mod tests {
+mod format_duration_tests {
+    use super::*;
+
+    #[test]
+    fn test_format_duration_basic_cases() {
+        // Test hours and minutes
+        assert_eq!(
+            format_duration(Duration::hours(2) + Duration::minutes(36)),
+            "2h 36m"
+        );
+        assert_eq!(
+            format_duration(Duration::hours(1) + Duration::minutes(0)),
+            "1h 0m"
+        );
+        assert_eq!(
+            format_duration(Duration::hours(5) + Duration::minutes(24)),
+            "5h 24m"
+        );
+
+        // Test minutes only
+        assert_eq!(format_duration(Duration::minutes(45)), "45m");
+        assert_eq!(format_duration(Duration::minutes(1)), "1m");
+        assert_eq!(format_duration(Duration::minutes(90)), "1h 30m"); // Should convert to hours
+
+        // Test less than a minute
+        assert_eq!(format_duration(Duration::seconds(30)), "0m");
+        assert_eq!(format_duration(Duration::seconds(59)), "0m");
+
+        // Test zero duration
+        assert_eq!(format_duration(Duration::zero()), "0m");
+
+        // Test negative duration
+        assert_eq!(format_duration(Duration::minutes(-10)), "0m");
+    }
+
+    #[test]
+    fn test_format_duration_edge_cases() {
+        // Large durations
+        assert_eq!(
+            format_duration(Duration::hours(100) + Duration::minutes(30)),
+            "100h 30m"
+        );
+        assert_eq!(format_duration(Duration::hours(24)), "24h 0m");
+
+        // Exactly at boundaries
+        assert_eq!(format_duration(Duration::minutes(60)), "1h 0m"); // 1 hour
+        assert_eq!(format_duration(Duration::hours(1)), "1h 0m"); // 1 hour as hours
+    }
+}
+
+#[cfg(test)]
+mod render_with_time_tests {
+    use super::*;
+    use chrono::NaiveDateTime;
+
+    fn create_test_datetime(time_str: &str) -> NaiveDateTime {
+        NaiveDateTime::parse_from_str(time_str, "%Y-%m-%d %H:%M:%S").unwrap()
+    }
+
+    #[test]
+    fn test_render_progress_bar_with_time_basic() {
+        let start = create_test_datetime("2025-01-27 09:00:00");
+        let end = create_test_datetime("2025-01-27 17:00:00"); // 8 hours
+        let current = create_test_datetime("2025-01-27 11:36:00"); // 2h 36m elapsed
+
+        let result = render_progress_bar_with_time(32.5, start, end, current);
+
+        // Should contain the progress bar part
+        assert!(result.contains("[█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░] 32.5%"));
+        // Should contain elapsed time
+        assert!(result.contains("2h 36m elapsed"));
+        // Should contain remaining time (5h 24m)
+        assert!(result.contains("5h 24m remaining"));
+    }
+
+    #[test]
+    fn test_render_colored_progress_bar_with_time_normal() {
+        let start = create_test_datetime("2025-01-27 09:00:00");
+        let end = create_test_datetime("2025-01-27 17:00:00");
+        let current = create_test_datetime("2025-01-27 11:00:00"); // 25% progress
+
+        let result = render_colored_progress_bar_with_time(25.0, start, end, current);
+
+        // For normal progress, should be same as non-colored version
+        let expected = render_progress_bar_with_time(25.0, start, end, current);
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_render_colored_progress_bar_with_time_overtime() {
+        let start = create_test_datetime("2025-01-27 09:00:00");
+        let end = create_test_datetime("2025-01-27 17:00:00");
+        let current = create_test_datetime("2025-01-27 19:00:00"); // 2 hours past end
+
+        let result = render_colored_progress_bar_with_time(125.0, start, end, current);
+
+        // Should contain the bar and percentage
+        assert!(result.contains("125.0%"));
+        // Should contain time information
+        assert!(result.contains("10h 0m elapsed"));
+        assert!(result.contains("0m remaining")); // Negative remaining shows as 0m
+    }
+
+    #[test]
+    fn test_time_information_formatting() {
+        let start = create_test_datetime("2025-01-27 10:00:00");
+        let end = create_test_datetime("2025-01-27 12:00:00"); // 2 hours
+        let current = create_test_datetime("2025-01-27 10:45:00"); // 45 minutes elapsed
+
+        let result = render_progress_bar_with_time(37.5, start, end, current);
+
+        assert!(result.contains("45m elapsed"));
+        assert!(result.contains("1h 15m remaining"));
+    }
+}
+#[cfg(test)]
+mod progress_calculation_tests {
     use super::*;
     use chrono::{Duration, NaiveDateTime};
 
@@ -425,12 +673,12 @@ mod render_tests {
         // Test 0%
         let result = render_progress_bar(0.0);
         assert!(result.starts_with('['));
-        assert!(result.ends_with("0%"));
+        assert!(result.ends_with("0.0%"));
 
         // Test 100%
         let result = render_progress_bar(100.0);
         assert!(result.starts_with('['));
-        assert!(result.ends_with("100%"));
+        assert!(result.ends_with("100.0%"));
 
         // Test that the bar portion is always 40 characters
         let bar_start = result.find('[').unwrap() + 1;
@@ -469,34 +717,34 @@ mod render_tests {
     fn test_exact_format_requirements() {
         // Test the exact format specified in the issue
 
-        // 0% should be empty bar
+        // 0% should be empty bar with ░ characters
         assert_eq!(
             render_progress_bar(0.0),
-            "[                                        ] 0%"
+            "[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0.0%"
         );
 
         // 25% should be 10 filled characters
         assert_eq!(
             render_progress_bar(25.0),
-            "[██████████                              ] 25%"
+            "[██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 25.0%"
         );
 
         // 50% should be 20 filled characters
         assert_eq!(
             render_progress_bar(50.0),
-            "[████████████████████                    ] 50%"
+            "[████████████████████░░░░░░░░░░░░░░░░░░░░] 50.0%"
         );
 
         // 75% should be 30 filled characters
         assert_eq!(
             render_progress_bar(75.0),
-            "[██████████████████████████████          ] 75%"
+            "[██████████████████████████████░░░░░░░░░░] 75.0%"
         );
 
         // 100% should be full bar
         assert_eq!(
             render_progress_bar(100.0),
-            "[████████████████████████████████████████] 100%"
+            "[████████████████████████████████████████] 100.0%"
         );
     }
 
@@ -504,7 +752,7 @@ mod render_tests {
     fn test_edge_cases() {
         // Negative percentage
         let result = render_progress_bar(-10.0);
-        assert!(result.ends_with("-10%"));
+        assert!(result.ends_with("-10.0%"));
         let bar_start = result.find('[').unwrap() + 1;
         let bar_end = result.find(']').unwrap();
         let bar = &result[bar_start..bar_end];
@@ -513,7 +761,7 @@ mod render_tests {
 
         // Over 100%
         let result = render_progress_bar(150.0);
-        assert!(result.ends_with("150%"));
+        assert!(result.ends_with("150.0%"));
         let bar_start = result.find('[').unwrap() + 1;
         let bar_end = result.find(']').unwrap();
         let bar = &result[bar_start..bar_end];
@@ -615,12 +863,11 @@ mod color_tests {
                 percentage
             );
 
-            // Check for the rounded percentage (since we use {:.0}% format)
-            let expected_percentage = percentage.round() as i32;
+            // Check for the decimal percentage (since we use {:.1}% format)
             assert!(
-                colored.contains(&format!("{}%", expected_percentage)),
-                "Should contain rounded percentage {}% for input {}%",
-                expected_percentage,
+                colored.contains(&format!("{:.1}%", percentage)),
+                "Should contain decimal percentage {:.1}% for input {}%",
+                percentage,
                 percentage
             );
         }
@@ -695,11 +942,10 @@ mod color_tests {
             );
 
             // Should contain the rounded percentage
-            let expected_percentage = percentage.round() as i32;
             assert!(
-                result.contains(&format!("{}%", expected_percentage)),
-                "Should contain percentage {}% for input {}%",
-                expected_percentage,
+                result.contains(&format!("{:.1}%", percentage)),
+                "Should contain decimal percentage {:.1}% for input {}%",
+                percentage,
                 percentage
             );
         }
@@ -802,12 +1048,11 @@ mod color_tests {
                 percentage
             );
 
-            // Both should have the same percentage number at the end (rounded)
-            let expected_percentage = percentage.round() as i32;
+            // Both should have the same percentage number at the end (decimal)
             assert!(
-                colored.contains(&format!("{}%", expected_percentage)),
-                "Colored version should contain correct rounded percentage {}% for input {}%",
-                expected_percentage,
+                colored.contains(&format!("{:.1}%", percentage)),
+                "Colored version should contain correct decimal percentage {:.1}% for input {}%",
+                percentage,
                 percentage
             );
         }

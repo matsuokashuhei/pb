@@ -2,7 +2,7 @@ use anyhow::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
 use pb::{
     calculate_progress, get_current_time, parse_time, parse_time_with_base,
-    render_colored_progress_bar, validate_times, Cli,
+    render_colored_progress_bar_with_time, validate_times, Cli,
 };
 use std::io::{self, Write};
 use std::time::Duration;
@@ -106,8 +106,9 @@ fn run_progress_loop(
         let current_time = get_current_time();
         let progress = calculate_progress(start_time, end_time, current_time);
 
-        // Render progress bar
-        let bar = render_colored_progress_bar(progress);
+        // Render progress bar with time information
+        let bar =
+            render_colored_progress_bar_with_time(progress, start_time, end_time, current_time);
 
         // Update display
         if is_tty {

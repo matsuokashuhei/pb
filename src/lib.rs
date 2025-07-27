@@ -12,7 +12,10 @@ pub mod time_parser;
 pub use anyhow::{Context, Result as AnyhowResult};
 pub use cli::Cli;
 pub use error::{PbError, PbResult};
-pub use progress_bar::{calculate_progress, render_colored_progress_bar, render_progress_bar};
+pub use progress_bar::{
+    calculate_progress, format_duration, render_colored_progress_bar,
+    render_colored_progress_bar_with_time, render_progress_bar, render_progress_bar_with_time,
+};
 pub use time_parser::{
     get_current_time, parse_date, parse_datetime, parse_relative_time, parse_time,
     parse_time_with_base, validate_times,
