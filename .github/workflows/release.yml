@@ -33,8 +33,14 @@ jobs:
             target: aarch64-unknown-linux-gnu
             artifact_name: pb-linux-aarch64
           - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: pb-macos-x86_64
+          - os: macos-latest
             target: aarch64-apple-darwin
             artifact_name: pb-macos-aarch64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: pb-windows-x86_64.exe
 
     steps:
       - name: Checkout code
@@ -72,16 +78,27 @@ jobs:
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
 
-      - name: Strip binary
+      - name: Prepare binary artifact
         run: |
-          strip target/${{ matrix.target }}/release/pb
-
-      - name: Rename binary
-        run: cp target/${{ matrix.target }}/release/pb target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+          if [[ "${{ matrix.target }}" == *"windows"* ]]; then
+            cp target/${{ matrix.target }}/release/pb.exe target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+          else
+            cp target/${{ matrix.target }}/release/pb target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+          fi
+        shell: bash
 
       - name: Test binary functionality
-        if: matrix.target != 'aarch64-unknown-linux-gnu'
-        run: ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }} --help
+        run: |
+          if [[ "${{ matrix.target }}" == *"windows"* ]]; then
+            ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }} --help
+          elif [ "${{ matrix.target }}" != "aarch64-unknown-linux-gnu" ]; then
+            ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }} --help
+          else
+            echo "Skipping functionality test for cross-compiled ARM64 binary"
+            # Verify the binary exists and has correct format
+            file target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+          fi
+        shell: bash
 
       - name: Get tag name
         id: get_tag
@@ -102,8 +119,8 @@ jobs:
             ## Changes in ${{ steps.get_tag.outputs.tag }}
 
             - Build artifacts for multiple platforms
-            - Cross-platform compatibility
-            - Performance improvements and bug fixes
+            - Cross-platform compatibility improvements
+            - Performance optimizations and bug fixes
 
             ## Installation
 
@@ -111,18 +128,26 @@ jobs:
 
             ### Linux
             - `pb-linux-x86_64` - For 64-bit Intel/AMD processors
-            - `pb-linux-aarch64` - For 64-bit ARM processors
-              (e.g., Raspberry Pi 4, AWS Graviton)
+            - `pb-linux-aarch64` - For 64-bit ARM processors (e.g., Raspberry Pi 4, AWS Graviton)
 
             ### macOS
+            - `pb-macos-x86_64` - For Intel Macs
             - `pb-macos-aarch64` - For Apple Silicon Macs (M1, M2, etc.)
+
+            ### Windows
+            - `pb-windows-x86_64.exe` - For 64-bit Windows systems
 
             ## Usage
 
-            After downloading, make the binary executable:
+            After downloading, make the binary executable (Linux/macOS):
             ```bash
             chmod +x pb-*
             ./pb-* --help
+            ```
+
+            For Windows, run directly:
+            ```cmd
+            pb-windows-x86_64.exe --help
             ```
           files: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
           draft: false
