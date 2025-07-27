@@ -217,7 +217,9 @@ jobs:
 
       - name: Install cargo-tarpaulin
         run: |
-          cargo install --locked cargo-tarpaulin || cargo install cargo-tarpaulin
+          if ! command -v cargo-tarpaulin &> /dev/null; then
+            cargo install --locked cargo-tarpaulin || cargo install cargo-tarpaulin
+          fi
 
       - name: Generate code coverage
         run: cargo tarpaulin --verbose --all-features --workspace --timeout 120 --out xml
