@@ -977,6 +977,9 @@ mod color_tests {
     fn test_color_consistency() {
         // Test that the same percentage always produces the same output
         // (important for consistent display)
+        
+        // Force consistent color behavior to prevent flaky CI tests
+        control::set_override(true);
 
         let test_cases = vec![0.0, 50.0, 100.0, 150.0];
 
@@ -1022,6 +1025,9 @@ mod color_tests {
                 "Overtime progress should match plain version when colors are disabled"
             );
         }
+        
+        // Reset color override after test
+        control::unset_override();
     }
 
     #[test]
