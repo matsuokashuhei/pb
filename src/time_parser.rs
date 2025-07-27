@@ -357,7 +357,7 @@ fn parse_time_only(input: &str) -> Result<NaiveDateTime, PbError> {
 /// Supported formats:
 /// - Date: "YYYY-MM-DD" (e.g., "2025-07-21")
 /// - DateTime: "YYYY-MM-DD HH:MM:SS" (e.g., "2025-07-21 10:30:00")
-/// - Relative: "+NNu" where NN is number and u is unit (m/h/d) (e.g., "+2h", "+30m")
+/// - Relative: "+NNu" where NN is number and u is unit (s/m/h/d) (e.g., "+2h", "+30m")
 ///
 /// # Arguments
 ///
@@ -381,11 +381,44 @@ fn parse_time_only(input: &str) -> Result<NaiveDateTime, PbError> {
 /// let result = parse_time("2025-07-21 10:30:00");
 /// assert!(result.is_ok());
 ///
-/// // Parse relative time (requires current time as base)
+/// // Parse relative time (uses current time as base)
 /// let result = parse_time("+2h");
 /// assert!(result.is_ok());
 /// ```
 pub fn parse_time(input: &str) -> Result<NaiveDateTime, PbError> {
+    parse_time_with_base(input, None)
+}
+
+/// Parse a time string with an optional base time for relative parsing
+///
+/// This function is similar to `parse_time` but allows specifying a base time
+/// for relative time calculations. When parsing end times that are relative,
+/// the base time should be the start time instead of the current time.
+///
+/// # Arguments
+///
+/// * `input` - A string slice containing the time in any supported format
+/// * `base_time` - Optional base time for relative calculations. If None, uses current time.
+///
+/// # Returns
+///
+/// * `Ok(NaiveDateTime)` - Successfully parsed time
+/// * `Err(PbError)` - Invalid format or unable to parse
+///
+/// # Examples
+///
+/// ```
+/// use pb::time_parser::parse_time_with_base;
+/// use chrono::NaiveDateTime;
+///
+/// let start_time = NaiveDateTime::parse_from_str("2025-01-27 14:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+///
+/// // Parse end time relative to start time
+/// let result = parse_time_with_base("2h", Some(start_time));
+/// assert!(result.is_ok());
+/// // This will give 2025-01-27 16:00:00 (2 hours after start_time)
+/// ```
+pub fn parse_time_with_base(input: &str, base_time: Option<NaiveDateTime>) -> Result<NaiveDateTime, PbError> {
     let trimmed_input = input.trim();
 
     if trimmed_input.is_empty() {
@@ -394,13 +427,13 @@ pub fn parse_time(input: &str) -> Result<NaiveDateTime, PbError> {
 
     // Check for relative time format (starts with + or -)
     if trimmed_input.starts_with('+') || trimmed_input.starts_with('-') {
-        let base_time = get_current_time();
+        let base = base_time.unwrap_or_else(get_current_time);
         let relative_input = if let Some(stripped) = trimmed_input.strip_prefix('+') {
             stripped // Remove the '+' prefix
         } else {
             trimmed_input // Keep the '-' prefix for negative relative times
         };
-        return parse_relative_time(relative_input, base_time);
+        return parse_relative_time(relative_input, base);
     }
 
     // Check if it looks like a datetime (contains space and colon)
@@ -419,8 +452,8 @@ pub fn parse_time(input: &str) -> Result<NaiveDateTime, PbError> {
     }
 
     // If none of the above, try relative time without prefix (like "2h", "30m")
-    let base_time = get_current_time();
-    parse_relative_time(trimmed_input, base_time)
+    let base = base_time.unwrap_or_else(get_current_time);
+    parse_relative_time(trimmed_input, base)
 }
 
 /// Validate that start time is before end time
