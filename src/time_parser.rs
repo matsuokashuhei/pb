@@ -196,18 +196,19 @@ pub fn parse_datetime(input: &str) -> Result<NaiveDateTime, PbError> {
 
 /// Parse a relative time string and convert to absolute timestamp
 ///
-/// This function parses relative time strings in formats like `30m`, `2h`, `1d`
+/// This function parses relative time strings in formats like `30s`, `30m`, `2h`, `1d`
 /// and converts them to absolute timestamps by adding the duration to a base time.
 ///
 /// Supported formats:
+/// - `30s` - 30 seconds
 /// - `30m` - 30 minutes
 /// - `2h` - 2 hours
 /// - `1d` - 1 day
 ///
 /// The function enforces strict formatting requirements:
-/// - Must match pattern `^(\d+)([mhd])$` exactly
-/// - Amount must be between 1 and 999 (inclusive)
-/// - Only supports units: m (minutes), h (hours), d (days)
+/// - Must match pattern `^(\d+)([smhd])$` exactly
+/// - Amount must be between 1 and 99999 (inclusive)
+/// - Only supports units: s (seconds), m (minutes), h (hours), d (days)
 ///
 /// # Arguments
 ///
@@ -228,6 +229,9 @@ pub fn parse_datetime(input: &str) -> Result<NaiveDateTime, PbError> {
 /// let base = NaiveDateTime::parse_from_str("2025-07-21 10:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
 ///
 /// // Valid relative times
+/// let result = parse_relative_time("30s", base);
+/// assert!(result.is_ok());
+///
 /// let result = parse_relative_time("30m", base);
 /// assert!(result.is_ok());
 ///
@@ -249,8 +253,8 @@ pub fn parse_relative_time(
     input: &str,
     base_time: NaiveDateTime,
 ) -> Result<NaiveDateTime, PbError> {
-    // Create regex pattern for relative time formats: ^(\d+)([mhd])$
-    let re = Regex::new(r"^(\d+)([mhd])$").unwrap();
+    // Create regex pattern for relative time formats: ^(\d+)([smhd])$
+    let re = Regex::new(r"^(\d+)([smhd])$").unwrap();
 
     if let Some(captures) = re.captures(input) {
         // Parse the numeric amount
@@ -262,8 +266,16 @@ pub fn parse_relative_time(
 
         let unit = &captures[2];
 
-        // Validate range (1-999)
-        if !(1..=999).contains(&amount) {
+        // Validate range based on unit
+        let max_value = match unit {
+            "s" => 86400,        // Max 1 day worth of seconds
+            "m" => 999,          // Max 999 minutes
+            "h" => 999,          // Max 999 hours
+            "d" => 999,          // Max 999 days
+            _ => unreachable!(), // Regex ensures only valid units
+        };
+
+        if !(1..=max_value).contains(&amount) {
             return Err(PbError::InvalidRelativeTimeFormat {
                 input: input.to_string(),
             });
@@ -271,6 +283,7 @@ pub fn parse_relative_time(
 
         // Convert to seconds based on unit
         let seconds = match unit {
+            "s" => amount,         // seconds
             "m" => amount * 60,    // minutes to seconds
             "h" => amount * 3600,  // hours to seconds
             "d" => amount * 86400, // days to seconds
@@ -352,7 +365,7 @@ fn parse_time_only(input: &str) -> Result<NaiveDateTime, PbError> {
 /// Supported formats:
 /// - Date: "YYYY-MM-DD" (e.g., "2025-07-21")
 /// - DateTime: "YYYY-MM-DD HH:MM:SS" (e.g., "2025-07-21 10:30:00")
-/// - Relative: "+NNu" where NN is number and u is unit (m/h/d) (e.g., "+2h", "+30m")
+/// - Relative: "+NNu" where NN is number and u is unit (s/m/h/d) (e.g., "+2h", "+30m")
 ///
 /// # Arguments
 ///
@@ -376,11 +389,47 @@ fn parse_time_only(input: &str) -> Result<NaiveDateTime, PbError> {
 /// let result = parse_time("2025-07-21 10:30:00");
 /// assert!(result.is_ok());
 ///
-/// // Parse relative time (requires current time as base)
+/// // Parse relative time (uses current time as base)
 /// let result = parse_time("+2h");
 /// assert!(result.is_ok());
 /// ```
 pub fn parse_time(input: &str) -> Result<NaiveDateTime, PbError> {
+    parse_time_with_base(input, None)
+}
+
+/// Parse a time string with an optional base time for relative parsing
+///
+/// This function is similar to `parse_time` but allows specifying a base time
+/// for relative time calculations. When parsing end times that are relative,
+/// the base time should be the start time instead of the current time.
+///
+/// # Arguments
+///
+/// * `input` - A string slice containing the time in any supported format
+/// * `base_time` - Optional base time for relative calculations. If None, uses current time.
+///
+/// # Returns
+///
+/// * `Ok(NaiveDateTime)` - Successfully parsed time
+/// * `Err(PbError)` - Invalid format or unable to parse
+///
+/// # Examples
+///
+/// ```
+/// use pb::time_parser::parse_time_with_base;
+/// use chrono::NaiveDateTime;
+///
+/// let start_time = NaiveDateTime::parse_from_str("2025-01-27 14:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+///
+/// // Parse end time relative to start time
+/// let result = parse_time_with_base("2h", Some(start_time));
+/// assert!(result.is_ok());
+/// // This will give 2025-01-27 16:00:00 (2 hours after start_time)
+/// ```
+pub fn parse_time_with_base(
+    input: &str,
+    base_time: Option<NaiveDateTime>,
+) -> Result<NaiveDateTime, PbError> {
     let trimmed_input = input.trim();
 
     if trimmed_input.is_empty() {
@@ -389,13 +438,13 @@ pub fn parse_time(input: &str) -> Result<NaiveDateTime, PbError> {
 
     // Check for relative time format (starts with + or -)
     if trimmed_input.starts_with('+') || trimmed_input.starts_with('-') {
-        let base_time = get_current_time();
+        let base = base_time.unwrap_or_else(get_current_time);
         let relative_input = if let Some(stripped) = trimmed_input.strip_prefix('+') {
             stripped // Remove the '+' prefix
         } else {
             trimmed_input // Keep the '-' prefix for negative relative times
         };
-        return parse_relative_time(relative_input, base_time);
+        return parse_relative_time(relative_input, base);
     }
 
     // Check if it looks like a datetime (contains space and colon)
@@ -414,8 +463,8 @@ pub fn parse_time(input: &str) -> Result<NaiveDateTime, PbError> {
     }
 
     // If none of the above, try relative time without prefix (like "2h", "30m")
-    let base_time = get_current_time();
-    parse_relative_time(trimmed_input, base_time)
+    let base = base_time.unwrap_or_else(get_current_time);
+    parse_relative_time(trimmed_input, base)
 }
 
 /// Validate that start time is before end time
@@ -1036,9 +1085,6 @@ mod tests {
         let result = parse_relative_time("30x", base_time);
         assert!(result.is_err());
 
-        let result = parse_relative_time("30s", base_time);
-        assert!(result.is_err());
-
         let result = parse_relative_time("30w", base_time);
         assert!(result.is_err());
 
@@ -1097,18 +1143,21 @@ mod tests {
         let result = parse_relative_time("0d", base_time);
         assert!(result.is_err());
 
-        // Values over 999 not allowed
-        let result = parse_relative_time("1000m", base_time);
+        // Values over unit-specific limits not allowed
+        let result = parse_relative_time("1000m", base_time); // Over 999 limit for minutes
         assert!(result.is_err());
 
-        let result = parse_relative_time("1000h", base_time);
+        let result = parse_relative_time("1000h", base_time); // Over 999 limit for hours
         assert!(result.is_err());
 
-        let result = parse_relative_time("1000d", base_time);
+        let result = parse_relative_time("1000d", base_time); // Over 999 limit for days
+        assert!(result.is_err());
+
+        let result = parse_relative_time("86401s", base_time); // Over 86400 limit for seconds
         assert!(result.is_err());
 
         // Very large numbers
-        let result = parse_relative_time("99999d", base_time);
+        let result = parse_relative_time("999999d", base_time);
         assert!(result.is_err());
 
         // Boundary tests - valid
@@ -1116,6 +1165,9 @@ mod tests {
         assert!(result.is_ok());
 
         let result = parse_relative_time("999m", base_time);
+        assert!(result.is_ok());
+
+        let result = parse_relative_time("86400s", base_time); // Max seconds (1 day)
         assert!(result.is_ok());
     }
 
@@ -1221,7 +1273,7 @@ mod tests {
             "30",    // Missing unit
             "30x",   // Invalid unit
             "0m",    // Zero not allowed
-            "1000m", // Too large
+            "1000m", // Too large (over 999 limit for minutes)
             " 30m",  // Leading space
             "30m ",  // Trailing space
             "abc",   // Not a number
