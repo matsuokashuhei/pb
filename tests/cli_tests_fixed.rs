@@ -72,8 +72,8 @@ mod cli_parsing_tests {
     fn test_required_arguments_missing() {
         let invalid_args = vec![
             vec!["pb"],                     // no arguments
-            vec!["pb", "--start", "10:00"], // missing end
-            vec!["pb", "--end", "12:00"],   // missing start
+            vec!["pb", "--start", "10:00"], // missing end (end is still required)
+            // Note: vec!["pb", "--end", "12:00"] is now valid since start is optional
         ];
 
         for args in invalid_args {
