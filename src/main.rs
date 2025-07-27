@@ -1,6 +1,9 @@
 use anyhow::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
-use pb::{calculate_progress, get_current_time, parse_time, render_colored_progress_bar, validate_times, Cli};
+use pb::{
+    calculate_progress, get_current_time, parse_time, render_colored_progress_bar, validate_times,
+    Cli,
+};
 use std::io::{self, Write};
 use std::time::Duration;
 

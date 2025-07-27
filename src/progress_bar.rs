@@ -745,25 +745,37 @@ mod color_tests {
             );
         }
 
-        // Also test that overtime (>100%) is handled differently than normal
+        // Also test that overtime (>100%) is handled consistently
         let normal = render_colored_progress_bar(50.0);
-        let _overtime = render_colored_progress_bar(150.0);
+        let overtime = render_colored_progress_bar(150.0);
 
-        // The overtime output should either be the same as normal (no color support)
-        // or different (with color support), but should be consistent
+        // Test relationship between normal and plain versions
         let normal_plain = render_progress_bar(50.0);
-        let _overtime_plain = render_progress_bar(150.0);
+        let overtime_plain = render_progress_bar(150.0);
 
-        // Color behavior should be consistent:
-        // Either both normal and overtime equal their plain versions (no color),
-        // or normal equals plain but overtime has color applied
-        assert!(
-            normal == normal_plain,
-            "Color behavior should be consistent - normal should match plain version"
-        );
-        
-        // Additional check: if overtime has color, it should be different than plain
-        // This is acceptable whether colors are on or off
+        // Color behavior should be consistent based on color support:
+        if control::SHOULD_COLORIZE.should_colorize() {
+            // When colors are enabled:
+            // - Normal progress should match plain version (no color applied)
+            // - Overtime progress should be different from plain version (color applied)
+            assert_eq!(
+                normal, normal_plain,
+                "Normal progress should match plain version when colors are enabled"
+            );
+
+            // Overtime should be different from plain if colors are enabled
+            // (but we don't enforce this as a strict assertion since color detection can vary)
+        } else {
+            // When colors are disabled, both should match their plain versions
+            assert_eq!(
+                normal, normal_plain,
+                "Normal progress should match plain version when colors are disabled"
+            );
+            assert_eq!(
+                overtime, overtime_plain,
+                "Overtime progress should match plain version when colors are disabled"
+            );
+        }
     }
 
     #[test]
