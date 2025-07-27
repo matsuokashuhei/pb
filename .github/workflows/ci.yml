@@ -143,8 +143,14 @@ jobs:
             target: aarch64-unknown-linux-gnu
             artifact_name: pb-linux-aarch64
           - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: pb-macos-x86_64
+          - os: macos-latest
             target: aarch64-apple-darwin
             artifact_name: pb-macos-aarch64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: pb-windows-x86_64.exe
 
     steps:
       - name: Checkout code
@@ -182,8 +188,14 @@ jobs:
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
 
-      - name: Rename binary
-        run: cp target/${{ matrix.target }}/release/pb target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+      - name: Prepare binary artifact
+        run: |
+          if [[ "${{ matrix.target }}" == *"windows"* ]]; then
+            cp target/${{ matrix.target }}/release/pb.exe target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+          else
+            cp target/${{ matrix.target }}/release/pb target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+          fi
+        shell: bash
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -233,3 +245,62 @@ jobs:
         with:
           file: cobertura.xml
           fail_ci_if_error: false
+
+  workflow-validation:
+    name: Validate Workflows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate release workflow syntax
+        run: |
+          echo "Validating .github/workflows/release.yml syntax..."
+          python3 -c "import yaml; yaml.safe_load(open('.github/workflows/release.yml'))"
+          echo "✓ Release workflow YAML syntax is valid"
+
+      - name: Validate workflow targets
+        run: |
+          echo "Checking if all expected targets are present in release workflow..."
+          targets=(
+            "x86_64-unknown-linux-gnu"
+            "aarch64-unknown-linux-gnu" 
+            "x86_64-apple-darwin"
+            "aarch64-apple-darwin"
+            "x86_64-pc-windows-msvc"
+          )
+          
+          missing=0
+          for target in "${targets[@]}"; do
+            if ! grep -q "$target" .github/workflows/release.yml; then
+              echo "✗ Missing target: $target"
+              missing=1
+            else
+              echo "✓ Found target: $target"
+            fi
+          done
+          
+          if [ $missing -eq 1 ]; then
+            echo "❌ Some required targets are missing from release workflow"
+            exit 1
+          fi
+          
+          echo "✅ All required targets are present in release workflow"
+
+      - name: Check for redundant commands
+        run: |
+          echo "Checking for redundant strip commands..."
+          if grep -q "strip target" .github/workflows/release.yml; then
+            echo "⚠️  Found manual strip command - may be redundant"
+            echo "   Check if Cargo.toml has 'strip = true' in [profile.release]"
+            if grep -q "strip = true" Cargo.toml; then
+              echo "   → Cargo.toml has 'strip = true', manual strip is redundant"
+            fi
+          else
+            echo "✓ No redundant strip commands found"
+          fi
+
+      - name: Run release workflow validation script
+        run: |
+          chmod +x scripts/validate-release-workflow.sh
+          ./scripts/validate-release-workflow.sh
