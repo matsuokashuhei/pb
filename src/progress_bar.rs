@@ -423,6 +423,14 @@ mod render_with_time_tests {
 
     #[test]
     fn test_render_colored_progress_bar_with_time_normal() {
+        use colored::control;
+
+        // Save the current color state to restore later
+        let original_should_colorize = control::SHOULD_COLORIZE.should_colorize();
+
+        // Force consistent color behavior to prevent flaky CI tests
+        control::set_override(true);
+
         let start = create_test_datetime("2025-01-27 09:00:00");
         let end = create_test_datetime("2025-01-27 17:00:00");
         let current = create_test_datetime("2025-01-27 11:00:00"); // 25% progress
@@ -431,11 +439,29 @@ mod render_with_time_tests {
 
         // For normal progress, should be same as non-colored version
         let expected = render_progress_bar_with_time(25.0, start, end, current);
-        assert_eq!(result, expected);
+        assert_eq!(
+            result, expected,
+            "Normal progress colored bar with time should match non-colored version"
+        );
+
+        // Restore original color state
+        if original_should_colorize {
+            control::set_override(true);
+        } else {
+            control::unset_override();
+        }
     }
 
     #[test]
     fn test_render_colored_progress_bar_with_time_overtime() {
+        use colored::control;
+
+        // Save the current color state to restore later
+        let original_should_colorize = control::SHOULD_COLORIZE.should_colorize();
+
+        // Force consistent color behavior to prevent flaky CI tests
+        control::set_override(true);
+
         let start = create_test_datetime("2025-01-27 09:00:00");
         let end = create_test_datetime("2025-01-27 17:00:00");
         let current = create_test_datetime("2025-01-27 19:00:00"); // 2 hours past end
@@ -447,6 +473,24 @@ mod render_with_time_tests {
         // Should contain time information
         assert!(result.contains("10h 0m elapsed"));
         assert!(result.contains("0m remaining")); // Negative remaining shows as 0m
+
+        // When colors are forced on, overtime should potentially contain color codes
+        // In some CI environments, colors may still be disabled, so we check the function doesn't panic
+        // and returns expected content rather than strictly requiring ANSI codes
+        let _non_colored = render_progress_bar_with_time(125.0, start, end, current);
+
+        // The core content should be present regardless of coloring
+        assert!(
+            result.contains("125.0%") && result.contains("10h 0m elapsed"),
+            "Result should contain expected time and percentage information"
+        );
+
+        // Restore original color state
+        if original_should_colorize {
+            control::set_override(true);
+        } else {
+            control::unset_override();
+        }
     }
 
     #[test]
@@ -803,33 +847,36 @@ mod color_tests {
     #[test]
     fn test_colored_overtime_progress() {
         // Test that overtime progress (>100%) gets color formatting
+        // Save the current color state to restore later
+        let original_should_colorize = control::SHOULD_COLORIZE.should_colorize();
+
+        // Force consistent color behavior to prevent flaky CI tests
+        control::set_override(true);
+
         let test_cases = vec![100.1, 110.0, 150.0, 200.0];
 
         for percentage in test_cases {
             let regular = render_progress_bar(percentage);
             let colored = render_colored_progress_bar(percentage);
 
-            // If colors are enabled, the colored version should be different
-            // If colors are disabled, they should be the same
-            if control::SHOULD_COLORIZE.should_colorize() {
-                assert_ne!(
-                    regular, colored,
-                    "Overtime progress {percentage}% should have color codes when colors are enabled"
-                );
+            // With colors forced on, the colored version should be different for overtime
+            assert_ne!(
+                regular, colored,
+                "Overtime progress {percentage}% should have color codes when colors are enabled"
+            );
 
-                // The colored version should contain the original text
-                assert!(
-                    colored.contains(&regular)
-                        || colored.ends_with(&format!("{}%", percentage as i32)),
-                    "Colored version should contain the original percentage: {percentage}"
-                );
-            } else {
-                // When colors are disabled, they should be identical
-                assert_eq!(
-                    regular, colored,
-                    "When colors disabled, {percentage}% should be identical"
-                );
-            }
+            // The colored version should contain ANSI color codes
+            assert!(
+                colored.contains('\x1b'),
+                "Overtime progress {percentage}% should contain ANSI escape codes"
+            );
+        }
+
+        // Restore original color state
+        if original_should_colorize {
+            control::set_override(true);
+        } else {
+            control::unset_override();
         }
     }
 
@@ -875,6 +922,9 @@ mod color_tests {
     #[test]
     fn test_color_formatting_structure() {
         // Test the structure of colored output when colors are enabled
+        // Save the current color state to restore later
+        let original_should_colorize = control::SHOULD_COLORIZE.should_colorize();
+
         control::set_override(true); // Force colors on for this test
 
         let overtime_result = render_colored_progress_bar(150.0);
@@ -894,7 +944,12 @@ mod color_tests {
             );
         }
 
-        control::unset_override(); // Reset override
+        // Restore original color state
+        if original_should_colorize {
+            control::set_override(true);
+        } else {
+            control::unset_override();
+        }
     }
 
     #[test]
@@ -951,6 +1006,9 @@ mod color_tests {
         // Test that the same percentage always produces the same output
         // (important for consistent display)
 
+        // Save the current color state to restore later
+        let original_should_colorize = control::SHOULD_COLORIZE.should_colorize();
+
         // Force consistent color behavior to prevent flaky CI tests
         control::set_override(true);
 
@@ -987,8 +1045,12 @@ mod color_tests {
             "Overtime progress should be consistent across calls"
         );
 
-        // Reset color override after test
-        control::unset_override();
+        // Restore original color state
+        if original_should_colorize {
+            control::set_override(true);
+        } else {
+            control::unset_override();
+        }
     }
 
     #[test]
