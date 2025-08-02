@@ -5,7 +5,7 @@
 
 use chrono::Timelike;
 use clap::Parser;
-use pb::{determine_start_time_for_end, get_current_time, Cli};
+use pmon::{determine_start_time_for_end, get_current_time, Cli};
 
 #[cfg(test)]
 mod optional_start_time_tests {
@@ -115,7 +115,7 @@ mod optional_start_time_tests {
     #[test]
     fn test_cli_optional_start_parsing() {
         // Test that CLI correctly parses when start is omitted
-        let cli = Cli::try_parse_from(vec!["pb", "--end", "17:00:00"]).unwrap();
+        let cli = Cli::try_parse_from(vec!["pmon", "--end", "17:00:00"]).unwrap();
 
         assert_eq!(cli.start(), None);
         assert_eq!(cli.end(), "17:00:00");
@@ -125,7 +125,8 @@ mod optional_start_time_tests {
     #[test]
     fn test_cli_optional_start_with_interval() {
         // Test that CLI correctly parses when start is omitted but interval is provided
-        let cli = Cli::try_parse_from(vec!["pb", "--end", "17:00:00", "--interval", "30"]).unwrap();
+        let cli =
+            Cli::try_parse_from(vec!["pmon", "--end", "17:00:00", "--interval", "30"]).unwrap();
 
         assert_eq!(cli.start(), None);
         assert_eq!(cli.end(), "17:00:00");
@@ -136,7 +137,7 @@ mod optional_start_time_tests {
     fn test_cli_backward_compatibility() {
         // Test that providing start still works as before
         let cli =
-            Cli::try_parse_from(vec!["pb", "--start", "15:00:00", "--end", "17:00:00"]).unwrap();
+            Cli::try_parse_from(vec!["pmon", "--start", "15:00:00", "--end", "17:00:00"]).unwrap();
 
         assert_eq!(cli.start(), Some("15:00:00"));
         assert_eq!(cli.end(), "17:00:00");
@@ -146,25 +147,25 @@ mod optional_start_time_tests {
     #[test]
     fn test_cli_validation_with_optional_start() {
         // Test validation when start is None
-        let cli = Cli::try_parse_from(vec!["pb", "--end", "17:00:00"]).unwrap();
+        let cli = Cli::try_parse_from(vec!["pmon", "--end", "17:00:00"]).unwrap();
         assert!(cli.validate().is_ok());
 
         // Test validation when start is Some but empty
-        let cli = Cli::try_parse_from(vec!["pb", "--start", "", "--end", "17:00:00"]).unwrap();
+        let cli = Cli::try_parse_from(vec!["pmon", "--start", "", "--end", "17:00:00"]).unwrap();
         assert!(cli.validate().is_err());
 
         // Test validation when end is empty
-        let cli = Cli::try_parse_from(vec!["pb", "--end", ""]).unwrap();
+        let cli = Cli::try_parse_from(vec!["pmon", "--end", ""]).unwrap();
         assert!(cli.validate().is_err());
     }
 
     #[test]
     fn test_cli_missing_end_still_fails() {
         // End time is still required
-        let result = Cli::try_parse_from(vec!["pb"]);
+        let result = Cli::try_parse_from(vec!["pmon"]);
         assert!(result.is_err());
 
-        let result = Cli::try_parse_from(vec!["pb", "--interval", "30"]);
+        let result = Cli::try_parse_from(vec!["pmon", "--interval", "30"]);
         assert!(result.is_err());
     }
 }

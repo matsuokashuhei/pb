@@ -68,13 +68,13 @@ RUN apt-get update && apt-get install -y \
 RUN useradd -r -s /bin/false appuser
 
 # Copy binary from builder stage
-COPY --from=builder /app/target/release/pb /usr/local/bin/pb
+COPY --from=builder /app/target/release/pmon /usr/local/bin/pmon
 
 # Change ownership
-RUN chown appuser:appuser /usr/local/bin/pb
+RUN chown appuser:appuser /usr/local/bin/pmon
 
 # Switch to app user
 USER appuser
 
 # Set entrypoint
-ENTRYPOINT ["pb"]
+ENTRYPOINT ["pmon"]

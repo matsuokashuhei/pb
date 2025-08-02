@@ -1,6 +1,6 @@
 use anyhow::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
-use pb::{
+use pmon::{
     calculate_progress, determine_start_time_for_end, get_current_time, parse_time,
     parse_time_with_base, render_colored_progress_bar_with_time, validate_times, Cli,
 };
@@ -52,7 +52,7 @@ fn main() -> Result<()> {
 
     // Display header information only if verbose flag is set
     if cli.verbose() {
-        println!("pb - Progress Bar Tool");
+        println!("pmon - Progress Monitor Tool");
         println!("Start time: {}", start_time.format("%Y-%m-%d %H:%M:%S"));
         println!("End time: {}", end_time.format("%Y-%m-%d %H:%M:%S"));
         println!("Update interval: {} seconds", cli.interval());

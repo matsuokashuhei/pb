@@ -1,27 +1,27 @@
-# pb - CLI Progress Bar Tool
+# pmon - CLI Progress Monitor Tool
 
 [![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)](https://www.rust-lang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://github.com/matsuokashuhei/pb/workflows/CI/badge.svg)](https://github.com/matsuokashuhei/pb/actions)
 
-A command-line progress bar tool for time-based visualization. Track time between two points with real-time progress updates, perfect for monitoring deadlines, work sessions, or any time-based process.
+A command-line progress monitor tool for time-based visualization. Track time between two points with real-time progress updates, perfect for monitoring deadlines, work sessions, or any time-based process.
 
-![pb demo](https://user-images.githubusercontent.com/example/pb-demo.gif)
+![pmon demo](https://user-images.githubusercontent.com/example/pmon-demo.gif)
 
 ## Quick Start
 
 ```bash
 # Track an 8-hour work day (traditional usage)
-pb --start "2025-01-27 09:00:00" --end "2025-01-27 17:00:00"
+pmon --start "2025-01-27 09:00:00" --end "2025-01-27 17:00:00"
 
 # Track remaining work day (start from now)
-pb --end "17:00:00"
+pmon --end "17:00:00"
 
 # Monitor a 2-hour meeting timer (start from now)
-pb --end "2h" --interval 30
+pmon --end "2h" --interval 30
 
 # Create a countdown to a deadline (start from today 00:00:00)
-pb --end "2025-02-15" --interval 3600
+pmon --end "2025-02-15" --interval 3600
 ```
 
 ## Features
@@ -41,35 +41,35 @@ pb --end "2025-02-15" --interval 3600
 
 #### Linux
 ```bash
-curl -L -o pb https://github.com/matsuokashuhei/pb/releases/latest/download/pb-linux-x86_64
-chmod +x pb
-sudo mv pb /usr/local/bin/
+curl -L -o pmon https://github.com/matsuokashuhei/pb/releases/latest/download/pmon-linux-x86_64
+chmod +x pmon
+sudo mv pmon /usr/local/bin/
 ```
 
 #### macOS
 ```bash
 # Intel Mac
-curl -L -o pb https://github.com/matsuokashuhei/pb/releases/latest/download/pb-macos-x86_64
+curl -L -o pmon https://github.com/matsuokashuhei/pb/releases/latest/download/pmon-macos-x86_64
 
 # Apple Silicon
-curl -L -o pb https://github.com/matsuokashuhei/pb/releases/latest/download/pb-macos-arm64
+curl -L -o pmon https://github.com/matsuokashuhei/pb/releases/latest/download/pmon-macos-arm64
 
-chmod +x pb
-sudo mv pb /usr/local/bin/
+chmod +x pmon
+sudo mv pmon /usr/local/bin/
 ```
 
 #### Windows
-Download `pb-windows-x86_64.exe` from the [releases page](https://github.com/matsuokashuhei/pb/releases) and add to your PATH.
+Download `pmon-windows-x86_64.exe` from the [releases page](https://github.com/matsuokashuhei/pb/releases) and add to your PATH.
 
 ### Package Managers
 
 ```bash
 # Homebrew (macOS/Linux)
 brew tap matsuokashuhei/pb
-brew install pb
+brew install pmon
 
 # Cargo (Rust)
-cargo install pb-cli
+cargo install pmon-cli
 ```
 
 ### From Source
@@ -78,7 +78,7 @@ cargo install pb-cli
 git clone https://github.com/matsuokashuhei/pb.git
 cd pb
 cargo build --release
-sudo mv target/release/pb /usr/local/bin/
+sudo mv target/release/pmon /usr/local/bin/
 ```
 
 For detailed installation instructions for all platforms, see [Installation Guide](docs/installation.md).
@@ -88,109 +88,109 @@ For detailed installation instructions for all platforms, see [Installation Guid
 ### Basic Syntax
 
 ```bash
-pb [--start START_TIME] --end END_TIME [--interval SECONDS]
+pmon [--start START_TIME] --end END_TIME [--interval SECONDS]
 ```
 
-**Note**: The `--start` parameter is optional. When omitted, pb automatically determines the start time based on the end time format:
+**Note**: The `--start` parameter is optional. When omitted, pmon automatically determines the start time based on the end time format:
 - **Time-containing formats** (e.g., "17:00:00", "2h", "+30m") → Start from current time
 - **Date-only formats** (e.g., "2025-12-31") → Start from today at 00:00:00
 
 ### Time Formats
 
-pb supports three flexible time formats:
+pmon supports three flexible time formats:
 
 #### Date Format (`YYYY-MM-DD`)
 ```bash
-pb --start "2025-01-27" --end "2025-01-28"
+pmon --start "2025-01-27" --end "2025-01-28"
 ```
 *Time defaults to 00:00:00 (midnight)*
 
 #### Datetime Format (`YYYY-MM-DD HH:MM:SS`)
 ```bash
-pb --start "2025-01-27 09:00:00" --end "2025-01-27 17:00:00"
+pmon --start "2025-01-27 09:00:00" --end "2025-01-27 17:00:00"
 ```
 *Full datetime in 24-hour format*
 
 #### Relative Time Format
 ```bash
-pb --start "2025-01-27 14:00:00" --end "2h"    # 2 hours
-pb --start "2025-01-27 14:00:00" --end "90m"   # 90 minutes
-pb --start "2025-01-27" --end "7d"             # 7 days
-pb --start "2025-01-27 14:00:00" --end "3600s" # 3600 seconds
+pmon --start "2025-01-27 14:00:00" --end "2h"    # 2 hours
+pmon --start "2025-01-27 14:00:00" --end "90m"   # 90 minutes
+pmon --start "2025-01-27" --end "7d"             # 7 days
+pmon --start "2025-01-27 14:00:00" --end "3600s" # 3600 seconds
 ```
 *Supports hours (h), minutes (m), days (d), and seconds (s)*
 
 ### Automatic Start Time Detection
 
-When the `--start` parameter is omitted, pb automatically determines the appropriate start time based on the end time format:
+When the `--start` parameter is omitted, pmon automatically determines the appropriate start time based on the end time format:
 
 #### Time-containing end formats → Current time as start
 ```bash
-pb --end "17:00:00"             # Work day tracking - start from now
-pb --end "2025-07-27 17:00:00"  # Datetime format - start from now  
-pb --end "2h"                   # Meeting timer - 2 hours from now
-pb --end "+30m"                 # Study session - 30 minutes from now
+pmon --end "17:00:00"             # Work day tracking - start from now
+pmon --end "2025-07-27 17:00:00"  # Datetime format - start from now  
+pmon --end "2h"                   # Meeting timer - 2 hours from now
+pmon --end "+30m"                 # Study session - 30 minutes from now
 ```
 
 #### Date-only end formats → Today 00:00:00 as start
 ```bash
-pb --end "2025-12-31"           # Project deadline - track from start of today
+pmon --end "2025-12-31"           # Project deadline - track from start of today
 ```
 
-This feature makes pb more intuitive for common use cases while maintaining backward compatibility.
+This feature makes pmon more intuitive for common use cases while maintaining backward compatibility.
 
 ### Common Use Cases
 
 #### Work Day Tracking
 ```bash
 # Standard 8-hour work day (traditional usage)
-pb --start "2025-01-27 09:00:00" --end "2025-01-27 17:00:00"
+pmon --start "2025-01-27 09:00:00" --end "2025-01-27 17:00:00"
 
 # Track remaining work day from now
-pb --end "17:00:00"
+pmon --end "17:00:00"
 
 # Flexible start with relative end time
-pb --start "$(date '+%Y-%m-%d 09:00:00')" --end "8h"
+pmon --start "$(date '+%Y-%m-%d 09:00:00')" --end "8h"
 ```
 
 #### Meeting Timer
 ```bash
 # 1-hour meeting with minute-by-minute updates (traditional usage)
-pb --start "2025-01-27 14:00:00" --end "1h" --interval 60
+pmon --start "2025-01-27 14:00:00" --end "1h" --interval 60
 
 # 2-hour meeting starting now
-pb --end "2h" --interval 60
+pmon --end "2h" --interval 60
 
 # 30-minute quick meeting starting now
-pb --end "30m" --interval 30
+pmon --end "30m" --interval 30
 ```
 
 #### Project Deadline
 ```bash
 # Track progress to deadline with daily updates (traditional usage)
-pb --start "2025-01-20" --end "2025-02-15" --interval 86400
+pmon --start "2025-01-20" --end "2025-02-15" --interval 86400
 
 # Track remaining time to deadline from today
-pb --end "2025-02-15" --interval 86400
+pmon --end "2025-02-15" --interval 86400
 ```
 
 #### Study/Focus Sessions
 ```bash
 # Pomodoro timer (25 minutes) - traditional usage
-pb --start "$(date '+%Y-%m-%d %H:%M:%S')" --end "25m" --interval 60
+pmon --start "$(date '+%Y-%m-%d %H:%M:%S')" --end "25m" --interval 60
 
 # Pomodoro timer starting now
-pb --end "25m" --interval 60
+pmon --end "25m" --interval 60
 
 # 2-hour study session
-pb --end "2h" --interval 300
+pmon --end "2h" --interval 300
 ```
 
 ### Output Examples
 
 #### Terminal Output (TTY Mode)
 ```
-pb - Progress Bar Tool
+pmon - Progress Bar Tool
 Start time: 2025-01-27 09:00:00
 End time: 2025-01-27 17:00:00
 Update interval: 60 seconds
@@ -202,12 +202,12 @@ Press Ctrl+C to exit
 #### Piped Output (Non-TTY Mode)
 ```bash
 # Traditional usage with explicit start time
-pb --start "2025-01-27 09:00:00" --end "8h" | while read line; do
+pmon --start "2025-01-27 09:00:00" --end "8h" | while read line; do
     echo "$(date): $line" >> progress.log
 done
 
 # New usage with auto-determined start time
-pb --end "8h" | while read line; do
+pmon --end "8h" | while read line; do
     echo "$(date): $line" >> progress.log
 done
 ```
@@ -235,7 +235,7 @@ done
 #!/bin/bash
 # Track work day and send notifications (traditional usage)
 
-pb --start "2025-01-27 09:00:00" --end "8h" --interval 300 | while read -r line; do
+pmon --start "2025-01-27 09:00:00" --end "8h" --interval 300 | while read -r line; do
     percentage=$(echo "$line" | grep -o '[0-9]*\.[0-9]*%')
     
     case $percentage in
@@ -245,7 +245,7 @@ pb --start "2025-01-27 09:00:00" --end "8h" --interval 300 | while read -r line;
 done
 
 # Or use the simplified version starting from now
-pb --end "8h" --interval 300 | while read -r line; do
+pmon --end "8h" --interval 300 | while read -r line; do
     percentage=$(echo "$line" | grep -o '[0-9]*\.[0-9]*%')
     
     case $percentage in
@@ -258,12 +258,12 @@ done
 ### Background Monitoring
 
 ```bash
-# Start pb in background and monitor with logs (traditional usage)
-pb --start "2025-01-27 09:00:00" --end "8h" > work_progress.log 2>&1 &
+# Start pmon in background and monitor with logs (traditional usage)
+pmon --start "2025-01-27 09:00:00" --end "8h" > work_progress.log 2>&1 &
 tail -f work_progress.log
 
 # Or start tracking from now
-pb --end "8h" > work_progress.log 2>&1 &
+pmon --end "8h" > work_progress.log 2>&1 &
 tail -f work_progress.log
 ```
 
@@ -271,14 +271,14 @@ tail -f work_progress.log
 
 ```bash
 # Track multiple time periods simultaneously (traditional usage)
-pb --start "2025-01-27 09:00:00" --end "8h" > work.log &
-pb --start "2025-01-27 12:00:00" --end "1h" > lunch.log &
-pb --start "2025-01-27 14:00:00" --end "2h" > meeting.log &
+pmon --start "2025-01-27 09:00:00" --end "8h" > work.log &
+pmon --start "2025-01-27 12:00:00" --end "1h" > lunch.log &
+pmon --start "2025-01-27 14:00:00" --end "2h" > meeting.log &
 
 # Or use simplified syntax where appropriate
-pb --end "8h" > work.log &           # Work session from now
-pb --end "1h" > lunch.log &          # 1-hour timer from now  
-pb --end "2h" > meeting.log &        # 2-hour timer from now
+pmon --end "8h" > work.log &           # Work session from now
+pmon --end "1h" > lunch.log &          # 1-hour timer from now  
+pmon --end "2h" > meeting.log &        # 2-hour timer from now
 ```
 
 ## Documentation
@@ -290,7 +290,7 @@ pb --end "2h" > meeting.log &        # 2-hour timer from now
 - 📚 **[API Documentation](docs/api_documentation.md)** - Library API reference
 - 🔍 **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
 - 📋 **[Examples](docs/examples/)** - Practical usage examples
-- 📄 **[Man Page](docs/man/pb.1)** - Unix manual page
+- 📄 **[Man Page](docs/man/pmon.1)** - Unix manual page
 
 ## Development
 
@@ -299,7 +299,7 @@ pb --end "2h" > meeting.log &        # 2-hour timer from now
 ```bash
 # Clone and setup
 git clone https://github.com/matsuokashuhei/pb.git
-cd pb
+cd pmon
 
 # Build and test
 cargo build
@@ -333,7 +333,7 @@ We welcome contributions! Please see our [Development Guide](docs/development_gu
 
 ## Performance
 
-pb is designed to be lightweight and efficient:
+pmon is designed to be lightweight and efficient:
 
 - **Startup time**: <50ms
 - **Memory usage**: <10MB during operation
@@ -354,23 +354,23 @@ pb is designed to be lightweight and efficient:
 
 ## FAQ
 
-**Q: Can I pause and resume pb?**  
-A: pb tracks real time, so it can't be paused. Stop with Ctrl+C and restart with adjusted times.
+**Q: Can I pause and resume pmon?**  
+A: pmon tracks real time, so it can't be paused. Stop with Ctrl+C and restart with adjusted times.
 
 **Q: What happens when the end time is reached?**  
-A: pb shows 100% completion and exits. If current time exceeds end time, it shows >100% in red.
+A: pmon shows 100% completion and exits. If current time exceeds end time, it shows >100% in red.
 
-**Q: Does pb work across time zones?**  
-A: pb uses local system time. Ensure your system clock is correct for accurate tracking.
+**Q: Does pmon work across time zones?**  
+A: pmon uses local system time. Ensure your system clock is correct for accurate tracking.
 
-**Q: Can I run multiple pb instances?**  
+**Q: Can I run multiple pmon instances?**  
 A: Yes! Run multiple instances in different terminals to track multiple time periods.
 
 For more questions, see [Troubleshooting Guide](docs/troubleshooting.md).
 
 ## License
 
-pb is licensed under the [MIT License](LICENSE). See LICENSE file for details.
+pmon is licensed under the [MIT License](LICENSE). See LICENSE file for details.
 
 ## Acknowledgments
 
@@ -381,4 +381,4 @@ pb is licensed under the [MIT License](LICENSE). See LICENSE file for details.
 
 ---
 
-**⭐ Star this repo if you find pb useful!**
+**⭐ Star this repo if you find pmon useful!**

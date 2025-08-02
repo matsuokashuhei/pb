@@ -4,7 +4,7 @@
 //! error handling, and help generation.
 
 use clap::{CommandFactory, Parser};
-use pb::cli::*;
+use pmon::cli::*;
 
 mod common;
 
@@ -15,11 +15,11 @@ mod cli_parsing_tests {
     #[test]
     fn test_basic_arguments_parsing() {
         let test_cases = vec![
-            (vec!["pb", "--start", "10:00", "--end", "12:00"], true),
-            (vec!["pb", "-s", "10:00", "-e", "12:00"], true),
+            (vec!["pmon", "--start", "10:00", "--end", "12:00"], true),
+            (vec!["pmon", "-s", "10:00", "-e", "12:00"], true),
             (
                 vec![
-                    "pb",
+                    "pmon",
                     "--start",
                     "2023-12-25 10:00:00",
                     "--end",
@@ -48,7 +48,7 @@ mod cli_parsing_tests {
         let test_cases = vec![
             (
                 vec![
-                    "pb",
+                    "pmon",
                     "--start",
                     "10:00",
                     "--end",
@@ -58,8 +58,8 @@ mod cli_parsing_tests {
                 ],
                 30,
             ),
-            (vec!["pb", "-s", "10:00", "-e", "12:00", "-i", "120"], 120),
-            (vec!["pb", "--start", "10:00", "--end", "12:00"], 60), // default
+            (vec!["pmon", "-s", "10:00", "-e", "12:00", "-i", "120"], 120),
+            (vec!["pmon", "--start", "10:00", "--end", "12:00"], 60), // default
         ];
 
         for (args, expected_interval) in test_cases {
@@ -71,9 +71,9 @@ mod cli_parsing_tests {
     #[test]
     fn test_required_arguments_missing() {
         let invalid_args = vec![
-            vec!["pb"], // no arguments
-            vec!["pb", "--start", "10:00"], // missing end (end is still required)
-                        // Note: vec!["pb", "--end", "12:00"] is now valid since start is optional
+            vec!["pmon"], // no arguments
+            vec!["pmon", "--start", "10:00"], // missing end (end is still required)
+                          // Note: vec!["pmon", "--end", "12:00"] is now valid since start is optional
         ];
 
         for args in invalid_args {
@@ -98,7 +98,7 @@ mod cli_validation_tests {
         ];
 
         for (start, end) in basic_cases {
-            let cli = Cli::try_parse_from(vec!["pb", "--start", start, "--end", end]).unwrap();
+            let cli = Cli::try_parse_from(vec!["pmon", "--start", start, "--end", end]).unwrap();
             // Since validate() is private, we just check the fields are set
             assert!(cli.start().is_some() && !cli.start().unwrap().is_empty());
             assert!(!cli.end().is_empty());
@@ -109,7 +109,7 @@ mod cli_validation_tests {
     #[test]
     fn test_empty_string_detection() {
         // Test that empty strings are handled appropriately
-        let cli = Cli::try_parse_from(vec!["pb", "--start", "", "--end", "12:00"]).unwrap();
+        let cli = Cli::try_parse_from(vec!["pmon", "--start", "", "--end", "12:00"]).unwrap();
         // We can't call validate() directly since it's private
         // But we can check that empty strings are present
         assert_eq!(cli.start(), Some(""));
@@ -119,7 +119,7 @@ mod cli_validation_tests {
     #[test]
     fn test_zero_interval_handling() {
         let cli = Cli::try_parse_from(vec![
-            "pb",
+            "pmon",
             "--start",
             "10:00",
             "--end",
@@ -140,7 +140,7 @@ mod cli_validation_tests {
 
         // Can't directly test parse_args with custom args easily, so test validation logic indirectly
         // by ensuring the CLI struct has proper methods
-        let cli = Cli::try_parse_from(vec!["pb", "--start", "10:00", "--end", "12:00"]).unwrap();
+        let cli = Cli::try_parse_from(vec!["pmon", "--start", "10:00", "--end", "12:00"]).unwrap();
         assert_eq!(cli.start(), Some("10:00"));
         assert_eq!(cli.end(), "12:00");
         assert_eq!(cli.interval(), 60); // default
@@ -151,7 +151,7 @@ mod cli_validation_tests {
     #[test]
     fn test_cli_field_validation() {
         // Test that all required fields are present after parsing
-        let cli = Cli::try_parse_from(vec!["pb", "--start", "2025-01-01", "--end", "2025-01-02"])
+        let cli = Cli::try_parse_from(vec!["pmon", "--start", "2025-01-01", "--end", "2025-01-02"])
             .unwrap();
 
         // Test all accessor methods
@@ -161,7 +161,7 @@ mod cli_validation_tests {
 
         // Test with custom interval
         let cli = Cli::try_parse_from(vec![
-            "pb",
+            "pmon",
             "--start",
             "2025-01-01",
             "--end",
@@ -179,7 +179,7 @@ mod cli_validation_tests {
 
         // Test with clearly invalid time format that would fail parsing
         let cli = Cli::try_parse_from(vec![
-            "pb",
+            "pmon",
             "--start",
             "clearly-invalid-time",
             "--end",
@@ -190,7 +190,7 @@ mod cli_validation_tests {
 
         // Test with negative interval - clap should reject this
         let result = Cli::try_parse_from(vec![
-            "pb",
+            "pmon",
             "--start",
             "10:00",
             "--end",
@@ -216,24 +216,24 @@ mod comprehensive_cli_tests {
         let test_cases = vec![
             // Valid combinations
             (
-                vec!["pb", "--start", "10:00", "--end", "12:00"],
+                vec!["pmon", "--start", "10:00", "--end", "12:00"],
                 true,
                 "Basic time format",
             ),
             (
-                vec!["pb", "-s", "2023-12-25", "-e", "2023-12-26"],
+                vec!["pmon", "-s", "2023-12-25", "-e", "2023-12-26"],
                 true,
                 "Short flags with dates",
             ),
             (
-                vec!["pb", "--start", "+1h", "--end", "+3h", "--interval", "30"],
+                vec!["pmon", "--start", "+1h", "--end", "+3h", "--interval", "30"],
                 true,
                 "Relative times",
             ),
             // Edge cases that should parse but might fail validation
             (
                 vec![
-                    "pb",
+                    "pmon",
                     "--start",
                     "10:00",
                     "--end",
@@ -245,7 +245,7 @@ mod comprehensive_cli_tests {
                 "Minimum interval",
             ),
             (
-                vec!["pb", "--start", "invalid", "--end", "12:00"],
+                vec!["pmon", "--start", "invalid", "--end", "12:00"],
                 true,
                 "Invalid time format - parsing only",
             ),
@@ -278,7 +278,7 @@ mod clap_integration_tests {
         // Test that help can be generated without panicking
         let mut cmd = Cli::command();
         let help = cmd.render_help();
-        assert!(help.to_string().contains("CLI progress bar tool"));
+        assert!(help.to_string().contains("CLI progress monitor (pmon)"));
     }
 
     #[test]
@@ -309,8 +309,8 @@ mod error_handling_tests {
     #[test]
     fn test_invalid_argument_handling() {
         let test_cases = vec![
-            vec!["pb", "--invalid-flag"],
-            vec!["pb", "--start", "10:00", "--end", "12:00", "--unknown"],
+            vec!["pmon", "--invalid-flag"],
+            vec!["pmon", "--start", "10:00", "--end", "12:00", "--unknown"],
         ];
 
         for args in test_cases {
@@ -322,9 +322,9 @@ mod error_handling_tests {
     #[test]
     fn test_missing_values() {
         let test_cases = vec![
-            vec!["pb", "--start"],
-            vec!["pb", "--end"],
-            vec!["pb", "--start", "10:00", "--end"],
+            vec!["pmon", "--start"],
+            vec!["pmon", "--end"],
+            vec!["pmon", "--start", "10:00", "--end"],
         ];
 
         for args in test_cases {
@@ -341,7 +341,7 @@ mod cli_field_access_tests {
     #[test]
     fn test_field_accessor_methods() {
         let cli = Cli::try_parse_from(vec![
-            "pb",
+            "pmon",
             "--start",
             "10:00",
             "--end",
@@ -358,7 +358,7 @@ mod cli_field_access_tests {
 
     #[test]
     fn test_default_interval_value() {
-        let cli = Cli::try_parse_from(vec!["pb", "--start", "10:00", "--end", "12:00"]).unwrap();
+        let cli = Cli::try_parse_from(vec!["pmon", "--start", "10:00", "--end", "12:00"]).unwrap();
         assert_eq!(cli.interval(), 60);
     }
 }

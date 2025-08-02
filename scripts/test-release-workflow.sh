@@ -39,7 +39,7 @@ fi
 
 # Check if we're in the right directory
 if [ ! -f "$PROJECT_ROOT/Cargo.toml" ]; then
-    echo -e "${RED}Error: Not in pb project root directory${NC}"
+    echo -e "${RED}Error: Not in pmon project root directory${NC}"
     exit 1
 fi
 
@@ -89,7 +89,7 @@ for target in "${TARGETS[@]}"; do
     
     # Build the target
     if cargo build --release --target "$target" 2>/dev/null; then
-        binary_path="target/$target/release/pb"
+        binary_path="target/$target/release/pmon"
         if [ -f "$binary_path" ]; then
             echo -e "${GREEN}✓ Build successful for $target${NC}"
             
@@ -126,7 +126,7 @@ done
 echo -e "${BLUE}Step 4: Testing binary functionality${NC}"
 
 for target in "${TARGETS[@]}"; do
-    binary_path="target/$target/release/pb"
+    binary_path="target/$target/release/pmon"
     
     # Only test native and ARM64 Linux binaries (skip macOS)
     if [[ "$target" == *"apple"* ]]; then
@@ -157,15 +157,15 @@ echo ""
 echo -e "${BLUE}Step 5: Testing artifact naming (simulating workflow)${NC}"
 
 ARTIFACT_NAMES=(
-    "pb-linux-x86_64"
-    "pb-linux-aarch64"
-    "pb-macos-aarch64"
+    "pmon-linux-x86_64"
+    "pmon-linux-aarch64"
+    "pmon-macos-aarch64"
 )
 
 for i in "${!TARGETS[@]}"; do
     target="${TARGETS[$i]}"
     artifact_name="${ARTIFACT_NAMES[$i]}"
-    binary_path="target/$target/release/pb"
+    binary_path="target/$target/release/pmon"
     
     if [ -f "$binary_path" ]; then
         # Copy binary with artifact name (simulating workflow step)
@@ -218,19 +218,19 @@ release_notes="## Changes in $test_version
 Download the appropriate binary for your platform from the assets below.
 
 ### Linux
-- \`pb-linux-x86_64\` - For 64-bit Intel/AMD processors
-- \`pb-linux-aarch64\` - For 64-bit ARM processors
+- \`pmon-linux-x86_64\` - For 64-bit Intel/AMD processors
+- \`pmon-linux-aarch64\` - For 64-bit ARM processors
   (e.g., Raspberry Pi 4, AWS Graviton)
 
 ### macOS
-- \`pb-macos-aarch64\` - For Apple Silicon Macs (M1, M2, etc.)
+- \`pmon-macos-aarch64\` - For Apple Silicon Macs (M1, M2, etc.)
 
 ## Usage
 
 After downloading, make the binary executable:
 \`\`\`bash
-chmod +x pb-*
-./pb-* --help
+chmod +x pmon-*
+./pmon-* --help
 \`\`\`"
 
 echo -e "${YELLOW}Generated release notes preview:${NC}"

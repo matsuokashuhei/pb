@@ -49,7 +49,7 @@ pub fn get_current_time() -> NaiveDateTime {
 /// # Examples
 ///
 /// ```
-/// use pb::time_parser::parse_date;
+/// use pmon::time_parser::parse_date;
 ///
 /// // Valid date
 /// let result = parse_date("2025-07-21");
@@ -129,7 +129,7 @@ pub fn parse_date(input: &str) -> Result<NaiveDateTime, PbError> {
 /// # Examples
 ///
 /// ```
-/// use pb::time_parser::parse_datetime;
+/// use pmon::time_parser::parse_datetime;
 ///
 /// // Valid datetime
 /// let result = parse_datetime("2025-07-21 10:30:45");
@@ -223,7 +223,7 @@ pub fn parse_datetime(input: &str) -> Result<NaiveDateTime, PbError> {
 /// # Examples
 ///
 /// ```
-/// use pb::time_parser::parse_relative_time;
+/// use pmon::time_parser::parse_relative_time;
 /// use chrono::NaiveDateTime;
 ///
 /// let base = NaiveDateTime::parse_from_str("2025-07-21 10:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
@@ -379,7 +379,7 @@ fn parse_time_only(input: &str) -> Result<NaiveDateTime, PbError> {
 /// # Examples
 ///
 /// ```
-/// use pb::time_parser::parse_time;
+/// use pmon::time_parser::parse_time;
 ///
 /// // Parse date
 /// let result = parse_time("2025-07-21");
@@ -416,7 +416,7 @@ pub fn parse_time(input: &str) -> Result<NaiveDateTime, PbError> {
 /// # Examples
 ///
 /// ```
-/// use pb::time_parser::parse_time_with_base;
+/// use pmon::time_parser::parse_time_with_base;
 /// use chrono::NaiveDateTime;
 ///
 /// let start_time = NaiveDateTime::parse_from_str("2025-01-27 14:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
@@ -484,7 +484,7 @@ pub fn parse_time_with_base(
 /// # Examples
 ///
 /// ```
-/// use pb::time_parser::determine_start_time_for_end;
+/// use pmon::time_parser::determine_start_time_for_end;
 ///
 /// // For datetime or time-only end times, use current time
 /// let start = determine_start_time_for_end("2025-07-27 17:00:00");
@@ -531,7 +531,7 @@ pub fn determine_start_time_for_end(end_time_input: &str) -> NaiveDateTime {
 /// # Examples
 ///
 /// ```
-/// use pb::time_parser::{parse_time, validate_times};
+/// use pmon::time_parser::{parse_time, validate_times};
 ///
 /// let start = parse_time("2025-07-21 10:00:00").unwrap();
 /// let end = parse_time("2025-07-21 12:00:00").unwrap();

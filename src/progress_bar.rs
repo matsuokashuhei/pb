@@ -33,7 +33,7 @@ const BAR_WIDTH: usize = 40;
 ///
 /// ```
 /// use chrono::Duration;
-/// use pb::progress_bar::format_duration;
+/// use pmon::progress_bar::format_duration;
 ///
 /// assert_eq!(format_duration(Duration::hours(2) + Duration::minutes(36)), "2h 36m");
 /// assert_eq!(format_duration(Duration::minutes(45)), "45m");
@@ -102,7 +102,7 @@ pub fn format_duration(duration: Duration) -> String {
 ///
 /// ```
 /// use chrono::NaiveDateTime;
-/// use pb::progress_bar::calculate_progress;
+/// use pmon::progress_bar::calculate_progress;
 ///
 /// let start = NaiveDateTime::parse_from_str("2025-07-21 10:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
 /// let end = NaiveDateTime::parse_from_str("2025-07-21 12:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
@@ -172,7 +172,7 @@ pub fn calculate_progress(start: NaiveDateTime, end: NaiveDateTime, current: Nai
 /// # Examples
 ///
 /// ```
-/// use pb::progress_bar::render_progress_bar;
+/// use pmon::progress_bar::render_progress_bar;
 ///
 /// // 0% progress
 /// assert_eq!(render_progress_bar(0.0), "[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0.0%");
@@ -245,7 +245,7 @@ pub fn render_progress_bar(percentage: f64) -> String {
 /// # Examples
 ///
 /// ```
-/// use pb::progress_bar::render_colored_progress_bar;
+/// use pmon::progress_bar::render_colored_progress_bar;
 ///
 /// // Normal progress - default color
 /// let normal = render_colored_progress_bar(50.0);
@@ -286,7 +286,7 @@ pub fn render_colored_progress_bar(percentage: f64) -> String {
 ///
 /// ```
 /// use chrono::NaiveDateTime;
-/// use pb::progress_bar::render_progress_bar_with_time;
+/// use pmon::progress_bar::render_progress_bar_with_time;
 ///
 /// let start = NaiveDateTime::parse_from_str("2025-01-27 09:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
 /// let end = NaiveDateTime::parse_from_str("2025-01-27 17:00:00", "%Y-%m-%d %H:%M:%S").unwrap();

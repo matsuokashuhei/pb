@@ -123,7 +123,7 @@ if cargo build --release >/dev/null 2>&1; then
     echo -e "${GREEN}✓ Native build successful${NC}"
     
     # Test binary functionality
-    if ./target/release/pb --help >/dev/null 2>&1; then
+    if ./target/release/pmon --help >/dev/null 2>&1; then
         echo -e "${GREEN}✓ Binary functionality test passed${NC}"
     else
         echo -e "${RED}✗ Binary functionality test failed${NC}"

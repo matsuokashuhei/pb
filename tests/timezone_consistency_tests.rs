@@ -4,7 +4,7 @@
 //! due to timezone inconsistency between parsed input times and current time.
 
 use chrono::{Duration, Local, NaiveDateTime, Utc};
-use pb::{calculate_progress, get_current_time, parse_time};
+use pmon::{calculate_progress, get_current_time, parse_time};
 
 #[test]
 fn test_demonstrate_timezone_inconsistency_issue() {

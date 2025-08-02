@@ -1,9 +1,23 @@
 # Changelog
 
-All notable changes to the pb CLI tool will be documented in this file.
+All notable changes to the pmon CLI tool will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [2.0.0] - 2025-01-27
+
+### Changed
+- **BREAKING CHANGE**: Renamed project from `pb` to `pmon` (Progress Monitor)
+- Updated binary name from `pb` to `pmon` for better clarity and memorability
+- Updated package name in Cargo.toml to `pmon`
+- Updated all documentation and examples to use `pmon` command
+- Updated help text and CLI descriptions to reflect new name
+
+### Migration Guide
+- Replace all instances of `pb` command with `pmon` in scripts and workflows
+- Reinstall the tool with the new binary name
+- Update any documentation or aliases that reference the old command name
 
 ## [1.0.0] - 2025-01-27
 

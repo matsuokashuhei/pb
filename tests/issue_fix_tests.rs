@@ -1,7 +1,7 @@
 //! Tests to validate the fixes for Issues 1 and 2
 
 use chrono::NaiveDateTime;
-use pb::{parse_time, parse_time_with_base};
+use pmon::{parse_time, parse_time_with_base};
 
 #[cfg(test)]
 mod issue_fix_tests {
