@@ -25,7 +25,12 @@ pub struct Cli {
     pub interval: u64,
 
     /// Display verbose output including header information
-    #[arg(short, long, default_value = "false", help = "Display verbose output with header information")]
+    #[arg(
+        short,
+        long,
+        default_value = "false",
+        help = "Display verbose output with header information"
+    )]
     pub verbose: bool,
 }
 

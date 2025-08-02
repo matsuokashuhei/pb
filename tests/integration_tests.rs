@@ -116,7 +116,15 @@ fn test_date_format_parsing() {
 #[test]
 fn test_relative_time_parsing() {
     let mut cmd = Command::cargo_bin("pb").unwrap();
-    cmd.args(["--start", "+30m", "--end", "+60m", "--interval", "1", "--verbose"]);
+    cmd.args([
+        "--start",
+        "+30m",
+        "--end",
+        "+60m",
+        "--interval",
+        "1",
+        "--verbose",
+    ]);
 
     // This should not complete immediately since it's a future time range
     let output = cmd.timeout(Duration::from_secs(3)).assert().failure(); // Will timeout, which is expected
@@ -226,7 +234,15 @@ mod comprehensive_cli_integration_tests {
 
         for (start, end) in format_combinations {
             let mut cmd = CliTestUtils::pb_command();
-            cmd.args(["--start", start, "--end", end, "--interval", "1"]);
+            cmd.args([
+                "--start",
+                start,
+                "--end",
+                end,
+                "--interval",
+                "1",
+                "--verbose",
+            ]);
 
             let output = cmd.timeout(Duration::from_secs(3)).assert();
 
@@ -327,6 +343,7 @@ mod comprehensive_cli_integration_tests {
                 "2025-07-21 11:00:00",
                 "--interval",
                 interval,
+                "--verbose",
             ]);
 
             let output = cmd.timeout(Duration::from_secs(3)).assert().success();
@@ -349,6 +366,7 @@ mod comprehensive_cli_integration_tests {
             "+2h",
             "--interval",
             "1",
+            "--verbose",
         ]);
 
         // Run with a short timeout to simulate interrupt
@@ -427,7 +445,15 @@ mod comprehensive_cli_integration_tests {
 
         for (start, end, description) in test_scenarios {
             let mut cmd = CliTestUtils::pb_command();
-            cmd.args(["--start", start, "--end", end, "--interval", "1"]);
+            cmd.args([
+                "--start",
+                start,
+                "--end",
+                end,
+                "--interval",
+                "1",
+                "--verbose",
+            ]);
 
             let output = cmd.timeout(Duration::from_secs(3)).assert().success();
             let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
@@ -484,7 +510,15 @@ mod comprehensive_cli_integration_tests {
 
         for (start, end, description) in edge_cases {
             let mut cmd = CliTestUtils::pb_command();
-            cmd.args(["--start", start, "--end", end, "--interval", "1"]);
+            cmd.args([
+                "--start",
+                start,
+                "--end",
+                end,
+                "--interval",
+                "1",
+                "--verbose",
+            ]);
 
             let result = cmd.timeout(Duration::from_secs(3)).assert();
 
@@ -627,6 +661,7 @@ mod environment_compatibility_tests {
                 "2025-07-21 11:00:00",
                 "--interval",
                 "1",
+                "--verbose",
             ]);
 
             let result = cmd.timeout(Duration::from_secs(3)).assert();
@@ -653,6 +688,7 @@ mod environment_compatibility_tests {
             "2025-07-21 11:00:00",
             "--interval",
             "1",
+            "--verbose",
         ]);
 
         let output = cmd.timeout(Duration::from_secs(3)).assert().success();
@@ -745,6 +781,7 @@ mod performance_integration_tests {
             "+2h",
             "--interval",
             "1",
+            "--verbose",
         ]);
 
         // Run for a short time to check basic memory behavior

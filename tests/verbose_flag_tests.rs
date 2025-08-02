@@ -70,7 +70,7 @@ fn test_default_behavior_no_header() {
     assert!(!stdout.contains("End time:"));
     assert!(!stdout.contains("Update interval:"));
     assert!(!stdout.contains("Press Ctrl+C to exit"));
-    
+
     // But should still show progress bar
     assert!(stdout.contains("["));
     assert!(stdout.contains("]"));
