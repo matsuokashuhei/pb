@@ -59,17 +59,19 @@ fn main() -> Result<()> {
         println!("Press Ctrl+C to exit\n");
     }
 
-    // Check if we're in a TTY environment
+    // Check if we're in a TTY environment and if the environment is truly interactive
     let is_tty = crossterm::tty::IsTty::is_tty(&std::io::stdout());
+    let is_interactive =
+        is_tty && std::env::var("CI").is_err() && std::env::var("GITHUB_ACTIONS").is_err();
 
-    // Enable raw mode for signal detection only if we're in a TTY
-    if is_tty {
+    // Enable raw mode for signal detection only if we're in an interactive TTY
+    if is_interactive {
         crossterm::terminal::enable_raw_mode()?;
     }
 
     // Ensure terminal cleanup on exit
     let cleanup = move || {
-        if is_tty {
+        if is_interactive {
             let _ = crossterm::terminal::disable_raw_mode();
         }
         println!(); // New line before exit
@@ -78,7 +80,7 @@ fn main() -> Result<()> {
     // Set up panic hook for cleanup
     let original_hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |panic_info| {
-        if is_tty {
+        if is_interactive {
             let _ = crossterm::terminal::disable_raw_mode();
         }
         println!(); // New line before exit
@@ -86,7 +88,7 @@ fn main() -> Result<()> {
     }));
 
     // Main application loop
-    let result = run_progress_loop(start_time, end_time, cli.interval(), is_tty);
+    let result = run_progress_loop(start_time, end_time, cli.interval(), is_interactive);
 
     // Cleanup and handle result
     cleanup();
@@ -108,7 +110,7 @@ fn run_progress_loop(
     start_time: chrono::NaiveDateTime,
     end_time: chrono::NaiveDateTime,
     interval_seconds: u64,
-    is_tty: bool,
+    is_interactive: bool,
 ) -> Result<()> {
     let interval_duration = Duration::from_secs(interval_seconds);
     let poll_duration = Duration::from_millis(100); // Check for Ctrl+C every 100ms
@@ -123,18 +125,18 @@ fn run_progress_loop(
             render_colored_progress_bar_with_time(progress, start_time, end_time, current_time);
 
         // Update display
-        if is_tty {
-            // In TTY mode, clear line and show new progress
+        if is_interactive {
+            // In interactive TTY mode, use carriage return to overwrite the current line
             print!("\r{bar}");
             io::stdout().flush()?;
         } else {
-            // In non-TTY mode, just print the progress bar
+            // In non-interactive mode, just print the progress bar
             println!("{bar}");
         }
 
         // Check if we've completed (progress >= 100%)
         if progress >= 100.0 {
-            if !is_tty {
+            if !is_interactive {
                 println!("Progress completed! Time range has elapsed.");
             } else {
                 println!("\nProgress completed! Time range has elapsed.");
@@ -142,8 +144,8 @@ fn run_progress_loop(
             break;
         }
 
-        // Sleep with periodic Ctrl+C checking (only in TTY mode)
-        if is_tty {
+        // Sleep with periodic Ctrl+C checking (only in interactive mode)
+        if is_interactive {
             let mut remaining_sleep = interval_duration;
             while remaining_sleep > Duration::ZERO {
                 let sleep_chunk = remaining_sleep.min(poll_duration);
@@ -165,7 +167,7 @@ fn run_progress_loop(
                 remaining_sleep = remaining_sleep.saturating_sub(sleep_chunk);
             }
         } else {
-            // In non-TTY mode, just sleep for the full interval
+            // In non-interactive mode, just sleep for the full interval
             std::thread::sleep(interval_duration);
         }
     }
