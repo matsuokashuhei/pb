@@ -9,6 +9,15 @@ use colored::*;
 /// Fixed width for the progress bar display
 const BAR_WIDTH: usize = 40;
 
+/// Display mode for the progress monitor
+#[derive(Debug, Clone, PartialEq)]
+pub enum DisplayMode {
+    /// Minimal display: progress bar only
+    Minimal,
+    /// Verbose display: dates + progress bar + statistics
+    Verbose,
+}
+
 /// Format a duration as human-readable time (e.g., "2h 36m", "45m", "1h")
 ///
 /// This function converts a chrono::Duration into a human-readable format
@@ -52,6 +61,64 @@ pub fn format_duration(duration: Duration) -> String {
 
     if hours > 0 {
         format!("{hours}h {minutes}m")
+    } else if minutes > 0 {
+        format!("{minutes}m")
+    } else {
+        "0m".to_string()
+    }
+}
+
+/// Format a duration in compact form (e.g., "3609h", "150d 9h", "45m")
+///
+/// This function converts a chrono::Duration into a compact human-readable format
+/// optimized for display in minimal mode where space is limited.
+///
+/// # Formatting Rules
+///
+/// - Durations >= 1 day: Show as "Xd Yh" if hours > 0, otherwise "Xd"
+/// - Durations >= 1 hour: Show as "Xh" (no minutes in compact mode)
+/// - Durations < 1 hour but >= 1 minute: Show as "Xm"
+/// - Durations < 1 minute: Show as "0m"
+/// - Negative durations: Return "0m"
+///
+/// # Arguments
+///
+/// * `duration` - The duration to format
+///
+/// # Returns
+///
+/// A formatted string representing the duration in compact form
+///
+/// # Examples
+///
+/// ```
+/// use chrono::Duration;
+/// use pmon::progress_bar::format_duration_compact;
+///
+/// assert_eq!(format_duration_compact(Duration::days(150) + Duration::hours(9)), "150d 9h");
+/// assert_eq!(format_duration_compact(Duration::hours(3609)), "150d 9h");
+/// assert_eq!(format_duration_compact(Duration::hours(25)), "1d 1h");
+/// assert_eq!(format_duration_compact(Duration::minutes(45)), "45m");
+/// ```
+pub fn format_duration_compact(duration: Duration) -> String {
+    // Handle negative durations
+    if duration.num_seconds() < 0 {
+        return "0m".to_string();
+    }
+
+    let total_hours = duration.num_hours();
+    let days = total_hours / 24;
+    let hours = total_hours % 24;
+    let minutes = duration.num_minutes() % 60;
+
+    if days > 0 {
+        if hours > 0 {
+            format!("{days}d {hours}h")
+        } else {
+            format!("{days}d")
+        }
+    } else if total_hours > 0 {
+        format!("{total_hours}h")
     } else if minutes > 0 {
         format!("{minutes}m")
     } else {
@@ -345,6 +412,113 @@ pub fn render_colored_progress_bar_with_time(
     }
 }
 
+/// Format minimal display: progress bar only
+///
+/// This function creates the minimal progress bar display format that shows
+/// only the progress bar without any additional information.
+///
+/// # Arguments
+///
+/// * `percentage` - The progress percentage as a floating-point number
+///
+/// # Returns
+///
+/// Returns a formatted string containing only the colored progress bar
+///
+/// # Examples
+///
+/// ```
+/// use pmon::progress_bar::format_minimal_only;
+///
+/// let minimal = format_minimal_only(50.0);
+/// // Contains: "████████████████████░░░░░░░░░░░░░░░░░░░░"
+/// ```
+pub fn format_minimal_only(percentage: f64) -> String {
+    let bar = render_progress_bar(percentage);
+
+    // Extract just the bar part (between [ and ])
+    if let (Some(start), Some(end)) = (bar.find('['), bar.find(']')) {
+        let bar_part = &bar[start + 1..end];
+
+        // Apply color for overtime (>100%)
+        if percentage > 100.0 {
+            bar_part.red().to_string()
+        } else {
+            bar_part.to_string()
+        }
+    } else {
+        // Fallback: return the colored bar as-is
+        render_colored_progress_bar(percentage)
+    }
+}
+
+/// Format verbose layout: dates + progress bar + statistics
+///
+/// This function creates the verbose progress bar display format that shows
+/// start date, end date, progress bar, percentage, and remaining time.
+///
+/// # Arguments
+///
+/// * `percentage` - The progress percentage as a floating-point number
+/// * `start` - The start time for display and calculation
+/// * `end` - The end time for display and calculation
+/// * `current` - The current time for calculations
+///
+/// # Returns
+///
+/// Returns a formatted string with full verbose layout
+///
+/// # Format
+///
+/// ```text
+/// 2025-01-01                                      2025-12-31
+/// ████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+/// 58.7% elapsed | 3609h remaining
+/// ```
+///
+/// # Examples
+///
+/// ```
+/// use chrono::NaiveDateTime;
+/// use pmon::progress_bar::format_verbose_layout;
+///
+/// let start = NaiveDateTime::parse_from_str("2025-01-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+/// let end = NaiveDateTime::parse_from_str("2025-12-31 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+/// let current = NaiveDateTime::parse_from_str("2025-07-15 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+///
+/// let verbose = format_verbose_layout(58.7, start, end, current);
+/// // Contains dates, progress bar, and statistics
+/// ```
+pub fn format_verbose_layout(
+    percentage: f64,
+    start: NaiveDateTime,
+    end: NaiveDateTime,
+    current: NaiveDateTime,
+) -> String {
+    // Format dates at the ends
+    let start_date = start.format("%Y-%m-%d").to_string();
+    let end_date = end.format("%Y-%m-%d").to_string();
+
+    // Create the date line with proper spacing between dates
+    // Use the full BAR_WIDTH for the date line to match progress bar width
+    let total_date_len = start_date.len() + end_date.len();
+    let padding_needed = BAR_WIDTH.saturating_sub(total_date_len);
+    let date_line = format!("{}{}{}", start_date, " ".repeat(padding_needed), end_date);
+
+    // Get the minimal progress bar (ensure it's exactly BAR_WIDTH characters)
+    let bar = format_minimal_only(percentage);
+
+    // Calculate remaining time using compact format
+    let remaining_duration = end - current;
+    let remaining_str = format_duration_compact(remaining_duration);
+
+    // Format statistics line (left-aligned, no extra spacing)
+    let stats_line = format!("{:.1}% elapsed | {} remaining", percentage, remaining_str);
+
+    // Combine all parts with explicit left alignment
+    format!("{}\n{}\n{}", date_line.trim_end(), bar, stats_line)
+}
+
 #[cfg(test)]
 mod format_duration_tests {
     use super::*;
@@ -393,6 +567,88 @@ mod format_duration_tests {
         // Exactly at boundaries
         assert_eq!(format_duration(Duration::minutes(60)), "1h 0m"); // 1 hour
         assert_eq!(format_duration(Duration::hours(1)), "1h 0m"); // 1 hour as hours
+    }
+}
+
+#[cfg(test)]
+mod format_duration_compact_tests {
+    use super::*;
+
+    #[test]
+    fn test_format_duration_compact_basic_cases() {
+        // Test days and hours
+        assert_eq!(
+            format_duration_compact(Duration::days(150) + Duration::hours(9)),
+            "150d 9h"
+        );
+        assert_eq!(
+            format_duration_compact(Duration::days(1) + Duration::hours(0)),
+            "1d"
+        );
+        assert_eq!(
+            format_duration_compact(Duration::days(2) + Duration::hours(5)),
+            "2d 5h"
+        );
+
+        // Test hours only (below 24)
+        assert_eq!(format_duration_compact(Duration::hours(23)), "23h");
+        assert_eq!(format_duration_compact(Duration::hours(1)), "1h");
+
+        // Test large hours (should convert to days)
+        assert_eq!(format_duration_compact(Duration::hours(3609)), "150d 9h");
+        assert_eq!(format_duration_compact(Duration::hours(25)), "1d 1h");
+
+        // Test minutes only
+        assert_eq!(format_duration_compact(Duration::minutes(45)), "45m");
+        assert_eq!(format_duration_compact(Duration::minutes(1)), "1m");
+
+        // Test less than a minute
+        assert_eq!(format_duration_compact(Duration::seconds(30)), "0m");
+        assert_eq!(format_duration_compact(Duration::seconds(59)), "0m");
+
+        // Test zero duration
+        assert_eq!(format_duration_compact(Duration::zero()), "0m");
+
+        // Test negative duration
+        assert_eq!(format_duration_compact(Duration::minutes(-10)), "0m");
+    }
+
+    #[test]
+    fn test_format_duration_compact_edge_cases() {
+        // Large durations
+        assert_eq!(
+            format_duration_compact(Duration::days(365) + Duration::hours(12)),
+            "365d 12h"
+        );
+        assert_eq!(format_duration_compact(Duration::days(100)), "100d");
+
+        // Exactly at boundaries
+        assert_eq!(format_duration_compact(Duration::hours(24)), "1d"); // Exactly 1 day
+        assert_eq!(format_duration_compact(Duration::minutes(60)), "1h"); // Exactly 1 hour
+    }
+
+    #[test]
+    fn test_format_duration_compact_vs_regular() {
+        // Verify that compact format is indeed more compact than regular format
+        let test_cases = vec![
+            Duration::days(150) + Duration::hours(9),
+            Duration::hours(25),
+            Duration::minutes(45),
+        ];
+
+        for duration in test_cases {
+            let regular = format_duration(duration);
+            let compact = format_duration_compact(duration);
+
+            // Compact should be shorter or equal length
+            assert!(
+                compact.len() <= regular.len(),
+                "Compact '{}' should be shorter than regular '{}' for duration {:?}",
+                compact,
+                regular,
+                duration
+            );
+        }
     }
 }
 
@@ -1080,6 +1336,195 @@ mod color_tests {
             assert!(
                 colored.contains(&format!("{percentage:.1}%")),
                 "Colored version should contain correct decimal percentage {percentage:.1}% for input {percentage}%"
+            );
+        }
+    }
+}
+
+#[cfg(test)]
+mod display_mode_tests {
+    use super::*;
+    use chrono::NaiveDateTime;
+
+    fn create_test_datetime(time_str: &str) -> NaiveDateTime {
+        NaiveDateTime::parse_from_str(time_str, "%Y-%m-%d %H:%M:%S").unwrap()
+    }
+
+    #[test]
+    fn test_display_mode_enum() {
+        // Test enum variants
+        assert_eq!(DisplayMode::Minimal, DisplayMode::Minimal);
+        assert_eq!(DisplayMode::Verbose, DisplayMode::Verbose);
+        assert_ne!(DisplayMode::Minimal, DisplayMode::Verbose);
+
+        // Test Debug formatting
+        assert_eq!(format!("{:?}", DisplayMode::Minimal), "Minimal");
+        assert_eq!(format!("{:?}", DisplayMode::Verbose), "Verbose");
+
+        // Test Clone
+        let mode = DisplayMode::Minimal;
+        let cloned = mode.clone();
+        assert_eq!(mode, cloned);
+    }
+
+    #[test]
+    fn test_format_minimal_only_basic() {
+        // Test that minimal format contains only the bar characters
+        let minimal = format_minimal_only(50.0);
+
+        // Should not contain brackets or percentage
+        assert!(!minimal.contains('['));
+        assert!(!minimal.contains(']'));
+        assert!(!minimal.contains('%'));
+
+        // Should contain the expected characters
+        assert!(minimal.contains('█') || minimal.contains('░'));
+
+        // Should be exactly BAR_WIDTH characters
+        assert_eq!(
+            minimal.chars().filter(|c| *c == '█' || *c == '░').count(),
+            BAR_WIDTH
+        );
+    }
+
+    #[test]
+    fn test_format_minimal_only_progress_levels() {
+        let test_cases = vec![
+            (0.0, 0),    // 0% - no filled characters
+            (25.0, 10),  // 25% - 10 filled characters
+            (50.0, 20),  // 50% - 20 filled characters
+            (100.0, 40), // 100% - all filled characters
+        ];
+
+        for (percentage, expected_filled) in test_cases {
+            let minimal = format_minimal_only(percentage);
+            let filled_count = minimal.chars().filter(|&c| c == '█').count();
+
+            assert_eq!(
+                filled_count, expected_filled,
+                "Percentage {percentage}% should have {expected_filled} filled chars, got {filled_count}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_format_verbose_layout_structure() {
+        let start = create_test_datetime("2025-01-01 00:00:00");
+        let end = create_test_datetime("2025-12-31 00:00:00");
+        let current = create_test_datetime("2025-07-15 00:00:00");
+
+        let verbose = format_verbose_layout(58.7, start, end, current);
+        let lines: Vec<&str> = verbose.split('\n').collect();
+
+        // Should have exactly 3 lines
+        assert_eq!(lines.len(), 3, "Verbose layout should have 3 lines");
+
+        // First line should contain dates
+        assert!(lines[0].contains("2025-01-01"));
+        assert!(lines[0].contains("2025-12-31"));
+
+        // Second line should be the progress bar
+        assert!(lines[1].contains('█') || lines[1].contains('░'));
+
+        // Third line should contain percentage and remaining time
+        assert!(lines[2].contains("58.7%"));
+        assert!(lines[2].contains("elapsed"));
+        assert!(lines[2].contains("remaining"));
+    }
+
+    #[test]
+    fn test_format_verbose_layout_date_formatting() {
+        let start = create_test_datetime("2025-01-01 09:30:00");
+        let end = create_test_datetime("2025-12-31 18:45:00");
+        let current = create_test_datetime("2025-06-15 12:00:00");
+
+        let verbose = format_verbose_layout(50.0, start, end, current);
+        let lines: Vec<&str> = verbose.split('\n').collect();
+
+        // Check that dates are formatted correctly (date only, no time)
+        assert!(lines[0].contains("2025-01-01"));
+        assert!(lines[0].contains("2025-12-31"));
+        assert!(!lines[0].contains("09:30:00")); // Time should not be included
+        assert!(!lines[0].contains("18:45:00"));
+    }
+
+    #[test]
+    fn test_format_verbose_layout_compact_duration() {
+        let start = create_test_datetime("2025-01-01 00:00:00");
+        let end = create_test_datetime("2025-12-31 00:00:00");
+        let current = create_test_datetime("2025-01-02 00:00:00"); // 1 day elapsed
+
+        let verbose = format_verbose_layout(1.0, start, end, current);
+        let lines: Vec<&str> = verbose.split('\n').collect();
+
+        // Should use compact format for remaining time
+        let stats_line = lines[2];
+        assert!(
+            stats_line.contains("h") || stats_line.contains("d"),
+            "Should use compact duration format, got: {}",
+            stats_line
+        );
+    }
+
+    #[test]
+    fn test_format_minimal_only_color_consistency() {
+        use colored::control;
+
+        // Save original color state
+        let original_should_colorize = control::SHOULD_COLORIZE.should_colorize();
+
+        // Test with colors enabled
+        control::set_override(true);
+
+        // Normal progress should not have extra characters from color codes
+        let normal = format_minimal_only(50.0);
+        assert_eq!(
+            normal.chars().filter(|c| *c == '█' || *c == '░').count(),
+            BAR_WIDTH
+        );
+
+        // Overtime progress may have color codes, but bar structure should remain
+        let overtime = format_minimal_only(150.0);
+        let visual_chars = overtime.chars().filter(|c| *c == '█' || *c == '░').count();
+        assert_eq!(
+            visual_chars, BAR_WIDTH,
+            "Bar should still have correct visual length"
+        );
+
+        // Restore original color state
+        if original_should_colorize {
+            control::set_override(true);
+        } else {
+            control::unset_override();
+        }
+    }
+
+    #[test]
+    fn test_verbose_layout_with_different_percentages() {
+        let start = create_test_datetime("2025-01-01 00:00:00");
+        let end = create_test_datetime("2025-01-02 00:00:00"); // 24 hours
+        let current = create_test_datetime("2025-01-01 12:00:00"); // 12 hours elapsed
+
+        let test_cases = vec![0.0, 25.0, 50.0, 75.0, 100.0, 125.0];
+
+        for percentage in test_cases {
+            let verbose = format_verbose_layout(percentage, start, end, current);
+            let lines: Vec<&str> = verbose.split('\n').collect();
+
+            // Verify structure consistency
+            assert_eq!(
+                lines.len(),
+                3,
+                "Should always have 3 lines for percentage {}",
+                percentage
+            );
+
+            // Verify percentage appears in stats line
+            assert!(
+                lines[2].contains(&format!("{:.1}%", percentage)),
+                "Stats line should contain percentage {:.1}% for input {}",
+                percentage,
+                percentage
             );
         }
     }
