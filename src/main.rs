@@ -1,11 +1,18 @@
 use anyhow::Result;
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::{
+    event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
+    execute,
+    terminal::{self, EnterAlternateScreen, LeaveAlternateScreen},
+};
 use pmon::{
-    calculate_progress, determine_start_time_for_end, get_current_time, parse_time,
-    parse_time_with_base, render_colored_progress_bar_with_time, validate_times, Cli,
+    calculate_progress, determine_start_time_for_end, format_minimal_only, format_verbose_layout,
+    get_current_time, parse_time, parse_time_with_base, render_colored_progress_bar_with_time,
+    validate_times, Cli, DisplayMode,
 };
 use std::io::{self, Write};
-use std::time::Duration;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 fn main() -> Result<()> {
     // Parse command line arguments
@@ -64,112 +71,182 @@ fn main() -> Result<()> {
     let is_interactive =
         is_tty && std::env::var("CI").is_err() && std::env::var("GITHUB_ACTIONS").is_err();
 
-    // Enable raw mode for signal detection only if we're in an interactive TTY
     if is_interactive {
-        crossterm::terminal::enable_raw_mode()?;
+        // Run in interactive mode with keyboard controls
+        run_interactive_mode(start_time, end_time, cli.interval())
+    } else {
+        // Run in pipe mode (backward compatibility)
+        run_pipe_mode(start_time, end_time, cli.interval())
     }
+}
 
-    // Ensure terminal cleanup on exit
-    let cleanup = move || {
-        if is_interactive {
-            let _ = crossterm::terminal::disable_raw_mode();
-        }
-        println!(); // New line before exit
+/// Run the interactive mode with keyboard controls and display mode switching
+fn run_interactive_mode(
+    start_time: chrono::NaiveDateTime,
+    end_time: chrono::NaiveDateTime,
+    interval_seconds: u64,
+) -> Result<()> {
+    // Set up signal handler for graceful exit
+    let running = Arc::new(AtomicBool::new(true));
+    let r = running.clone();
+    
+    ctrlc::set_handler(move || {
+        r.store(false, Ordering::SeqCst);
+    })?;
+
+    // Enable raw mode and alternate screen
+    terminal::enable_raw_mode()?;
+    execute!(io::stdout(), EnterAlternateScreen)?;
+
+    // Set up cleanup function
+    let cleanup = || {
+        let _ = execute!(io::stdout(), LeaveAlternateScreen);
+        let _ = terminal::disable_raw_mode();
     };
 
     // Set up panic hook for cleanup
     let original_hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |panic_info| {
-        if is_interactive {
-            let _ = crossterm::terminal::disable_raw_mode();
-        }
-        println!(); // New line before exit
+        let _ = execute!(io::stdout(), LeaveAlternateScreen);
+        let _ = terminal::disable_raw_mode();
         original_hook(panic_info);
     }));
 
-    // Main application loop
-    let result = run_progress_loop(start_time, end_time, cli.interval(), is_interactive);
-
-    // Cleanup and handle result
-    cleanup();
-
-    match result {
-        Ok(_) => {
-            println!("Progress monitoring completed successfully.");
-            Ok(())
-        }
-        Err(e) => {
-            eprintln!("Error during progress monitoring: {e}");
-            std::process::exit(1);
-        }
-    }
-}
-
-/// Run the main progress monitoring loop
-fn run_progress_loop(
-    start_time: chrono::NaiveDateTime,
-    end_time: chrono::NaiveDateTime,
-    interval_seconds: u64,
-    is_interactive: bool,
-) -> Result<()> {
+    let mut display_mode = DisplayMode::Minimal;
+    let mut show_instructions = true;
+    let instruction_start = Instant::now();
     let interval_duration = Duration::from_secs(interval_seconds);
-    let poll_duration = Duration::from_millis(100); // Check for Ctrl+C every 100ms
+    let poll_duration = Duration::from_millis(100);
 
-    loop {
-        // Get current time and calculate progress (using centralized time function)
+    let result = 'main_loop: loop {
+        // Check for signals
+        if !running.load(Ordering::SeqCst) {
+            break Ok(());
+        }
+
+        // Get current time and calculate progress
         let current_time = get_current_time();
         let progress = calculate_progress(start_time, end_time, current_time);
 
-        // Render progress bar with time information
-        let bar =
-            render_colored_progress_bar_with_time(progress, start_time, end_time, current_time);
-
-        // Update display
-        if is_interactive {
-            // In interactive TTY mode, use carriage return to overwrite the current line
-            print!("\r{bar}");
-            io::stdout().flush()?;
-        } else {
-            // In non-interactive mode, just print the progress bar
-            println!("{bar}");
-        }
-
-        // Check if we've completed (progress >= 100%)
+        // Check if we've completed
         if progress >= 100.0 {
-            if !is_interactive {
-                println!("Progress completed! Time range has elapsed.");
-            } else {
-                println!("\nProgress completed! Time range has elapsed.");
-            }
-            break;
+            break Ok(());
         }
 
-        // Sleep with periodic Ctrl+C checking (only in interactive mode)
-        if is_interactive {
-            let mut remaining_sleep = interval_duration;
-            while remaining_sleep > Duration::ZERO {
-                let sleep_chunk = remaining_sleep.min(poll_duration);
+        // Hide instructions after 3 seconds in minimal mode
+        if show_instructions && display_mode == DisplayMode::Minimal {
+            if instruction_start.elapsed() >= Duration::from_secs(3) {
+                show_instructions = false;
+            }
+        }
 
-                // Check for Ctrl+C
-                if event::poll(sleep_chunk)? {
-                    if let Event::Key(KeyEvent {
+        // Clear screen and render display
+        print!("\r\x1b[2J\x1b[1;1H"); // Clear screen and move cursor to top-left
+
+        match display_mode {
+            DisplayMode::Minimal => {
+                let bar = format_minimal_only(progress);
+                println!("{}", bar);
+                
+                if show_instructions {
+                    println!("Press 'v' for details, 'q' to quit");
+                }
+            }
+            DisplayMode::Verbose => {
+                let layout = format_verbose_layout(progress, start_time, end_time, current_time);
+                println!("{}", layout);
+                println!();
+                println!("Press 'v' to toggle view, 'q' to quit");
+            }
+        }
+        
+        io::stdout().flush()?;
+
+        // Handle input and sleep
+        let mut remaining_sleep = interval_duration;
+        while remaining_sleep > Duration::ZERO && running.load(Ordering::SeqCst) {
+            let sleep_chunk = remaining_sleep.min(poll_duration);
+
+            // Check for input
+            if event::poll(sleep_chunk)? {
+                match event::read()? {
+                    Event::Key(KeyEvent {
+                        code: KeyCode::Char('v') | KeyCode::Char('V'),
+                        ..
+                    }) => {
+                        // Toggle display mode
+                        display_mode = match display_mode {
+                            DisplayMode::Minimal => DisplayMode::Verbose,
+                            DisplayMode::Verbose => DisplayMode::Minimal,
+                        };
+                        
+                        // Reset instruction timer if switching to minimal
+                        if display_mode == DisplayMode::Minimal {
+                            show_instructions = true;
+                        }
+                        
+                        break; // Redraw immediately
+                    }
+                    Event::Key(KeyEvent {
+                        code: KeyCode::Char('q') | KeyCode::Char('Q'),
+                        ..
+                    }) | Event::Key(KeyEvent {
+                        code: KeyCode::Esc,
+                        ..
+                    }) => {
+                        break 'main_loop Ok(());
+                    }
+                    Event::Key(KeyEvent {
                         code: KeyCode::Char('c'),
                         modifiers: KeyModifiers::CONTROL,
                         ..
-                    }) = event::read()?
-                    {
-                        println!("\nReceived Ctrl+C, exiting gracefully...");
-                        return Ok(());
+                    }) => {
+                        break 'main_loop Ok(());
                     }
-                    // Ignore other key events
+                    _ => {
+                        // Ignore other key events
+                    }
                 }
-
-                remaining_sleep = remaining_sleep.saturating_sub(sleep_chunk);
             }
-        } else {
-            // In non-interactive mode, just sleep for the full interval
-            std::thread::sleep(interval_duration);
+
+            remaining_sleep = remaining_sleep.saturating_sub(sleep_chunk);
         }
+    };
+
+    // Cleanup
+    cleanup();
+
+    result
+}
+
+/// Run the pipe mode for backward compatibility (non-interactive)
+fn run_pipe_mode(
+    start_time: chrono::NaiveDateTime,
+    end_time: chrono::NaiveDateTime,
+    interval_seconds: u64,
+) -> Result<()> {
+    let interval_duration = Duration::from_secs(interval_seconds);
+
+    loop {
+        // Get current time and calculate progress
+        let current_time = get_current_time();
+        let progress = calculate_progress(start_time, end_time, current_time);
+
+        // Render progress bar with time information (original format)
+        let bar =
+            render_colored_progress_bar_with_time(progress, start_time, end_time, current_time);
+
+        // Print the progress bar (each on a new line for pipe mode)
+        println!("{bar}");
+
+        // Check if we've completed (progress >= 100%)
+        if progress >= 100.0 {
+            println!("Progress completed! Time range has elapsed.");
+            break;
+        }
+
+        // Sleep for the full interval in pipe mode
+        std::thread::sleep(interval_duration);
     }
 
     Ok(())
