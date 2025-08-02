@@ -97,7 +97,7 @@ pub fn format_duration(duration: Duration) -> String {
 ///
 /// assert_eq!(format_duration_compact(Duration::days(150) + Duration::hours(9)), "150d 9h");
 /// assert_eq!(format_duration_compact(Duration::hours(3609)), "150d 9h");
-/// assert_eq!(format_duration_compact(Duration::hours(25)), "25h");
+/// assert_eq!(format_duration_compact(Duration::hours(25)), "1d 1h");
 /// assert_eq!(format_duration_compact(Duration::minutes(45)), "45m");
 /// ```
 pub fn format_duration_compact(duration: Duration) -> String {
@@ -435,11 +435,11 @@ pub fn render_colored_progress_bar_with_time(
 /// ```
 pub fn format_minimal_only(percentage: f64) -> String {
     let bar = render_progress_bar(percentage);
-    
+
     // Extract just the bar part (between [ and ])
     if let (Some(start), Some(end)) = (bar.find('['), bar.find(']')) {
         let bar_part = &bar[start + 1..end];
-        
+
         // Apply color for overtime (>100%)
         if percentage > 100.0 {
             bar_part.red().to_string()
@@ -498,20 +498,25 @@ pub fn format_verbose_layout(
     // Format dates at the ends
     let start_date = start.format("%Y-%m-%d").to_string();
     let end_date = end.format("%Y-%m-%d").to_string();
-    
+
     // Create the date line with padding to match bar width
-    let date_line = format!("{:<width$}{:>width$}", start_date, end_date, width = BAR_WIDTH / 2);
-    
+    let date_line = format!(
+        "{:<width$}{:>width$}",
+        start_date,
+        end_date,
+        width = BAR_WIDTH / 2
+    );
+
     // Get the minimal progress bar
     let bar = format_minimal_only(percentage);
-    
+
     // Calculate remaining time using compact format
     let remaining_duration = end - current;
     let remaining_str = format_duration_compact(remaining_duration);
-    
+
     // Format statistics line
     let stats_line = format!("{:.1}% elapsed | {} remaining", percentage, remaining_str);
-    
+
     // Combine all parts
     format!("{}\n{}\n{}", date_line, bar, stats_line)
 }
@@ -590,7 +595,7 @@ mod format_duration_compact_tests {
         // Test hours only (below 24)
         assert_eq!(format_duration_compact(Duration::hours(23)), "23h");
         assert_eq!(format_duration_compact(Duration::hours(1)), "1h");
-        
+
         // Test large hours (should convert to days)
         assert_eq!(format_duration_compact(Duration::hours(3609)), "150d 9h");
         assert_eq!(format_duration_compact(Duration::hours(25)), "1d 1h");
@@ -636,12 +641,14 @@ mod format_duration_compact_tests {
         for duration in test_cases {
             let regular = format_duration(duration);
             let compact = format_duration_compact(duration);
-            
+
             // Compact should be shorter or equal length
             assert!(
                 compact.len() <= regular.len(),
                 "Compact '{}' should be shorter than regular '{}' for duration {:?}",
-                compact, regular, duration
+                compact,
+                regular,
+                duration
             );
         }
     }
@@ -1366,17 +1373,20 @@ mod display_mode_tests {
     fn test_format_minimal_only_basic() {
         // Test that minimal format contains only the bar characters
         let minimal = format_minimal_only(50.0);
-        
+
         // Should not contain brackets or percentage
         assert!(!minimal.contains('['));
         assert!(!minimal.contains(']'));
         assert!(!minimal.contains('%'));
-        
+
         // Should contain the expected characters
         assert!(minimal.contains('█') || minimal.contains('░'));
-        
+
         // Should be exactly BAR_WIDTH characters
-        assert_eq!(minimal.chars().filter(|c| *c == '█' || *c == '░').count(), BAR_WIDTH);
+        assert_eq!(
+            minimal.chars().filter(|c| *c == '█' || *c == '░').count(),
+            BAR_WIDTH
+        );
     }
 
     #[test]
@@ -1391,7 +1401,7 @@ mod display_mode_tests {
         for (percentage, expected_filled) in test_cases {
             let minimal = format_minimal_only(percentage);
             let filled_count = minimal.chars().filter(|&c| c == '█').count();
-            
+
             assert_eq!(
                 filled_count, expected_filled,
                 "Percentage {percentage}% should have {expected_filled} filled chars, got {filled_count}"
@@ -1464,18 +1474,24 @@ mod display_mode_tests {
 
         // Save original color state
         let original_should_colorize = control::SHOULD_COLORIZE.should_colorize();
-        
+
         // Test with colors enabled
         control::set_override(true);
 
         // Normal progress should not have extra characters from color codes
         let normal = format_minimal_only(50.0);
-        assert_eq!(normal.chars().filter(|c| *c == '█' || *c == '░').count(), BAR_WIDTH);
+        assert_eq!(
+            normal.chars().filter(|c| *c == '█' || *c == '░').count(),
+            BAR_WIDTH
+        );
 
         // Overtime progress may have color codes, but bar structure should remain
         let overtime = format_minimal_only(150.0);
         let visual_chars = overtime.chars().filter(|c| *c == '█' || *c == '░').count();
-        assert_eq!(visual_chars, BAR_WIDTH, "Bar should still have correct visual length");
+        assert_eq!(
+            visual_chars, BAR_WIDTH,
+            "Bar should still have correct visual length"
+        );
 
         // Restore original color state
         if original_should_colorize {
@@ -1498,12 +1514,19 @@ mod display_mode_tests {
             let lines: Vec<&str> = verbose.split('\n').collect();
 
             // Verify structure consistency
-            assert_eq!(lines.len(), 3, "Should always have 3 lines for percentage {}", percentage);
-            
+            assert_eq!(
+                lines.len(),
+                3,
+                "Should always have 3 lines for percentage {}",
+                percentage
+            );
+
             // Verify percentage appears in stats line
             assert!(
                 lines[2].contains(&format!("{:.1}%", percentage)),
-                "Stats line should contain percentage {:.1}% for input {}", percentage, percentage
+                "Stats line should contain percentage {:.1}% for input {}",
+                percentage,
+                percentage
             );
         }
     }

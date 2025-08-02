@@ -89,7 +89,7 @@ fn run_interactive_mode(
     // Set up signal handler for graceful exit
     let running = Arc::new(AtomicBool::new(true));
     let r = running.clone();
-    
+
     ctrlc::set_handler(move || {
         r.store(false, Ordering::SeqCst);
     })?;
@@ -147,7 +147,7 @@ fn run_interactive_mode(
             DisplayMode::Minimal => {
                 let bar = format_minimal_only(progress);
                 println!("{}", bar);
-                
+
                 if show_instructions {
                     println!("Press 'v' for details, 'q' to quit");
                 }
@@ -159,7 +159,7 @@ fn run_interactive_mode(
                 println!("Press 'v' to toggle view, 'q' to quit");
             }
         }
-        
+
         io::stdout().flush()?;
 
         // Handle input and sleep
@@ -179,20 +179,20 @@ fn run_interactive_mode(
                             DisplayMode::Minimal => DisplayMode::Verbose,
                             DisplayMode::Verbose => DisplayMode::Minimal,
                         };
-                        
+
                         // Reset instruction timer if switching to minimal
                         if display_mode == DisplayMode::Minimal {
                             show_instructions = true;
                         }
-                        
+
                         break; // Redraw immediately
                     }
                     Event::Key(KeyEvent {
                         code: KeyCode::Char('q') | KeyCode::Char('Q'),
                         ..
-                    }) | Event::Key(KeyEvent {
-                        code: KeyCode::Esc,
-                        ..
+                    })
+                    | Event::Key(KeyEvent {
+                        code: KeyCode::Esc, ..
                     }) => {
                         break 'main_loop Ok(());
                     }
