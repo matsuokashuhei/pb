@@ -110,9 +110,9 @@ Code coverage is measured using `cargo-tarpaulin` and uploaded to Codecov:
 The following badges can be added to README.md:
 
 ```markdown
-![CI](https://github.com/matsuokashuhei/pb/workflows/CI/badge.svg)
-![Release](https://github.com/matsuokashuhei/pb/workflows/Release/badge.svg)
-[![codecov](https://codecov.io/gh/matsuokashuhei/pb/branch/main/graph/badge.svg)](https://codecov.io/gh/matsuokashuhei/pb)
+![CI](https://github.com/matsuokashuhei/pmon/workflows/CI/badge.svg)
+![Release](https://github.com/matsuokashuhei/pmon/workflows/Release/badge.svg)
+[![codecov](https://codecov.io/gh/matsuokashuhei/pmon/branch/main/graph/badge.svg)](https://codecov.io/gh/matsuokashuhei/pmon)
 ```
 
 ## Local Testing

@@ -2,10 +2,10 @@
 name = "pmon"
 version = "2.0.0"
 edition = "2021"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["Shuhei Matsuoka <matsuokashuheiii@gmail.com>"]
 description = "A CLI progress monitor (pmon) for time-based visualization"
 license = "MIT"
-repository = "https://github.com/matsuokashuhei/pb"
+repository = "https://github.com/matsuokashuhei/pmon"
 
 [dependencies]
 clap = { version = "4.0", features = ["derive"] }

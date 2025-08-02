@@ -24,21 +24,21 @@ We're excited to announce the first stable release of **pb** - a CLI progress ba
 ## 📦 Installation
 
 ### Pre-built Binaries
-Download from [GitHub Releases](https://github.com/matsuokashuhei/pb/releases/v1.0.0):
+Download from [GitHub Releases](https://github.com/matsuokashuhei/pmon/releases/v1.0.0):
 
 **Linux x86_64:**
 ```bash
-curl -L -o pb https://github.com/matsuokashuhei/pb/releases/v1.0.0/download/pb-linux-x86_64
+curl -L -o pb https://github.com/matsuokashuhei/pmon/releases/v1.0.0/download/pb-linux-x86_64
 chmod +x pb && sudo mv pb /usr/local/bin/
 ```
 
 **macOS:**
 ```bash
 # Intel Macs
-curl -L -o pb https://github.com/matsuokashuhei/pb/releases/v1.0.0/download/pb-macos-x86_64
+curl -L -o pb https://github.com/matsuokashuhei/pmon/releases/v1.0.0/download/pb-macos-x86_64
 
 # Apple Silicon
-curl -L -o pb https://github.com/matsuokashuhei/pb/releases/v1.0.0/download/pb-macos-arm64
+curl -L -o pb https://github.com/matsuokashuhei/pmon/releases/v1.0.0/download/pb-macos-arm64
 
 chmod +x pb && sudo mv pb /usr/local/bin/
 ```
@@ -128,4 +128,4 @@ Built with [Rust](https://www.rust-lang.org/) for performance and reliability, u
 
 **Download pb v1.0.0 today and start tracking your time-based progress!**
 
-For questions, issues, or feature requests, visit our [GitHub repository](https://github.com/matsuokashuhei/pb).
+For questions, issues, or feature requests, visit our [GitHub repository](https://github.com/matsuokashuhei/pmon).
