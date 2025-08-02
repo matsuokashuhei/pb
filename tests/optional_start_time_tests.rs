@@ -125,7 +125,8 @@ mod optional_start_time_tests {
     #[test]
     fn test_cli_optional_start_with_interval() {
         // Test that CLI correctly parses when start is omitted but interval is provided
-        let cli = Cli::try_parse_from(vec!["pmon", "--end", "17:00:00", "--interval", "30"]).unwrap();
+        let cli =
+            Cli::try_parse_from(vec!["pmon", "--end", "17:00:00", "--interval", "30"]).unwrap();
 
         assert_eq!(cli.start(), None);
         assert_eq!(cli.end(), "17:00:00");

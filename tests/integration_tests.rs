@@ -12,7 +12,7 @@ fn test_cli_help() {
 
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("CLI progress bar tool"));
+        .stdout(predicate::str::contains("CLI progress monitor (pmon)"));
 }
 
 #[test]
@@ -22,7 +22,7 @@ fn test_cli_version() {
 
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("pb 1.0.0"));
+        .stdout(predicate::str::contains("pmon 2.0.0"));
 }
 
 #[test]
@@ -85,7 +85,7 @@ fn test_completed_progress() {
     let output = cmd.timeout(Duration::from_secs(5)).assert().success();
 
     let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
-    assert!(stdout.contains("pb - Progress Bar Tool"));
+    assert!(stdout.contains("pmon - Progress Monitor Tool"));
     assert!(stdout.contains("Start time: 2025-07-21 10:00:00"));
     assert!(stdout.contains("End time: 2025-07-21 11:00:00"));
     assert!(stdout.contains("Progress completed!"));
@@ -130,7 +130,7 @@ fn test_relative_time_parsing() {
     let output = cmd.timeout(Duration::from_secs(3)).assert().failure(); // Will timeout, which is expected
 
     let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
-    assert!(stdout.contains("pb - Progress Bar Tool"));
+    assert!(stdout.contains("pmon - Progress Monitor Tool"));
     assert!(stdout.contains("[░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0.0%"));
 }
 
@@ -259,7 +259,7 @@ mod comprehensive_cli_integration_tests {
             } else {
                 // If it succeeds, should show proper output
                 assert!(
-                    stdout.contains("pb - Progress Bar Tool"),
+                    stdout.contains("pmon - Progress Monitor Tool"),
                     "Should show proper output for format combination: {start} to {end}"
                 );
             }
@@ -374,7 +374,7 @@ mod comprehensive_cli_integration_tests {
 
         // Should show progress output before timeout
         let stdout = String::from_utf8_lossy(&output.get_output().stdout);
-        assert!(stdout.contains("pb - Progress Bar Tool"));
+        assert!(stdout.contains("pmon - Progress Monitor Tool"));
     }
 
     #[test]
@@ -398,7 +398,7 @@ mod comprehensive_cli_integration_tests {
         let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
 
         // Should work in non-TTY mode
-        assert!(stdout.contains("pb - Progress Bar Tool"));
+        assert!(stdout.contains("pmon - Progress Monitor Tool"));
         assert!(stdout.contains("Progress completed!"));
     }
 
@@ -460,7 +460,7 @@ mod comprehensive_cli_integration_tests {
 
             // Check consistent header format
             assert!(
-                stdout.contains("pb - Progress Bar Tool"),
+                stdout.contains("pmon - Progress Monitor Tool"),
                 "Missing header for {description}"
             );
             assert!(
@@ -527,11 +527,13 @@ mod comprehensive_cli_integration_tests {
             let stderr = String::from_utf8_lossy(&result.get_output().stderr);
 
             // For valid time ranges, we should see the header even if the command times out
-            if stdout.contains("pb - Progress Bar Tool") || result.get_output().status.success() {
+            if stdout.contains("pmon - Progress Monitor Tool")
+                || result.get_output().status.success()
+            {
                 // This indicates the command started successfully
                 if !stdout.is_empty() {
                     assert!(
-                        stdout.contains("pb - Progress Bar Tool"),
+                        stdout.contains("pmon - Progress Monitor Tool"),
                         "Should show proper output for {description}"
                     );
                 }
@@ -641,7 +643,7 @@ mod environment_compatibility_tests {
         let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
 
         // Should work with NO_COLOR environment variable
-        assert!(stdout.contains("pb - Progress Bar Tool"));
+        assert!(stdout.contains("pmon - Progress Monitor Tool"));
         assert!(stdout.contains("Progress completed!"));
     }
 
@@ -670,7 +672,7 @@ mod environment_compatibility_tests {
             if result.get_output().status.success() {
                 let stdout = String::from_utf8_lossy(&result.get_output().stdout);
                 assert!(
-                    stdout.contains("pb - Progress Bar Tool"),
+                    stdout.contains("pmon - Progress Monitor Tool"),
                     "Should work with locale {lang}/{lc_all}"
                 );
             }
@@ -696,7 +698,7 @@ mod environment_compatibility_tests {
         let stderr = String::from_utf8_lossy(&output.get_output().stderr);
 
         // Normal output should go to stdout
-        assert!(stdout.contains("pb - Progress Bar Tool"));
+        assert!(stdout.contains("pmon - Progress Monitor Tool"));
         assert!(stdout.contains("Progress completed!"));
 
         // stderr should be empty for successful runs
@@ -789,7 +791,7 @@ mod performance_integration_tests {
 
         // Should produce output without obvious memory issues
         let stdout = String::from_utf8_lossy(&output.get_output().stdout);
-        assert!(stdout.contains("pb - Progress Bar Tool"));
+        assert!(stdout.contains("pmon - Progress Monitor Tool"));
     }
 }
 

@@ -92,7 +92,7 @@ fn test_cli_help_display() {
 
     cmd.assert()
         .success() // Help should exit successfully
-        .stdout(predicate::str::contains("CLI progress bar tool"));
+        .stdout(predicate::str::contains("CLI progress monitor (pmon)"));
 }
 
 #[test]
@@ -103,7 +103,7 @@ fn test_cli_version_display() {
 
     cmd.assert()
         .success() // Version should exit successfully
-        .stdout(predicate::str::contains("pb 1.0.0"));
+        .stdout(predicate::str::contains("pmon 2.0.0"));
 }
 
 #[test]

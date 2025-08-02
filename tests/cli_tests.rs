@@ -73,7 +73,7 @@ mod cli_parsing_tests {
         let invalid_args = vec![
             vec!["pmon"], // no arguments
             vec!["pmon", "--start", "10:00"], // missing end (end is still required)
-                        // Note: vec!["pmon", "--end", "12:00"] is now valid since start is optional
+                          // Note: vec!["pmon", "--end", "12:00"] is now valid since start is optional
         ];
 
         for args in invalid_args {
@@ -278,7 +278,7 @@ mod clap_integration_tests {
         // Test that help can be generated without panicking
         let mut cmd = Cli::command();
         let help = cmd.render_help();
-        assert!(help.to_string().contains("CLI progress bar tool"));
+        assert!(help.to_string().contains("CLI progress monitor (pmon)"));
     }
 
     #[test]
