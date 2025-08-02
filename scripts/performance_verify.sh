@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Performance verification script for pb v1.0.0
+# Performance verification script for pmon v1.0.0
 
 set -e
 
-echo "=== pb v1.0.0 Performance Verification ==="
+echo "=== pmon v1.0.0 Performance Verification ==="
 echo
 
 # Build optimized binary
@@ -13,7 +13,7 @@ echo "✓ Build completed"
 echo
 
 # Check binary size
-BINARY_SIZE=$(stat -c%s target/release/pb 2>/dev/null || stat -f%z target/release/pb)
+BINARY_SIZE=$(stat -c%s target/release/pmon 2>/dev/null || stat -f%z target/release/pmon)
 BINARY_SIZE_MB=$(echo "scale=1; $BINARY_SIZE / 1024 / 1024" | bc -l)
 echo "Binary size: ${BINARY_SIZE_MB}MB"
 
@@ -27,7 +27,7 @@ echo
 # Test startup time
 echo "Testing startup time..."
 START_TIME=$(date +%s%N)
-./target/release/pb --help > /dev/null
+./target/release/pmon --help > /dev/null
 END_TIME=$(date +%s%N)
 STARTUP_TIME_MS=$(echo "scale=2; ($END_TIME - $START_TIME) / 1000000" | bc -l)
 
@@ -41,20 +41,20 @@ echo
 
 # Test version display performance
 echo "Testing version command performance..."
-time ./target/release/pb --version
+time ./target/release/pmon --version
 echo "✓ Version command completed"
 echo
 
 # Test help display performance  
 echo "Testing help command performance..."
-time ./target/release/pb --help > /dev/null
+time ./target/release/pmon --help > /dev/null
 echo "✓ Help command completed"
 echo
 
 # Test argument parsing with invalid input
 echo "Testing error handling performance..."
 START_TIME=$(date +%s%N)
-./target/release/pb --start "invalid" --end "also-invalid" 2>/dev/null || true
+./target/release/pmon --start "invalid" --end "also-invalid" 2>/dev/null || true
 END_TIME=$(date +%s%N)
 ERROR_TIME_MS=$(echo "scale=2; ($END_TIME - $START_TIME) / 1000000" | bc -l)
 
@@ -70,7 +70,7 @@ echo
 if command -v valgrind >/dev/null 2>&1; then
     echo "Testing memory usage with valgrind..."
     valgrind --tool=massif --pages-as-heap=yes --massif-out-file=massif.out \
-        timeout 5 ./target/release/pb --start "$(date '+%Y-%m-%d %H:%M:%S')" --end "1m" --interval 1 2>/dev/null || true
+        timeout 5 ./target/release/pmon --start "$(date '+%Y-%m-%d %H:%M:%S')" --end "1m" --interval 1 2>/dev/null || true
     
     if [ -f massif.out ]; then
         PEAK_MEMORY=$(grep "mem_heap_B=" massif.out | sed -e 's/mem_heap_B=\([0-9]*\)/\1/' | sort -rn | head -1)
@@ -89,7 +89,7 @@ fi
 
 # Cross-platform compatibility test
 echo "Testing cross-platform binary compatibility..."
-file target/release/pb
+file target/release/pmon
 echo "✓ Binary type verified"
 echo
 
@@ -100,4 +100,4 @@ echo "Startup time: ${STARTUP_TIME_MS}ms"
 echo "Error handling: ${ERROR_TIME_MS}ms"
 echo
 echo "✓ Performance verification completed successfully!"
-echo "pb v1.0.0 meets all performance requirements."
+echo "pmon v1.0.0 meets all performance requirements."

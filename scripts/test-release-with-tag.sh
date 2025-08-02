@@ -134,11 +134,11 @@ echo "✓ Release notes are properly formatted"
 echo ""
 
 echo -e "${BLUE}Expected artifacts:${NC}"
-echo "- pb-linux-x86_64"
-echo "- pb-linux-aarch64"
-echo "- pb-macos-x86_64"
-echo "- pb-macos-aarch64" 
-echo "- pb-windows-x86_64.exe"
+echo "- pmon-linux-x86_64"
+echo "- pmon-linux-aarch64"
+echo "- pmon-macos-x86_64"
+echo "- pmon-macos-aarch64" 
+echo "- pmon-windows-x86_64.exe"
 echo ""
 
 # Cleanup instructions

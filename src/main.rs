@@ -52,7 +52,7 @@ fn main() -> Result<()> {
 
     // Display header information only if verbose flag is set
     if cli.verbose() {
-        println!("pb - Progress Bar Tool");
+        println!("pmon - Progress Monitor Tool");
         println!("Start time: {}", start_time.format("%Y-%m-%d %H:%M:%S"));
         println!("End time: {}", end_time.format("%Y-%m-%d %H:%M:%S"));
         println!("Update interval: {} seconds", cli.interval());

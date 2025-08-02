@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Run script for pb project using Docker
+# Run script for pmon project using Docker
 
 set -e
 
@@ -19,7 +19,7 @@ usage() {
     echo "Options:"
     echo "  -r, --release     Use release build"
     echo "  -h, --help        Show this help message"
-    echo "  --                Pass remaining arguments to pb command"
+    echo "  --                Pass remaining arguments to pmon command"
     echo ""
     echo "Examples:"
     echo "  $0 -- --help"
@@ -46,7 +46,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         *)
             echo -e "${RED}Unknown option: $1${NC}"
-            echo "Use -- to separate script options from pb arguments"
+            echo "Use -- to separate script options from pmon arguments"
             usage
             ;;
     esac
@@ -54,13 +54,13 @@ done
 
 # Determine binary path based on build type
 if [ "$BUILD_TYPE" = "release" ]; then
-    BINARY_PATH="/app/target/release/pb"
+    BINARY_PATH="/app/target/release/pmon"
 else
-    BINARY_PATH="/app/target/debug/pb"
+    BINARY_PATH="/app/target/debug/pmon"
 fi
 
 # Try to use Docker, but fallback to local build if Docker setup fails
-IMAGE_NAME="pb-dev"
+IMAGE_NAME="pmon-dev"
 USE_DOCKER=true
 
 # Check if Docker image exists or try to build it
@@ -78,15 +78,15 @@ elif [ "Dockerfile" -nt "$(docker inspect -f '{{.Created}}' $IMAGE_NAME 2>/dev/n
     fi
 fi
 
-echo -e "${YELLOW}Running pb (${BUILD_TYPE} build)...${NC}"
+echo -e "${YELLOW}Running pmon (${BUILD_TYPE} build)...${NC}"
 
 if [ "$USE_DOCKER" = true ]; then
     # Build the binary with current source code in the container first
     echo -e "${YELLOW}Building binary with current source code in Docker...${NC}"
     docker run --rm \
         -v $(pwd):/app \
-        -v pb-cargo-cache:/usr/local/cargo/registry \
-        -v pb-target-cache:/app/target \
+        -v pmon-cargo-cache:/usr/local/cargo/registry \
+        -v pmon-target-cache:/app/target \
         -w /app \
         $IMAGE_NAME \
         sh -c "if [ '$BUILD_TYPE' = 'release' ]; then cargo build --release; else cargo build; fi"
@@ -98,8 +98,8 @@ if [ "$USE_DOCKER" = true ]; then
         # Docker run command with volume mounts and TTY for interactive progress bar
         docker run --rm -it \
             -v $(pwd):/app \
-            -v pb-cargo-cache:/usr/local/cargo/registry \
-            -v pb-target-cache:/app/target \
+            -v pmon-cargo-cache:/usr/local/cargo/registry \
+            -v pmon-target-cache:/app/target \
             -w /app \
             $IMAGE_NAME \
             $BINARY_PATH "${PB_ARGS[@]}"
@@ -112,7 +112,7 @@ echo -e "${YELLOW}Using local Rust toolchain...${NC}"
 
 # Build locally if needed
 if [ "$BUILD_TYPE" = "release" ]; then
-    LOCAL_BINARY_PATH="./target/release/pb"
+    LOCAL_BINARY_PATH="./target/release/pmon"
     if [ ! -f "$LOCAL_BINARY_PATH" ] || [ "src/" -nt "$LOCAL_BINARY_PATH" ]; then
         echo -e "${YELLOW}Building release binary locally...${NC}"
         cargo build --release
@@ -122,7 +122,7 @@ if [ "$BUILD_TYPE" = "release" ]; then
         fi
     fi
 else
-    LOCAL_BINARY_PATH="./target/debug/pb"
+    LOCAL_BINARY_PATH="./target/debug/pmon"
     if [ ! -f "$LOCAL_BINARY_PATH" ] || [ "src/" -nt "$LOCAL_BINARY_PATH" ]; then
         echo -e "${YELLOW}Building debug binary locally...${NC}"
         cargo build

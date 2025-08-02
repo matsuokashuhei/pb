@@ -1,11 +1,11 @@
-.TH PB 1 "January 2025" "pb 0.1.0" "User Commands"
+.TH PMON 1 "January 2025" "pmon 2.0.0" "User Commands"
 .SH NAME
-pb \- CLI progress bar tool for time-based visualization
+pmon \- CLI progress monitor tool for time-based visualization
 .SH SYNOPSIS
-.B pb
+.B pmon
 [\fIOPTION\fR]... [\fB\-\-start\fR \fISTART_TIME\fR] \fB\-\-end\fR \fIEND_TIME\fR
 .SH DESCRIPTION
-.B pb
+.B pmon
 is a command-line progress bar tool that visualizes the progress between two points in time. It displays a real-time progress bar showing elapsed time, remaining time, and completion percentage.
 
 The tool supports multiple time formats including absolute dates, datetimes, and relative time expressions. It's useful for tracking deadlines, monitoring time-based processes, or simply visualizing time passage.
@@ -28,7 +28,7 @@ Display help information and exit.
 Display version information and exit.
 
 .SH TIME FORMATS
-.B pb
+.B pmon
 supports three time format categories:
 
 .SS Date Format
@@ -64,7 +64,7 @@ Days (e.g., 1d, 7d, 30d)
 When the
 .B \-\-start
 option is omitted,
-.B pb
+.B pmon
 automatically determines the start time based on the end time format:
 
 .TP
@@ -76,51 +76,51 @@ End times that include time components (colons, relative prefixes like "2h", "+3
 End times in YYYY-MM-DD format use today at 00:00:00 as start.
 
 This feature makes
-.B pb
+.B pmon
 more intuitive for common use cases like timers and countdowns.
 
 .SH EXAMPLES
 .TP
-.B pb \-\-end "17:00:00"
+.B pmon \-\-end "17:00:00"
 Track remaining work day from now until 5 PM.
 
 .TP
-.B pb \-\-end "2h"
+.B pmon \-\-end "2h"
 2-hour timer starting from current time.
 
 .TP
-.B pb \-\-end "2025-02-15"
+.B pmon \-\-end "2025-02-15"
 Countdown to deadline from start of today.
 
 .TP
-.B pb \-\-start "2025-01-27 09:00:00" \-\-end "2025-01-27 17:00:00"
+.B pmon \-\-start "2025-01-27 09:00:00" \-\-end "2025-01-27 17:00:00"
 Track an 8-hour work day with default 60-second updates (traditional usage).
 
 .TP
-.B pb \-\-start "2025-01-27 14:00:00" \-\-end "1h" \-\-interval 30
+.B pmon \-\-start "2025-01-27 14:00:00" \-\-end "1h" \-\-interval 30
 Monitor a 1-hour meeting with 30-second update intervals (traditional usage).
 
 .TP
-.B pb \-\-start "2025-01-27" \-\-end "7d" \-\-interval 3600
+.B pmon \-\-start "2025-01-27" \-\-end "7d" \-\-interval 3600
 Create a 7-day countdown with hourly updates (traditional usage).
 
 .TP
-.B pb \-\-start "2025-01-20" \-\-end "2025-02-15"
+.B pmon \-\-start "2025-01-20" \-\-end "2025-02-15"
 Track progress toward a project deadline (traditional usage).
 
 .TP
-.B pb \-\-start "2025-01-27 10:00:00" \-\-end "25m" \-\-interval 60
+.B pmon \-\-start "2025-01-27 10:00:00" \-\-end "25m" \-\-interval 60
 Pomodoro technique timer (25-minute focus session).
 
 .SH OUTPUT
-.B pb
+.B pmon
 displays different output depending on the terminal environment:
 
 .SS TTY Mode (Interactive Terminal)
-When running in a terminal, pb shows a dynamic progress bar that updates in place:
+When running in a terminal, pmon shows a dynamic progress bar that updates in place:
 .br
 .nf
-pb - Progress Bar Tool
+pmon - Progress Bar Tool
 Start time: 2025-01-27 09:00:00
 End time: 2025-01-27 17:00:00
 Update interval: 60 seconds
@@ -130,7 +130,7 @@ Press Ctrl+C to exit
 .fi
 
 .SS Non-TTY Mode (Redirected Output)
-When output is redirected or piped, pb prints each update as a separate line:
+When output is redirected or piped, pmon prints each update as a separate line:
 .br
 .nf
 [████████░░░░░░░░░░░░░░░░░░░░] 32.5% (2h 36m elapsed, 5h 24m remaining)
@@ -164,7 +164,7 @@ Nearing completion (80-100% completion)
 Overtime (>100% completion)
 
 .SH EXIT STATUS
-.B pb
+.B pmon
 exits with the following status codes:
 .TP
 .B 0
@@ -176,13 +176,13 @@ Error - invalid arguments, time parsing failure, or runtime error
 .SH SIGNALS
 .TP
 .B SIGINT (Ctrl+C)
-Gracefully exit pb with cleanup. In TTY mode, pb actively monitors for Ctrl+C and provides clean shutdown.
+Gracefully exit pmon with cleanup. In TTY mode, pmon actively monitors for Ctrl+C and provides clean shutdown.
 .TP
 .B SIGTERM
-Terminate pb process immediately.
+Terminate pmon process immediately.
 
 .SH ENVIRONMENT
-.B pb
+.B pmon
 respects the following environment variables:
 .TP
 .B NO_COLOR
@@ -192,7 +192,7 @@ If set, disables colored output regardless of terminal capabilities.
 Used to determine terminal capabilities for color and formatting support.
 
 .SH FILES
-.B pb
+.B pmon
 does not create or modify any files. All output goes to stdout/stderr.
 
 .SH LIMITATIONS
@@ -218,10 +218,10 @@ Choose appropriate intervals: 1-10s for short tasks, 1-5m for medium tasks, 15m+
 Use pipe output (\fBpb ... | cat\fR) for line-by-line updates in scripts.
 .TP
 .B Background Use
-Run pb in background and monitor with \fBtail -f\fR for logging.
+Run pmon in background and monitor with \fBtail -f\fR for logging.
 .TP
 .B Multiple Timers
-Run multiple pb instances in different terminals for concurrent time tracking.
+Run multiple pmon instances in different terminals for concurrent time tracking.
 
 .SH SEE ALSO
 .BR date (1),
@@ -230,19 +230,19 @@ Run multiple pb instances in different terminals for concurrent time tracking.
 .BR crontab (1)
 
 .SH BUGS
-Report bugs at: https://github.com/matsuokashuhei/pb/issues
+Report bugs at: https://github.com/matsuokashuhei/pmon/issues
 
 .SH AUTHOR
-pb was written by the pb development team.
+pmon was written by the pmon development team.
 
 .SH COPYRIGHT
-Copyright \(co 2025 pb contributors. Licensed under the MIT License.
+Copyright \(co 2025 pmon contributors. Licensed under the MIT License.
 This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.
 
 .SH EXAMPLES SECTION
 For comprehensive usage examples, see:
 .br
-.I /usr/share/doc/pb/examples/
+.I /usr/share/doc/pmon/examples/
 .br
-or visit: https://github.com/matsuokashuhei/pb/tree/main/docs/examples
+or visit: https://github.com/matsuokashuhei/pmon/tree/main/docs/examples

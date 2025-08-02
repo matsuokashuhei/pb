@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Target detection and verification script for pb project
+# Target detection and verification script for pmon project
 # This script helps diagnose target-related issues
 
 set -e
@@ -12,7 +12,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}=== pb Target Detection and Verification ===${NC}"
+echo -e "${BLUE}=== pmon Target Detection and Verification ===${NC}"
 echo
 
 # Show current system information
@@ -76,23 +76,23 @@ current_target=$(rustc -vV | grep 'host:' | cut -d' ' -f2)
 echo "Expected build target: $current_target"
 
 # Check if binary exists and show information
-if [ -f "target/release/pb" ]; then
+if [ -f "target/release/pmon" ]; then
     echo -e "${GREEN}Found existing release binary:${NC}"
-    echo "  - Path: target/release/pb"
-    echo "  - Size: $(ls -lh target/release/pb | awk '{print $5}')"
-    echo "  - File type: $(file target/release/pb | cut -d: -f2- | sed 's/^ *//')"
+    echo "  - Path: target/release/pmon"
+    echo "  - Size: $(ls -lh target/release/pmon | awk '{print $5}')"
+    echo "  - File type: $(file target/release/pmon | cut -d: -f2- | sed 's/^ *//')"
     echo
 
     # Test if binary works
     echo -e "${YELLOW}Binary Test:${NC}"
-    if ./target/release/pb --version >/dev/null 2>&1; then
+    if ./target/release/pmon --version >/dev/null 2>&1; then
         echo -e "${GREEN}  ✓ Binary executes successfully${NC}"
-        echo "  Version: $(./target/release/pb --version)"
+        echo "  Version: $(./target/release/pmon --version)"
     else
         echo -e "${RED}  ✗ Binary execution failed${NC}"
     fi
 else
-    echo -e "${YELLOW}No release binary found at target/release/pb${NC}"
+    echo -e "${YELLOW}No release binary found at target/release/pmon${NC}"
     echo "Run 'cargo build --release' or './scripts/build.sh --release' to build"
 fi
 echo
@@ -100,7 +100,7 @@ echo
 # Check for target-specific binaries
 echo -e "${YELLOW}Target-specific Binaries:${NC}"
 target_dirs_found=false
-for target_dir in target/*/release/pb; do
+for target_dir in target/*/release/pmon; do
     if [ -f "$target_dir" ]; then
         target_name=$(basename $(dirname $(dirname $target_dir)))
         echo "  - $target_name: $(file $target_dir | cut -d: -f2- | sed 's/^ *//')"
@@ -124,8 +124,8 @@ echo "3. To use the build script:"
 echo "   ./scripts/build.sh --release"
 echo
 echo "4. To verify binary compatibility:"
-echo "   file target/release/pb"
-echo "   ./target/release/pb --version"
+echo "   file target/release/pmon"
+echo "   ./target/release/pmon --version"
 echo
 
 echo -e "${BLUE}=== End of Verification ===${NC}"

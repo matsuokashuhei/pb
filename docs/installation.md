@@ -1,6 +1,6 @@
 # Installation Guide
 
-This guide covers installation instructions for pb (progress bar tool) on all supported platforms.
+This guide covers installation instructions for pmon (progress monitor tool) on all supported platforms.
 
 ## Table of Contents
 
@@ -13,7 +13,7 @@ This guide covers installation instructions for pb (progress bar tool) on all su
 
 ## Prerequisites
 
-pb requires minimal system resources and dependencies:
+pmon requires minimal system resources and dependencies:
 
 - **Operating System**: Linux, macOS, Windows, or any Unix-like system
 - **Terminal**: Any terminal emulator with ANSI color support (recommended)
@@ -25,47 +25,47 @@ pb requires minimal system resources and dependencies:
 
 ### Method 1: Pre-built Binaries (Recommended)
 
-Download the appropriate binary for your platform from the [releases page](https://github.com/matsuokashuhei/pb/releases).
+Download the appropriate binary for your platform from the [releases page](https://github.com/matsuokashuhei/pmon/releases).
 
 #### Linux (x86_64)
 ```bash
 # Download the latest release
-curl -L -o pb https://github.com/matsuokashuhei/pb/releases/latest/download/pb-linux-x86_64
+curl -L -o pmon https://github.com/matsuokashuhei/pmon/releases/latest/download/pmon-linux-x86_64
 
 # Make it executable
-chmod +x pb
+chmod +x pmon
 
 # Move to PATH (optional)
-sudo mv pb /usr/local/bin/
+sudo mv pmon /usr/local/bin/
 ```
 
 #### macOS (x86_64)
 ```bash
 # Download the latest release
-curl -L -o pb https://github.com/matsuokashuhei/pb/releases/latest/download/pb-macos-x86_64
+curl -L -o pmon https://github.com/matsuokashuhei/pmon/releases/latest/download/pmon-macos-x86_64
 
 # Make it executable
-chmod +x pb
+chmod +x pmon
 
 # Move to PATH (optional)
-sudo mv pb /usr/local/bin/
+sudo mv pmon /usr/local/bin/
 ```
 
 #### macOS (ARM64/Apple Silicon)
 ```bash
 # Download the latest release
-curl -L -o pb https://github.com/matsuokashuhei/pb/releases/latest/download/pb-macos-arm64
+curl -L -o pmon https://github.com/matsuokashuhei/pmon/releases/latest/download/pmon-macos-arm64
 
 # Make it executable
-chmod +x pb
+chmod +x pmon
 
 # Move to PATH (optional)
-sudo mv pb /usr/local/bin/
+sudo mv pmon /usr/local/bin/
 ```
 
 #### Windows (x86_64)
-1. Download `pb-windows-x86_64.exe` from the releases page
-2. Rename it to `pb.exe`
+1. Download `pmon-windows-x86_64.exe` from the releases page
+2. Rename it to `pmon.exe`
 3. Place it in a directory that's in your PATH, or create a new directory and add it to PATH
 
 ### Method 2: Package Managers
@@ -73,25 +73,25 @@ sudo mv pb /usr/local/bin/
 #### Homebrew (macOS/Linux)
 ```bash
 # Add the tap (once available)
-brew tap matsuokashuhei/pb
+brew tap matsuokashuhei/pmon
 
-# Install pb
-brew install pb
+# Install pmon
+brew install pmon
 ```
 
 #### Cargo (Rust Package Manager)
 ```bash
 # Install from crates.io (once published)
-cargo install pb-cli
+cargo install pmon-cli
 
 # Or install directly from git
-cargo install --git https://github.com/matsuokashuhei/pb.git
+cargo install --git https://github.com/matsuokashuhei/pmon.git
 ```
 
 #### Snap (Linux)
 ```bash
 # Install from Snap Store (once available)
-sudo snap install pb-progress-bar
+sudo snap install pmon-progress-bar
 ```
 
 ### Method 3: Building from Source
@@ -105,34 +105,34 @@ See the [Building from Source](#building-from-source) section below.
 #### Ubuntu/Debian
 ```bash
 # Using pre-built binary
-wget https://github.com/matsuokashuhei/pb/releases/latest/download/pb-linux-x86_64
-chmod +x pb-linux-x86_64
-sudo mv pb-linux-x86_64 /usr/local/bin/pb
+wget https://github.com/matsuokashuhei/pmon/releases/latest/download/pmon-linux-x86_64
+chmod +x pmon-linux-x86_64
+sudo mv pmon-linux-x86_64 /usr/local/bin/pmon
 
 # Verify installation
-pb --version
+pmon --version
 ```
 
 #### CentOS/RHEL/Fedora
 ```bash
 # Using pre-built binary
-curl -L -o pb https://github.com/matsuokashuhei/pb/releases/latest/download/pb-linux-x86_64
-chmod +x pb
-sudo mv pb /usr/local/bin/
+curl -L -o pmon https://github.com/matsuokashuhei/pmon/releases/latest/download/pmon-linux-x86_64
+chmod +x pmon
+sudo mv pmon /usr/local/bin/
 
 # Verify installation
-pb --version
+pmon --version
 ```
 
 #### Arch Linux
 ```bash
 # Using pre-built binary
-curl -L -o pb https://github.com/matsuokashuhei/pb/releases/latest/download/pb-linux-x86_64
-chmod +x pb
-sudo mv pb /usr/local/bin/
+curl -L -o pmon https://github.com/matsuokashuhei/pmon/releases/latest/download/pmon-linux-x86_64
+chmod +x pmon
+sudo mv pmon /usr/local/bin/
 
 # Alternative: Build from AUR (once available)
-# yay -S pb-progress-bar
+# yay -S pmon-progress-bar
 ```
 
 ### macOS
@@ -142,9 +142,9 @@ sudo mv pb /usr/local/bin/
 # Install Homebrew if not already installed
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# Install pb (once available in Homebrew)
-brew tap matsuokashuhei/pb
-brew install pb
+# Install pmon (once available in Homebrew)
+brew tap matsuokashuhei/pmon
+brew install pmon
 ```
 
 #### Manual Installation
@@ -154,41 +154,41 @@ arch=$(uname -m)
 
 if [ "$arch" = "arm64" ]; then
     # Apple Silicon (M1/M2/M3)
-    curl -L -o pb https://github.com/matsuokashuhei/pb/releases/latest/download/pb-macos-arm64
+    curl -L -o pmon https://github.com/matsuokashuhei/pmon/releases/latest/download/pmon-macos-arm64
 else
     # Intel Mac
-    curl -L -o pb https://github.com/matsuokashuhei/pb/releases/latest/download/pb-macos-x86_64
+    curl -L -o pmon https://github.com/matsuokashuhei/pmon/releases/latest/download/pmon-macos-x86_64
 fi
 
-chmod +x pb
-sudo mv pb /usr/local/bin/
+chmod +x pmon
+sudo mv pmon /usr/local/bin/
 
 # Verify installation
-pb --version
+pmon --version
 ```
 
 ### Windows
 
 #### Using PowerShell
 ```powershell
-# Create a directory for pb (if it doesn't exist)
-New-Item -ItemType Directory -Force -Path "C:\Program Files\pb"
+# Create a directory for pmon (if it doesn't exist)
+New-Item -ItemType Directory -Force -Path "C:\Program Files\pmon"
 
 # Download the binary
-Invoke-WebRequest -Uri "https://github.com/matsuokashuhei/pb/releases/latest/download/pb-windows-x86_64.exe" -OutFile "C:\Program Files\pb\pb.exe"
+Invoke-WebRequest -Uri "https://github.com/matsuokashuhei/pmon/releases/latest/download/pmon-windows-x86_64.exe" -OutFile "C:\Program Files\pmon\pmon.exe"
 
 # Add to PATH (requires administrator privileges)
-$env:PATH += ";C:\Program Files\pb"
+$env:PATH += ";C:\Program Files\pmon"
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, [EnvironmentVariableTarget]::Machine)
 ```
 
 #### Using Command Prompt
 ```cmd
 # Create directory
-mkdir "C:\Program Files\pb"
+mkdir "C:\Program Files\pmon"
 
 # Download using curl (available in Windows 10+)
-curl -L -o "C:\Program Files\pb\pb.exe" "https://github.com/matsuokashuhei/pb/releases/latest/download/pb-windows-x86_64.exe"
+curl -L -o "C:\Program Files\pmon\pmon.exe" "https://github.com/matsuokashuhei/pmon/releases/latest/download/pmon-windows-x86_64.exe"
 
 # Add to PATH manually through System Properties > Environment Variables
 # Or use PowerShell command above
@@ -196,21 +196,21 @@ curl -L -o "C:\Program Files\pb\pb.exe" "https://github.com/matsuokashuhei/pb/re
 
 #### Using Chocolatey (once available)
 ```cmd
-choco install pb-progress-bar
+choco install pmon-progress-bar
 ```
 
 #### Using Scoop (once available)
 ```cmd
-scoop install pb
+scoop install pmon
 ```
 
 ### Unix-like Systems (FreeBSD, OpenBSD, etc.)
 
 ```bash
 # Download and install binary
-curl -L -o pb https://github.com/matsuokashuhei/pb/releases/latest/download/pb-unix-x86_64
-chmod +x pb
-sudo mv pb /usr/local/bin/
+curl -L -o pmon https://github.com/matsuokashuhei/pmon/releases/latest/download/pmon-unix-x86_64
+chmod +x pmon
+sudo mv pmon /usr/local/bin/
 
 # Or build from source (recommended for compatibility)
 # See Building from Source section
@@ -234,8 +234,8 @@ sudo mv pb /usr/local/bin/
 
 2. **Clone the repository**:
    ```bash
-   git clone https://github.com/matsuokashuhei/pb.git
-   cd pb
+   git clone https://github.com/matsuokashuhei/pmon.git
+   cd pmon
    ```
 
 3. **Build the project**:
@@ -253,7 +253,7 @@ sudo mv pb /usr/local/bin/
    cargo install --path .
 
    # Or copy the binary to a system directory
-   sudo cp target/release/pb /usr/local/bin/
+   sudo cp target/release/pmon /usr/local/bin/
    ```
 
 ### Cross-Compilation
@@ -322,9 +322,9 @@ If you encounter issues where `cargo build` produces binaries for the wrong targ
 
 5. **Verify binary after build**:
    ```bash
-   file target/release/pb
+   file target/release/pmon
    # or
-   file target/$(rustc -vV | sed -n 's|host: ||p')/release/pb
+   file target/$(rustc -vV | sed -n 's|host: ||p')/release/pmon
    ```
 
 ### Development Build with Docker
@@ -333,28 +333,28 @@ If you prefer using Docker for a consistent build environment:
 
 ```bash
 # Clone the repository
-git clone https://github.com/matsuokashuhei/pb.git
-cd pb
+git clone https://github.com/matsuokashuhei/pmon.git
+cd pmon
 
 # Build using the development script
 ./scripts/build.sh --release
 
-# The binary will be available in target/release/pb
+# The binary will be available in target/release/pmon
 ```
 
 ## Verification
 
-After installation, verify that pb is working correctly:
+After installation, verify that pmon is working correctly:
 
 ```bash
 # Check version
-pb --version
+pmon --version
 
 # View help
-pb --help
+pmon --help
 
 # Test with a simple example
-pb --start "2025-01-27 12:00:00" --end "2025-01-27 13:00:00" --interval 5
+pmon --start "2025-01-27 12:00:00" --end "2025-01-27 13:00:00" --interval 5
 ```
 
 Expected output should show:
@@ -366,20 +366,20 @@ Expected output should show:
 
 ### Common Issues
 
-#### "pb: command not found"
-**Cause**: pb is not in your system PATH.
+#### "pmon: command not found"
+**Cause**: pmon is not in your system PATH.
 
 **Solutions**:
-- Ensure the directory containing pb is in your PATH
+- Ensure the directory containing pmon is in your PATH
 - Reinstall using a method that automatically adds to PATH
-- Run pb using its full path (e.g., `./pb` or `/usr/local/bin/pb`)
+- Run pmon using its full path (e.g., `./pmon` or `/usr/local/bin/pmon`)
 
-#### "Permission denied" when running pb
+#### "Permission denied" when running pmon
 **Cause**: The binary doesn't have execute permissions.
 
 **Solution**:
 ```bash
-chmod +x /path/to/pb
+chmod +x /path/to/pmon
 ```
 
 #### Colors not displaying correctly
@@ -402,14 +402,14 @@ chmod +x /path/to/pb
 **Cause**: Binary was compiled for wrong target (e.g., Linux ARM64 binary on macOS ARM64).
 
 **Symptoms**:
-- `zsh: exec format error: ./pb` on macOS
+- `zsh: exec format error: ./pmon` on macOS
 - `cannot execute binary file: Exec format error` on Linux
-- `file pb` shows wrong architecture/format
+- `file pmon` shows wrong architecture/format
 
 **Solutions**:
 1. **Check the current binary**:
    ```bash
-   file ./target/release/pb
+   file ./target/release/pmon
    ```
 
 2. **Rebuild for correct target**:
@@ -450,11 +450,11 @@ chmod +x /path/to/pb
 
 5. **Verify `.cargo/config.toml`**: Ensure no incorrect target overrides
 
-#### Windows Defender or antivirus blocking pb
+#### Windows Defender or antivirus blocking pmon
 **Cause**: Some antivirus software may flag unknown binaries.
 
 **Solutions**:
-- Add pb.exe to your antivirus whitelist
+- Add pmon.exe to your antivirus whitelist
 - Download from the official GitHub releases page
 - Build from source to ensure authenticity
 
@@ -463,38 +463,38 @@ chmod +x /path/to/pb
 If you encounter issues not covered here:
 
 1. **Check the troubleshooting guide**: [docs/troubleshooting.md](troubleshooting.md)
-2. **Search existing issues**: [GitHub Issues](https://github.com/matsuokashuhei/pb/issues)
+2. **Search existing issues**: [GitHub Issues](https://github.com/matsuokashuhei/pmon/issues)
 3. **Create a new issue**: Include your operating system, installation method, and error messages
 4. **Check system requirements**: Ensure your system meets the minimum requirements
 
 ### Uninstallation
 
-To remove pb from your system:
+To remove pmon from your system:
 
 #### Binary Installation
 ```bash
 # Remove the binary
-sudo rm /usr/local/bin/pb
+sudo rm /usr/local/bin/pmon
 
 # Or remove from custom location
-rm /path/to/pb
+rm /path/to/pmon
 ```
 
 #### Cargo Installation
 ```bash
-cargo uninstall pb-cli
+cargo uninstall pmon-cli
 ```
 
 #### Package Manager Installation
 ```bash
 # Homebrew
-brew uninstall pb
+brew uninstall pmon
 
 # Chocolatey
-choco uninstall pb-progress-bar
+choco uninstall pmon-progress-bar
 
 # Snap
-sudo snap remove pb-progress-bar
+sudo snap remove pmon-progress-bar
 ```
 
 ## Next Steps
@@ -503,7 +503,7 @@ After successful installation:
 
 1. Read the [User Guide](user_guide.md) for detailed usage instructions
 2. Check out [examples](examples/) for common use cases
-3. Review the [man page](man/pb.1) for quick reference
+3. Review the [man page](man/pmon.1) for quick reference
 4. See the [troubleshooting guide](troubleshooting.md) for common issues
 
 For development and contribution, see the [Development Guide](development_guide.md).

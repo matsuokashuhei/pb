@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Build script for pb project
-# This script builds pb using either the local Rust toolchain or Docker
+# Build script for pmon project
+# This script builds pmon using either the local Rust toolchain or Docker
 # It prefers local cargo for better performance but falls back to Docker when needed
 
 set -e
@@ -79,9 +79,9 @@ if [ "$VERBOSE" = true ]; then
 fi
 if [ -n "$TARGET" ]; then
     BUILD_ARGS="$BUILD_ARGS --target $TARGET"
-    echo -e "${YELLOW}Building pb for target: $TARGET${NC}"
+    echo -e "${YELLOW}Building pmon for target: $TARGET${NC}"
 else
-    echo -e "${YELLOW}Building pb for default target${NC}"
+    echo -e "${YELLOW}Building pmon for default target${NC}"
 fi
 
 # Determine build method: local cargo or Docker
@@ -128,14 +128,14 @@ else
     fi
 fi
 
-echo -e "${YELLOW}Building pb in ${BUILD_TYPE} mode...${NC}"
+echo -e "${YELLOW}Building pmon in ${BUILD_TYPE} mode...${NC}"
 
 # Execute build command
 if [ "$USE_DOCKER" = true ]; then
     # Check if we should use the optimized Docker setup or simple rust:latest
     if command -v docker >/dev/null 2>&1; then
         # Try to use the optimized setup first
-        IMAGE_NAME="pb-dev"
+        IMAGE_NAME="pmon-dev"
         if docker images -q $IMAGE_NAME 2>/dev/null | grep -q .; then
             echo -e "${YELLOW}Using cached development Docker image for optimized build...${NC}"
 
@@ -144,19 +144,19 @@ if [ "$USE_DOCKER" = true ]; then
                 echo -e "${YELLOW}Installing target $TARGET in Docker container...${NC}"
                 docker run --rm \
                     -v "$(pwd):/app" \
-                    -v pb-cargo-cache:/usr/local/cargo/registry \
-                    -v pb-target-cache:/app/target \
+                    -v pmon-cargo-cache:/usr/local/cargo/registry \
+                    -v pmon-target-cache:/app/target \
                     -w /app \
                     $IMAGE_NAME rustup target add "$TARGET" || echo -e "${YELLOW}Target installation completed (may have warnings)${NC}"
             fi
 
-            echo -e "${YELLOW}Build command: docker run --rm -v $(pwd):/app -v pb-cargo-cache:/usr/local/cargo/registry -v pb-target-cache:/app/target -w /app $IMAGE_NAME cargo build $BUILD_ARGS${NC}"
+            echo -e "${YELLOW}Build command: docker run --rm -v $(pwd):/app -v pmon-cargo-cache:/usr/local/cargo/registry -v pmon-target-cache:/app/target -w /app $IMAGE_NAME cargo build $BUILD_ARGS${NC}"
 
             # Docker run command with volume mounts using cached image
             docker run --rm \
                 -v "$(pwd):/app" \
-                -v pb-cargo-cache:/usr/local/cargo/registry \
-                -v pb-target-cache:/app/target \
+                -v pmon-cargo-cache:/usr/local/cargo/registry \
+                -v pmon-target-cache:/app/target \
                 -w /app \
                 $IMAGE_NAME cargo build $BUILD_ARGS
             BUILD_EXIT_CODE=$?
@@ -171,19 +171,19 @@ if [ "$USE_DOCKER" = true ]; then
                     echo -e "${YELLOW}Installing target $TARGET in Docker container...${NC}"
                     docker run --rm \
                         -v "$(pwd):/app" \
-                        -v pb-cargo-cache:/usr/local/cargo/registry \
-                        -v pb-target-cache:/app/target \
+                        -v pmon-cargo-cache:/usr/local/cargo/registry \
+                        -v pmon-target-cache:/app/target \
                         -w /app \
                         $IMAGE_NAME rustup target add "$TARGET" || echo -e "${YELLOW}Target installation completed (may have warnings)${NC}"
                 fi
 
-                echo -e "${YELLOW}Build command: docker run --rm -v $(pwd):/app -v pb-cargo-cache:/usr/local/cargo/registry -v pb-target-cache:/app/target -w /app $IMAGE_NAME cargo build $BUILD_ARGS${NC}"
+                echo -e "${YELLOW}Build command: docker run --rm -v $(pwd):/app -v pmon-cargo-cache:/usr/local/cargo/registry -v pmon-target-cache:/app/target -w /app $IMAGE_NAME cargo build $BUILD_ARGS${NC}"
 
                 # Docker run command with volume mounts using built image
                 docker run --rm \
                     -v "$(pwd):/app" \
-                    -v pb-cargo-cache:/usr/local/cargo/registry \
-                    -v pb-target-cache:/app/target \
+                    -v pmon-cargo-cache:/usr/local/cargo/registry \
+                    -v pmon-target-cache:/app/target \
                     -w /app \
                     $IMAGE_NAME cargo build $BUILD_ARGS
                 BUILD_EXIT_CODE=$?
@@ -217,9 +217,9 @@ if [ $BUILD_EXIT_CODE -eq 0 ]; then
 
     # Show binary information
     if [ -n "$TARGET" ]; then
-        BINARY_PATH="target/$TARGET/$BUILD_TYPE/pb"
+        BINARY_PATH="target/$TARGET/$BUILD_TYPE/pmon"
     else
-        BINARY_PATH="target/$BUILD_TYPE/pb"
+        BINARY_PATH="target/$BUILD_TYPE/pmon"
     fi
 
     if [ -f "$BINARY_PATH" ]; then

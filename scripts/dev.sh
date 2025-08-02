@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Development environment script for pb project using Docker
+# Development environment script for pmon project using Docker
 
 set -e
 
@@ -24,7 +24,7 @@ usage() {
 }
 
 # Build Docker image if it doesn't exist or Dockerfile is newer
-IMAGE_NAME="pb-dev"
+IMAGE_NAME="pmon-dev"
 if [ ! "$(docker images -q $IMAGE_NAME 2> /dev/null)" ] || [ "Dockerfile" -nt "$(docker inspect -f '{{.Created}}' $IMAGE_NAME 2>/dev/null)" ]; then
     echo -e "${YELLOW}Building development Docker image...${NC}"
     docker build -t $IMAGE_NAME --target development . > /dev/null
@@ -33,8 +33,8 @@ fi
 # Docker run command with volume mounts using our built image
 DOCKER_CMD="docker run --rm -it \
     -v $(pwd):/app \
-    -v pb-cargo-cache:/usr/local/cargo/registry \
-    -v pb-target-cache:/app/target \
+    -v pmon-cargo-cache:/usr/local/cargo/registry \
+    -v pmon-target-cache:/app/target \
     -w /app \
     $IMAGE_NAME"
 
@@ -48,7 +48,7 @@ case "${1:-shell}" in
         echo -e "${YELLOW}Cleaning build artifacts...${NC}"
         $DOCKER_CMD cargo clean
         echo -e "${YELLOW}Removing Docker volumes...${NC}"
-        docker volume rm pb-cargo-cache pb-target-cache 2>/dev/null || true
+        docker volume rm pmon-cargo-cache pmon-target-cache 2>/dev/null || true
         echo -e "${GREEN}Clean completed!${NC}"
         ;;
     "deps")
