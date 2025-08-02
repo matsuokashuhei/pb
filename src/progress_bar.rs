@@ -499,26 +499,24 @@ pub fn format_verbose_layout(
     let start_date = start.format("%Y-%m-%d").to_string();
     let end_date = end.format("%Y-%m-%d").to_string();
 
-    // Create the date line with padding to match bar width
-    let date_line = format!(
-        "{:<width$}{:>width$}",
-        start_date,
-        end_date,
-        width = BAR_WIDTH / 2
-    );
+    // Create the date line with proper spacing between dates
+    // Use the full BAR_WIDTH for the date line to match progress bar width
+    let total_date_len = start_date.len() + end_date.len();
+    let padding_needed = BAR_WIDTH.saturating_sub(total_date_len);
+    let date_line = format!("{}{}{}", start_date, " ".repeat(padding_needed), end_date);
 
-    // Get the minimal progress bar
+    // Get the minimal progress bar (ensure it's exactly BAR_WIDTH characters)
     let bar = format_minimal_only(percentage);
 
     // Calculate remaining time using compact format
     let remaining_duration = end - current;
     let remaining_str = format_duration_compact(remaining_duration);
 
-    // Format statistics line
+    // Format statistics line (left-aligned, no extra spacing)
     let stats_line = format!("{:.1}% elapsed | {} remaining", percentage, remaining_str);
 
-    // Combine all parts
-    format!("{}\n{}\n{}", date_line, bar, stats_line)
+    // Combine all parts with explicit left alignment
+    format!("{}\n{}\n{}", date_line.trim_end(), bar, stats_line)
 }
 
 #[cfg(test)]
