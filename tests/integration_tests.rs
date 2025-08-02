@@ -7,7 +7,7 @@ use common::helpers::CliTestUtils;
 
 #[test]
 fn test_cli_help() {
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.arg("--help");
 
     cmd.assert()
@@ -17,7 +17,7 @@ fn test_cli_help() {
 
 #[test]
 fn test_cli_version() {
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.arg("--version");
 
     cmd.assert()
@@ -27,7 +27,7 @@ fn test_cli_version() {
 
 #[test]
 fn test_missing_required_args() {
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
 
     cmd.assert()
         .failure()
@@ -36,7 +36,7 @@ fn test_missing_required_args() {
 
 #[test]
 fn test_invalid_start_time() {
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args(["--start", "invalid", "--end", "2025-07-21 12:00:00"]);
 
     cmd.assert()
@@ -46,7 +46,7 @@ fn test_invalid_start_time() {
 
 #[test]
 fn test_invalid_end_time() {
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args(["--start", "2025-07-21 10:00:00", "--end", "invalid"]);
 
     cmd.assert()
@@ -56,7 +56,7 @@ fn test_invalid_end_time() {
 
 #[test]
 fn test_start_after_end_time() {
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args([
         "--start",
         "2025-07-21 12:00:00",
@@ -71,7 +71,7 @@ fn test_start_after_end_time() {
 
 #[test]
 fn test_completed_progress() {
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args([
         "--start",
         "2025-07-21 10:00:00",
@@ -93,7 +93,7 @@ fn test_completed_progress() {
 
 #[test]
 fn test_date_format_parsing() {
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args([
         "--start",
         "2025-07-20", // Yesterday
@@ -115,7 +115,7 @@ fn test_date_format_parsing() {
 
 #[test]
 fn test_relative_time_parsing() {
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args([
         "--start",
         "+30m",
@@ -136,7 +136,7 @@ fn test_relative_time_parsing() {
 
 #[test]
 fn test_custom_interval() {
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args([
         "--start",
         "2025-07-21 10:00:00",
@@ -155,7 +155,7 @@ fn test_custom_interval() {
 
 #[test]
 fn test_progress_bar_overtime() {
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args([
         "--start",
         "2025-07-21 09:00:00",
@@ -175,7 +175,7 @@ fn test_progress_bar_overtime() {
 
 #[test]
 fn test_zero_interval_error() {
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args([
         "--start",
         "2025-07-21 10:00:00",
@@ -192,7 +192,7 @@ fn test_zero_interval_error() {
 
 #[test]
 fn test_equal_start_end_times() {
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args([
         "--start",
         "2025-07-21 10:00:00",

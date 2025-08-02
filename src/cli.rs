@@ -6,10 +6,10 @@
 use crate::error::{PbError, PbResult};
 use clap::Parser;
 
-/// CLI progress bar tool for time-based visualization
+/// CLI progress monitor tool for time-based visualization
 #[derive(Parser, Debug)]
-#[command(name = "pb")]
-#[command(about = "A CLI progress bar tool for time-based visualization")]
+#[command(name = "pmon")]
+#[command(about = "A CLI progress monitor (pmon) for time-based visualization")]
 #[command(version = env!("CARGO_PKG_VERSION"))]
 pub struct Cli {
     /// Start time (e.g., "2023-12-01 10:00:00", "10:00", "+1h")
@@ -120,7 +120,7 @@ mod tests {
     #[test]
     fn test_parse_valid_args() {
         // Test parsing valid arguments
-        let args = vec!["pb", "--start", "10:00", "--end", "12:00"];
+        let args = vec!["pmon", "--start", "10:00", "--end", "12:00"];
         let cli = Cli::try_parse_from(args).unwrap();
 
         assert_eq!(cli.start(), Some("10:00"));
@@ -131,7 +131,7 @@ mod tests {
     #[test]
     fn test_parse_with_interval() {
         // Test parsing with custom interval
-        let args = vec!["pb", "-s", "10:00", "-e", "12:00", "-i", "30"];
+        let args = vec!["pmon", "-s", "10:00", "-e", "12:00", "-i", "30"];
         let cli = Cli::try_parse_from(args).unwrap();
 
         assert_eq!(cli.start(), Some("10:00"));
@@ -143,7 +143,7 @@ mod tests {
     fn test_parse_long_form() {
         // Test parsing with long form arguments
         let args = vec![
-            "pb",
+            "pmon",
             "--start",
             "2023-12-01 10:00:00",
             "--end",
@@ -161,12 +161,12 @@ mod tests {
     #[test]
     fn test_missing_required_args() {
         // Test that missing required arguments are handled
-        let args = vec!["pb"];
+        let args = vec!["pmon"];
         let result = Cli::try_parse_from(args);
         assert!(result.is_err()); // --end is still required
 
         // --start is now optional, so this should succeed
-        let args = vec!["pb", "--end", "12:00"];
+        let args = vec!["pmon", "--end", "12:00"];
         let result = Cli::try_parse_from(args);
         assert!(result.is_ok());
 
@@ -182,8 +182,8 @@ mod tests {
         // Mock command line args for testing
         // In real usage, this would use std::env::args()
         let test_cases = vec![
-            (vec!["pb", "--start", "10:00", "--end", "12:00"], true),
-            (vec!["pb", "-s", "10:00", "-e", "12:00", "-i", "30"], true),
+            (vec!["pmon", "--start", "10:00", "--end", "12:00"], true),
+            (vec!["pmon", "-s", "10:00", "-e", "12:00", "-i", "30"], true),
         ];
 
         for (args, should_succeed) in test_cases {
@@ -202,11 +202,11 @@ mod tests {
     #[test]
     fn test_validation_empty_strings() {
         // Test validation with empty strings
-        let args = vec!["pb", "--start", "", "--end", "12:00"];
+        let args = vec!["pmon", "--start", "", "--end", "12:00"];
         let cli = Cli::try_parse_from(args).unwrap();
         assert!(cli.validate().is_err());
 
-        let args = vec!["pb", "--start", "10:00", "--end", ""];
+        let args = vec!["pmon", "--start", "10:00", "--end", ""];
         let cli = Cli::try_parse_from(args).unwrap();
         assert!(cli.validate().is_err());
     }
@@ -215,7 +215,7 @@ mod tests {
     fn test_validation_zero_interval() {
         // Test validation with zero interval
         let args = vec![
-            "pb",
+            "pmon",
             "--start",
             "10:00",
             "--end",
@@ -234,7 +234,7 @@ mod tests {
         let help = cmd.render_help();
         let help_str = help.to_string();
 
-        assert!(help_str.contains("A CLI progress bar tool for time-based visualization"));
+        assert!(help_str.contains("A CLI progress monitor (pmon) for time-based visualization"));
         assert!(help_str.contains("Start time"));
         assert!(help_str.contains("End time"));
         assert!(help_str.contains("Update interval in seconds"));
@@ -246,7 +246,7 @@ mod tests {
     #[test]
     fn test_debug_output() {
         // Test that the debug output is reasonable
-        let args = vec!["pb", "--start", "10:00", "--end", "12:00"];
+        let args = vec!["pmon", "--start", "10:00", "--end", "12:00"];
         let cli = Cli::try_parse_from(args).unwrap();
         let debug_str = format!("{cli:?}");
 
@@ -259,7 +259,7 @@ mod tests {
     fn test_getters() {
         // Test getter methods
         let args = vec![
-            "pb",
+            "pmon",
             "--start",
             "10:00",
             "--end",

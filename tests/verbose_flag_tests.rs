@@ -3,7 +3,7 @@ use std::time::Duration;
 
 #[test]
 fn test_verbose_flag_shows_header() {
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args([
         "--start",
         "2025-07-21 10:00:00",
@@ -27,7 +27,7 @@ fn test_verbose_flag_shows_header() {
 
 #[test]
 fn test_verbose_flag_short_form() {
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args([
         "--start",
         "2025-07-21 10:00:00",
@@ -51,7 +51,7 @@ fn test_verbose_flag_short_form() {
 
 #[test]
 fn test_default_behavior_no_header() {
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args([
         "--start",
         "2025-07-21 10:00:00",
@@ -79,7 +79,7 @@ fn test_default_behavior_no_header() {
 
 #[test]
 fn test_verbose_flag_with_different_intervals() {
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args([
         "--start",
         "2025-07-21 10:00:00",
@@ -99,7 +99,7 @@ fn test_verbose_flag_with_different_intervals() {
 
 #[test]
 fn test_help_includes_verbose_flag() {
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.arg("--help");
 
     let output = cmd.assert().success();

@@ -4,7 +4,7 @@
 //! to ensure robust error handling throughout the application.
 
 use anyhow::Context;
-use pb::error::*;
+use pmon::error::*;
 use std::error::Error;
 
 mod common;

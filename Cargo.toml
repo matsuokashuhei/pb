@@ -1,9 +1,9 @@
 [package]
-name = "pb"
-version = "1.0.0"
+name = "pmon"
+version = "2.0.0"
 edition = "2021"
 authors = ["Your Name <your.email@example.com>"]
-description = "A CLI progress bar tool for time-based visualization"
+description = "A CLI progress monitor (pmon) for time-based visualization"
 license = "MIT"
 repository = "https://github.com/matsuokashuhei/pb"
 
@@ -30,5 +30,5 @@ panic = "abort"
 strip = true
 
 [[bin]]
-name = "pb"
+name = "pmon"
 path = "src/main.rs"

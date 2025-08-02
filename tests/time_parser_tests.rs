@@ -4,8 +4,8 @@
 //! time, and relative time parsing with comprehensive edge case coverage.
 
 use chrono::{Duration, NaiveDateTime, Timelike};
-use pb::error::PbError;
-use pb::time_parser::*;
+use pmon::error::PbError;
+use pmon::time_parser::*;
 
 mod common;
 use common::helpers::TimeTestData;

@@ -9,7 +9,7 @@ use predicates::prelude::*;
 #[test]
 fn test_cli_validation_empty_start_time() {
     // Test validation failure for empty start time
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args(["--start", "", "--end", "12:00:00"]);
 
     cmd.assert()
@@ -20,7 +20,7 @@ fn test_cli_validation_empty_start_time() {
 #[test]
 fn test_cli_validation_empty_end_time() {
     // Test validation failure for empty end time
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args(["--start", "10:00:00", "--end", ""]);
 
     cmd.assert()
@@ -31,7 +31,7 @@ fn test_cli_validation_empty_end_time() {
 #[test]
 fn test_cli_validation_zero_interval() {
     // Test validation failure for zero interval
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args([
         "--start",
         "10:00:00",
@@ -49,7 +49,7 @@ fn test_cli_validation_zero_interval() {
 #[test]
 fn test_cli_validation_invalid_start_time() {
     // Test validation failure for invalid start time format
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args(["--start", "not-a-time", "--end", "12:00:00"]);
 
     cmd.assert()
@@ -60,7 +60,7 @@ fn test_cli_validation_invalid_start_time() {
 #[test]
 fn test_cli_validation_invalid_end_time() {
     // Test validation failure for invalid end time format
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args(["--start", "10:00:00", "--end", "not-a-time"]);
 
     cmd.assert()
@@ -71,7 +71,7 @@ fn test_cli_validation_invalid_end_time() {
 #[test]
 fn test_cli_validation_start_after_end() {
     // Test validation failure when start time is after end time
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args([
         "--start",
         "2025-07-21 12:00:00",
@@ -87,7 +87,7 @@ fn test_cli_validation_start_after_end() {
 #[test]
 fn test_cli_help_display() {
     // Test help display (which exercises the parse_args error handling)
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.arg("--help");
 
     cmd.assert()
@@ -98,7 +98,7 @@ fn test_cli_help_display() {
 #[test]
 fn test_cli_version_display() {
     // Test version display (which exercises the parse_args error handling)
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.arg("--version");
 
     cmd.assert()
@@ -109,7 +109,7 @@ fn test_cli_version_display() {
 #[test]
 fn test_cli_missing_required_args() {
     // Test missing required arguments (exercises MissingRequiredOptions error path)
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     // No arguments provided
 
     cmd.assert()
@@ -120,7 +120,7 @@ fn test_cli_missing_required_args() {
 #[test]
 fn test_cli_optional_start_with_future_time() {
     // Test that start argument is now optional and uses determined start time
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args(["--end", "23:59:59"]); // Use a future time to avoid validation failure
 
     // Should either succeed or timeout (since it's a future time)
@@ -131,7 +131,7 @@ fn test_cli_optional_start_with_future_time() {
 #[test]
 fn test_cli_missing_end_arg() {
     // Test missing end argument
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args(["--start", "10:00:00"]);
 
     cmd.assert()
@@ -150,7 +150,7 @@ fn test_cli_successful_validation() {
     ];
 
     for (start, end, interval) in test_cases {
-        let mut cmd = Command::cargo_bin("pb").unwrap();
+        let mut cmd = Command::cargo_bin("pmon").unwrap();
         cmd.args(["--start", start, "--end", end, "--interval", interval]);
 
         // Should either succeed or timeout (since these are past/future times)
@@ -162,7 +162,7 @@ fn test_cli_successful_validation() {
 #[test]
 fn test_cli_edge_case_intervals() {
     // Test edge case intervals
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args([
         "--start",
         "2025-07-21 10:00:00",
@@ -176,7 +176,7 @@ fn test_cli_edge_case_intervals() {
     cmd.timeout(std::time::Duration::from_secs(2)).assert();
 
     // Test very large interval
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args([
         "--start",
         "2025-07-21 10:00:00",
@@ -200,7 +200,7 @@ fn test_cli_unicode_and_special_characters() {
     ];
 
     for invalid_input in invalid_inputs {
-        let mut cmd = Command::cargo_bin("pb").unwrap();
+        let mut cmd = Command::cargo_bin("pmon").unwrap();
         cmd.args(["--start", invalid_input, "--end", "12:00:00"]);
 
         cmd.assert()
@@ -215,7 +215,7 @@ fn test_cli_whitespace_handling() {
     // Note: Some whitespace might be accepted by the time parser
     let invalid_input = "10:  00:00"; // Internal spaces should be invalid
 
-    let mut cmd = Command::cargo_bin("pb").unwrap();
+    let mut cmd = Command::cargo_bin("pmon").unwrap();
     cmd.args(["--start", invalid_input, "--end", "12:00:00"]);
 
     // This specific case should fail validation

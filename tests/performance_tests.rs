@@ -5,8 +5,8 @@
 
 use chrono::Duration;
 use clap::Parser; // Add this import for try_parse_from
-use pb::cli::Cli;
-use pb::{
+use pmon::cli::Cli;
+use pmon::{
     calculate_progress, parse_date, parse_datetime, parse_relative_time, parse_time,
     render_colored_progress_bar, render_progress_bar, validate_times,
 };
@@ -362,14 +362,14 @@ mod progress_bar_rendering_performance {
 #[cfg(test)]
 mod cli_parsing_performance {
     use super::*;
-    use pb::cli::Cli;
+    use pmon::cli::Cli;
 
     #[test]
     fn test_cli_parsing_performance() {
         let test_args = vec![
-            vec!["pb", "--start", "10:00", "--end", "12:00"],
+            vec!["pmon", "--start", "10:00", "--end", "12:00"],
             vec![
-                "pb",
+                "pmon",
                 "-s",
                 "2025-07-21 10:00:00",
                 "-e",
@@ -377,7 +377,7 @@ mod cli_parsing_performance {
                 "-i",
                 "30",
             ],
-            vec!["pb", "--start", "+1h", "--end", "+2h", "--interval", "60"],
+            vec!["pmon", "--start", "+1h", "--end", "+2h", "--interval", "60"],
         ];
 
         for args in test_args {
@@ -397,7 +397,7 @@ mod cli_parsing_performance {
 
     #[test]
     fn test_cli_validation_performance() {
-        let cli = Cli::try_parse_from(vec!["pb", "--start", "10:00", "--end", "12:00"]).unwrap();
+        let cli = Cli::try_parse_from(vec!["pmon", "--start", "10:00", "--end", "12:00"]).unwrap();
 
         let avg_duration = PerformanceTestUtils::benchmark(|| cli.validate(), 10000);
 
@@ -416,7 +416,7 @@ mod end_to_end_performance {
     fn test_complete_workflow_performance() {
         // Test the performance of a complete workflow: parse CLI -> parse times -> calculate progress -> render bar
         let args = vec![
-            "pb",
+            "pmon",
             "--start",
             "2025-07-21 10:00:00",
             "--end",

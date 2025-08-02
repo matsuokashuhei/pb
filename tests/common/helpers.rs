@@ -193,7 +193,7 @@ pub struct CliTestUtils;
 impl CliTestUtils {
     /// Create a command with pb binary
     pub fn pb_command() -> Command {
-        Command::cargo_bin("pb").expect("Failed to find pb binary")
+        Command::cargo_bin("pmon").expect("Failed to find pb binary")
     }
 
     /// Generate test cases for CLI argument validation

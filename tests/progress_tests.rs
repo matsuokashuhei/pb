@@ -4,7 +4,7 @@
 //! color management, and performance characteristics.
 
 use chrono::Duration;
-use pb::progress_bar::*;
+use pmon::progress_bar::*;
 
 mod common;
 use common::helpers::{
