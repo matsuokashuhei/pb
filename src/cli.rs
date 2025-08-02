@@ -23,6 +23,15 @@ pub struct Cli {
     /// Update interval in seconds
     #[arg(short, long, default_value = "60", help = "Update interval in seconds")]
     pub interval: u64,
+
+    /// Display verbose output including header information
+    #[arg(
+        short,
+        long,
+        default_value = "false",
+        help = "Display verbose output with header information"
+    )]
+    pub verbose: bool,
 }
 
 impl Cli {
@@ -89,6 +98,11 @@ impl Cli {
     /// Get interval in seconds
     pub fn interval(&self) -> u64 {
         self.interval
+    }
+
+    /// Get verbose flag
+    pub fn verbose(&self) -> bool {
+        self.verbose
     }
 }
 
