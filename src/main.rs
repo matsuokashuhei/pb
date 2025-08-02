@@ -50,11 +50,14 @@ fn main() -> Result<()> {
         std::process::exit(1);
     }
 
-    println!("pb - Progress Bar Tool");
-    println!("Start time: {}", start_time.format("%Y-%m-%d %H:%M:%S"));
-    println!("End time: {}", end_time.format("%Y-%m-%d %H:%M:%S"));
-    println!("Update interval: {} seconds", cli.interval());
-    println!("Press Ctrl+C to exit\n");
+    // Display header information only if verbose flag is set
+    if cli.verbose() {
+        println!("pb - Progress Bar Tool");
+        println!("Start time: {}", start_time.format("%Y-%m-%d %H:%M:%S"));
+        println!("End time: {}", end_time.format("%Y-%m-%d %H:%M:%S"));
+        println!("Update interval: {} seconds", cli.interval());
+        println!("Press Ctrl+C to exit\n");
+    }
 
     // Check if we're in a TTY environment
     let is_tty = crossterm::tty::IsTty::is_tty(&std::io::stdout());
