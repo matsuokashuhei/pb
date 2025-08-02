@@ -2,7 +2,7 @@
 
 [![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)](https://www.rust-lang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://github.com/matsuokashuhei/pb/workflows/CI/badge.svg)](https://github.com/matsuokashuhei/pb/actions)
+[![Build Status](https://github.com/matsuokashuhei/pmon/workflows/CI/badge.svg)](https://github.com/matsuokashuhei/pmon/actions)
 
 A command-line progress monitor tool for time-based visualization. Track time between two points with real-time progress updates, perfect for monitoring deadlines, work sessions, or any time-based process.
 
@@ -41,7 +41,7 @@ pmon --end "2025-02-15" --interval 3600
 
 #### Linux
 ```bash
-curl -L -o pmon https://github.com/matsuokashuhei/pb/releases/latest/download/pmon-linux-x86_64
+curl -L -o pmon https://github.com/matsuokashuhei/pmon/releases/latest/download/pmon-linux-x86_64
 chmod +x pmon
 sudo mv pmon /usr/local/bin/
 ```
@@ -49,23 +49,23 @@ sudo mv pmon /usr/local/bin/
 #### macOS
 ```bash
 # Intel Mac
-curl -L -o pmon https://github.com/matsuokashuhei/pb/releases/latest/download/pmon-macos-x86_64
+curl -L -o pmon https://github.com/matsuokashuhei/pmon/releases/latest/download/pmon-macos-x86_64
 
 # Apple Silicon
-curl -L -o pmon https://github.com/matsuokashuhei/pb/releases/latest/download/pmon-macos-arm64
+curl -L -o pmon https://github.com/matsuokashuhei/pmon/releases/latest/download/pmon-macos-arm64
 
 chmod +x pmon
 sudo mv pmon /usr/local/bin/
 ```
 
 #### Windows
-Download `pmon-windows-x86_64.exe` from the [releases page](https://github.com/matsuokashuhei/pb/releases) and add to your PATH.
+Download `pmon-windows-x86_64.exe` from the [releases page](https://github.com/matsuokashuhei/pmon/releases) and add to your PATH.
 
 ### Package Managers
 
 ```bash
 # Homebrew (macOS/Linux)
-brew tap matsuokashuhei/pb
+brew tap matsuokashuhei/pmon
 brew install pmon
 
 # Cargo (Rust)
@@ -75,8 +75,8 @@ cargo install pmon-cli
 ### From Source
 
 ```bash
-git clone https://github.com/matsuokashuhei/pb.git
-cd pb
+git clone https://github.com/matsuokashuhei/pmon.git
+cd pmon
 cargo build --release
 sudo mv target/release/pmon /usr/local/bin/
 ```
@@ -298,7 +298,7 @@ pmon --end "2h" > meeting.log &        # 2-hour timer from now
 
 ```bash
 # Clone and setup
-git clone https://github.com/matsuokashuhei/pb.git
+git clone https://github.com/matsuokashuhei/pmon.git
 cd pmon
 
 # Build and test
