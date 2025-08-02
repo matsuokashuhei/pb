@@ -2,10 +2,25 @@
 
 This directory contains practical examples of how to use pb (progress bar tool) in various scenarios.
 
+## New Optional Start Feature
+
+As of version 1.0.0, pb supports omitting the `--start` parameter. When you don't specify a start time, pb automatically determines it based on the end time format:
+
+- **Time-containing formats** (e.g., "17:00:00", "2h", "+30m") → Start from current time
+- **Date-only formats** (e.g., "2025-12-31") → Start from today at 00:00:00
+
+This makes common use cases much more intuitive!
+
 ## Basic Examples
 
 ### Example 1: Work Day Progress
-Track your 8-hour work day:
+Track your work day progress using the new simplified syntax:
+
+```bash
+pb --end "17:00:00"
+```
+
+Or use traditional syntax with explicit start time:
 
 ```bash
 pb --start "2025-01-27 09:00:00" --end "2025-01-27 17:00:00"
@@ -23,14 +38,26 @@ Press Ctrl+C to exit
 ```
 
 ### Example 2: Meeting Timer
-Monitor a 1-hour meeting:
+Monitor a 1-hour meeting starting now:
+
+```bash
+pb --end "1h" --interval 30
+```
+
+Or with explicit start time (traditional):
 
 ```bash
 pb --start "2025-01-27 14:00:00" --end "1h" --interval 30
 ```
 
 ### Example 3: Project Deadline
-Track time until project deadline:
+Track time remaining until project deadline from today:
+
+```bash
+pb --end "2025-02-15" --interval 3600
+```
+
+Or with explicit start time (traditional):
 
 ```bash
 pb --start "2025-01-20" --end "2025-02-15" --interval 3600
@@ -39,13 +66,23 @@ pb --start "2025-01-20" --end "2025-02-15" --interval 3600
 ## Advanced Examples
 
 ### Example 4: Study Session with Breaks
-Create a 2-hour study session with 5-minute update intervals:
+Create a 2-hour study session starting now:
 
 ```bash
-# Study session
+# Study session (simplified)
+pb --end "2h" --interval 300
+
+# During break, track break time (simplified)
+pb --end "15m" --interval 60
+```
+
+Or using traditional explicit start times:
+
+```bash
+# Study session (traditional)
 pb --start "2025-01-27 10:00:00" --end "2h" --interval 300
 
-# During break, track break time
+# During break, track break time (traditional)
 pb --start "2025-01-27 12:00:00" --end "15m" --interval 60
 ```
 

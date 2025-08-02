@@ -3,7 +3,7 @@
 pb \- CLI progress bar tool for time-based visualization
 .SH SYNOPSIS
 .B pb
-[\fIOPTION\fR]... \fB\-\-start\fR \fISTART_TIME\fR \fB\-\-end\fR \fIEND_TIME\fR
+[\fIOPTION\fR]... [\fB\-\-start\fR \fISTART_TIME\fR] \fB\-\-end\fR \fIEND_TIME\fR
 .SH DESCRIPTION
 .B pb
 is a command-line progress bar tool that visualizes the progress between two points in time. It displays a real-time progress bar showing elapsed time, remaining time, and completion percentage.
@@ -13,7 +13,7 @@ The tool supports multiple time formats including absolute dates, datetimes, and
 .SH OPTIONS
 .TP
 .BR \-s ", " \-\-start =\fISTART_TIME\fR
-Specify the start time. Required. Accepts date (YYYY-MM-DD), datetime (YYYY-MM-DD HH:MM:SS), or relative time formats.
+Specify the start time. Optional. When omitted, start time is automatically determined based on end time format. Accepts date (YYYY-MM-DD), datetime (YYYY-MM-DD HH:MM:SS), or relative time formats.
 .TP
 .BR \-e ", " \-\-end =\fIEND_TIME\fR
 Specify the end time. Required. Accepts date (YYYY-MM-DD), datetime (YYYY-MM-DD HH:MM:SS), or relative time formats (Nh, Nm, Ns, Nd).
@@ -60,22 +60,53 @@ Seconds (e.g., 30s, 60s, 3600s)
 .B Nd
 Days (e.g., 1d, 7d, 30d)
 
+.SH AUTOMATIC START TIME DETECTION
+When the
+.B \-\-start
+option is omitted,
+.B pb
+automatically determines the start time based on the end time format:
+
+.TP
+.B Time-containing end formats
+End times that include time components (colons, relative prefixes like "2h", "+30m") use the current time as start.
+
+.TP
+.B Date-only end formats
+End times in YYYY-MM-DD format use today at 00:00:00 as start.
+
+This feature makes
+.B pb
+more intuitive for common use cases like timers and countdowns.
+
 .SH EXAMPLES
 .TP
+.B pb \-\-end "17:00:00"
+Track remaining work day from now until 5 PM.
+
+.TP
+.B pb \-\-end "2h"
+2-hour timer starting from current time.
+
+.TP
+.B pb \-\-end "2025-02-15"
+Countdown to deadline from start of today.
+
+.TP
 .B pb \-\-start "2025-01-27 09:00:00" \-\-end "2025-01-27 17:00:00"
-Track an 8-hour work day with default 60-second updates.
+Track an 8-hour work day with default 60-second updates (traditional usage).
 
 .TP
 .B pb \-\-start "2025-01-27 14:00:00" \-\-end "1h" \-\-interval 30
-Monitor a 1-hour meeting with 30-second update intervals.
+Monitor a 1-hour meeting with 30-second update intervals (traditional usage).
 
 .TP
 .B pb \-\-start "2025-01-27" \-\-end "7d" \-\-interval 3600
-Create a 7-day countdown with hourly updates.
+Create a 7-day countdown with hourly updates (traditional usage).
 
 .TP
 .B pb \-\-start "2025-01-20" \-\-end "2025-02-15"
-Track progress toward a project deadline.
+Track progress toward a project deadline (traditional usage).
 
 .TP
 .B pb \-\-start "2025-01-27 10:00:00" \-\-end "25m" \-\-interval 60

@@ -27,7 +27,7 @@ mod error_type_tests {
         assert!(error.source().is_none()); // No underlying cause
 
         // Test debug formatting
-        let debug_str = format!("{:?}", error);
+        let debug_str = format!("{error:?}");
         assert!(debug_str.contains("StartAfterEnd"));
     }
 
@@ -39,11 +39,11 @@ mod error_type_tests {
         };
 
         // Test display message
-        let expected_msg = format!("Invalid time format: {}", input);
+        let expected_msg = format!("Invalid time format: {input}");
         assert_eq!(error.to_string(), expected_msg);
 
         // Test debug formatting
-        let debug_str = format!("{:?}", error);
+        let debug_str = format!("{error:?}");
         assert!(debug_str.contains("InvalidTimeFormat"));
         assert!(debug_str.contains(input));
     }
@@ -59,7 +59,7 @@ mod error_type_tests {
         );
 
         // Test debug formatting
-        let debug_str = format!("{:?}", error);
+        let debug_str = format!("{error:?}");
         assert!(debug_str.contains("EndTimeAlreadyPassed"));
     }
 
@@ -71,11 +71,11 @@ mod error_type_tests {
         };
 
         // Test display message
-        let expected_msg = format!("Invalid relative time format: {}", input);
+        let expected_msg = format!("Invalid relative time format: {input}");
         assert_eq!(error.to_string(), expected_msg);
 
         // Test debug formatting
-        let debug_str = format!("{:?}", error);
+        let debug_str = format!("{error:?}");
         assert!(debug_str.contains("InvalidRelativeTimeFormat"));
         assert!(debug_str.contains(input));
     }
@@ -85,10 +85,10 @@ mod error_type_tests {
         let error = PbError::MissingRequiredOptions;
 
         // Test display message
-        assert_eq!(error.to_string(), "--start and --end options are required");
+        assert_eq!(error.to_string(), "--end option is required");
 
         // Test debug formatting
-        let debug_str = format!("{:?}", error);
+        let debug_str = format!("{error:?}");
         assert!(debug_str.contains("MissingRequiredOptions"));
     }
 }
@@ -311,10 +311,7 @@ mod error_message_tests {
                 PbError::invalid_relative_time_format("+1x"),
                 "Invalid relative time format: +1x",
             ),
-            (
-                PbError::MissingRequiredOptions,
-                "--start and --end options are required",
-            ),
+            (PbError::MissingRequiredOptions, "--end option is required"),
         ];
 
         for (error, expected_message) in error_cases {
@@ -368,8 +365,8 @@ mod error_message_tests {
 
         for error in test_cases {
             let message = error.to_string();
-            assert!(message.len() < 200, "Error message too long: {}", message);
-            assert!(message.len() > 10, "Error message too short: {}", message);
+            assert!(message.len() < 200, "Error message too long: {message}");
+            assert!(message.len() > 10, "Error message too short: {message}");
         }
     }
 }
@@ -411,7 +408,7 @@ mod error_trait_implementation_tests {
             let _: String = error.to_string();
 
             // Should implement Debug
-            let _: String = format!("{:?}", error);
+            let _: String = format!("{error:?}");
         }
     }
 
@@ -461,7 +458,7 @@ mod error_pattern_matching_tests {
                     assert_eq!(input, "test");
                 }
                 PbError::MissingRequiredOptions => {
-                    assert_eq!(error.to_string(), "--start and --end options are required");
+                    assert_eq!(error.to_string(), "--end option is required");
                 }
             }
         }
@@ -503,11 +500,10 @@ mod error_serialization_tests {
         ];
 
         for (error, expected_variant) in test_cases {
-            let debug_str = format!("{:?}", error);
+            let debug_str = format!("{error:?}");
             assert!(
                 debug_str.contains(expected_variant),
-                "Debug format should contain variant name: {}",
-                debug_str
+                "Debug format should contain variant name: {debug_str}"
             );
         }
     }
@@ -528,7 +524,7 @@ mod error_serialization_tests {
 
             // Should not panic or cause issues
             let _display = error.to_string();
-            let _debug = format!("{:?}", error);
+            let _debug = format!("{error:?}");
 
             // Should preserve the input
             match error {

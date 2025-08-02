@@ -52,9 +52,7 @@ mod time_parsing_performance {
 
             assert!(
                 avg_duration < StdDuration::from_millis(10), // Increased from 1ms to 10ms
-                "parse_date('{}') took too long: {:?}",
-                date,
-                avg_duration
+                "parse_date('{date}') took too long: {avg_duration:?}"
             );
         }
     }
@@ -72,9 +70,7 @@ mod time_parsing_performance {
 
             assert!(
                 avg_duration < StdDuration::from_millis(10), // Increased from 1ms to 10ms
-                "parse_datetime('{}') took too long: {:?}",
-                datetime,
-                avg_duration
+                "parse_datetime('{datetime}') took too long: {avg_duration:?}"
             );
         }
     }
@@ -92,9 +88,7 @@ mod time_parsing_performance {
 
             assert!(
                 avg_duration < StdDuration::from_millis(10), // Increased from 1ms to 10ms
-                "parse_relative_time('{}') took too long: {:?}",
-                relative_time,
-                avg_duration
+                "parse_relative_time('{relative_time}') took too long: {avg_duration:?}"
             );
         }
     }
@@ -108,8 +102,7 @@ mod time_parsing_performance {
 
         assert!(
             avg_duration < StdDuration::from_micros(10),
-            "validate_times took too long: {:?}",
-            avg_duration
+            "validate_times took too long: {avg_duration:?}"
         );
     }
 
@@ -131,9 +124,7 @@ mod time_parsing_performance {
 
             assert!(
                 avg_duration < StdDuration::from_millis(10), // Increased from 1ms to 10ms
-                "Parsing scalability degraded at size {}: {:?} avg per operation",
-                size,
-                avg_duration
+                "Parsing scalability degraded at size {size}: {avg_duration:?} avg per operation"
             );
         }
     }
@@ -157,8 +148,7 @@ mod time_parsing_performance {
         // Memory increase should be minimal (less than 1MB)
         assert!(
             memory_increase < 1_000_000,
-            "Excessive memory usage during parsing: {} bytes",
-            memory_increase
+            "Excessive memory usage during parsing: {memory_increase} bytes"
         );
     }
 }
@@ -206,9 +196,7 @@ mod progress_calculation_performance {
 
             assert!(
                 avg_duration < StdDuration::from_micros(100),
-                "calculate_progress with {} took too long: {:?}",
-                description,
-                avg_duration
+                "calculate_progress with {description} took too long: {avg_duration:?}"
             );
         }
     }
@@ -243,9 +231,7 @@ mod progress_calculation_performance {
 
             assert!(
                 avg_duration < StdDuration::from_micros(100),
-                "calculate_progress with {} took too long: {:?}",
-                description,
-                avg_duration
+                "calculate_progress with {description} took too long: {avg_duration:?}"
             );
         }
     }
@@ -271,9 +257,7 @@ mod progress_calculation_performance {
 
             assert!(
                 avg_duration < StdDuration::from_micros(100),
-                "Progress calculation scalability degraded at size {}: {:?} avg per operation",
-                size,
-                avg_duration
+                "Progress calculation scalability degraded at size {size}: {avg_duration:?} avg per operation"
             );
         }
     }
@@ -322,9 +306,7 @@ mod progress_bar_rendering_performance {
 
             assert!(
                 avg_duration < StdDuration::from_millis(5), // Increased from 1ms to 5ms for rendering
-                "render_progress_bar({}%) took too long: {:?}",
-                percentage,
-                avg_duration
+                "render_progress_bar({percentage}%) took too long: {avg_duration:?}"
             );
         }
     }
@@ -348,8 +330,7 @@ mod progress_bar_rendering_performance {
         // Memory increase should be minimal
         assert!(
             memory_increase < 5_000_000, // 5MB threshold
-            "Excessive memory usage during progress bar rendering: {} bytes",
-            memory_increase
+            "Excessive memory usage during progress bar rendering: {memory_increase} bytes"
         );
     }
 
@@ -372,9 +353,7 @@ mod progress_bar_rendering_performance {
 
             assert!(
                 avg_duration < StdDuration::from_micros(500),
-                "String allocation overhead too high for {}%: {:?}",
-                percentage,
-                avg_duration
+                "String allocation overhead too high for {percentage}%: {avg_duration:?}"
             );
         }
     }
@@ -411,9 +390,7 @@ mod cli_parsing_performance {
 
             assert!(
                 avg_duration < StdDuration::from_millis(5),
-                "CLI parsing took too long for {:?}: {:?}",
-                args,
-                avg_duration
+                "CLI parsing took too long for {args:?}: {avg_duration:?}"
             );
         }
     }
@@ -426,8 +403,7 @@ mod cli_parsing_performance {
 
         assert!(
             avg_duration < StdDuration::from_micros(10),
-            "CLI validation took too long: {:?}",
-            avg_duration
+            "CLI validation took too long: {avg_duration:?}"
         );
     }
 }
@@ -454,7 +430,7 @@ mod end_to_end_performance {
                 // Note: validate() is private, so we skip validation in this benchmark
 
                 // Parse times
-                let start_time = parse_time(cli.start()).unwrap();
+                let start_time = parse_time(cli.start().unwrap()).unwrap();
                 let end_time = parse_time(cli.end()).unwrap();
 
                 // Validate times
@@ -472,8 +448,7 @@ mod end_to_end_performance {
 
         assert!(
             avg_duration < StdDuration::from_millis(10),
-            "Complete workflow took too long: {:?}",
-            avg_duration
+            "Complete workflow took too long: {avg_duration:?}"
         );
     }
 
@@ -498,8 +473,7 @@ mod end_to_end_performance {
 
         assert!(
             avg_iteration < StdDuration::from_millis(10), // Increased from 1ms to 10ms for app loop
-            "Application loop iteration took too long: {:?}",
-            avg_iteration
+            "Application loop iteration took too long: {avg_iteration:?}"
         );
     }
 }
@@ -537,8 +511,7 @@ mod memory_usage_tests {
 
         assert!(
             memory_increase < 2_000_000, // 2MB threshold
-            "Memory usage increased too much: {} bytes",
-            memory_increase
+            "Memory usage increased too much: {memory_increase} bytes"
         );
     }
 
@@ -619,8 +592,7 @@ mod stress_tests {
 
         assert!(
             total_duration < StdDuration::from_secs(60), // Increased from 20s to 60s for stress test
-            "Stress test took too long: {:?}",
-            total_duration
+            "Stress test took too long: {total_duration:?}"
         );
     }
 
@@ -661,8 +633,7 @@ mod stress_tests {
 
         assert!(
             total_duration < StdDuration::from_secs(2),
-            "Concurrent operations took too long: {:?}",
-            total_duration
+            "Concurrent operations took too long: {total_duration:?}"
         );
     }
 }

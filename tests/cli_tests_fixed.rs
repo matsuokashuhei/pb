@@ -34,11 +34,11 @@ mod cli_parsing_tests {
 
             if should_pass {
                 let cli = Cli::try_parse_from(args.clone()).unwrap();
-                assert_eq!(cli.start, args[2]);
+                assert_eq!(cli.start, Some(args[2].to_string()));
                 assert_eq!(cli.end, args[4]);
                 assert_eq!(cli.interval, 60); // default value
             } else {
-                assert!(result.is_err(), "Expected parsing to fail for: {:?}", args);
+                assert!(result.is_err(), "Expected parsing to fail for: {args:?}");
             }
         }
     }
@@ -71,14 +71,14 @@ mod cli_parsing_tests {
     #[test]
     fn test_required_arguments_missing() {
         let invalid_args = vec![
-            vec!["pb"],                     // no arguments
-            vec!["pb", "--start", "10:00"], // missing end
-            vec!["pb", "--end", "12:00"],   // missing start
+            vec!["pb"], // no arguments
+            vec!["pb", "--start", "10:00"], // missing end (end is still required)
+                        // Note: vec!["pb", "--end", "12:00"] is now valid since start is optional
         ];
 
         for args in invalid_args {
             let result = Cli::try_parse_from(args.clone());
-            assert!(result.is_err(), "Expected parsing to fail for: {:?}", args);
+            assert!(result.is_err(), "Expected parsing to fail for: {args:?}");
         }
     }
 }
@@ -100,7 +100,7 @@ mod cli_validation_tests {
         for (start, end) in basic_cases {
             let cli = Cli::try_parse_from(vec!["pb", "--start", start, "--end", end]).unwrap();
             // Since validate() is private, we just check the fields are set
-            assert!(!cli.start().is_empty());
+            assert!(cli.start().is_some() && !cli.start().unwrap().is_empty());
             assert!(!cli.end().is_empty());
             assert!(cli.interval() > 0);
         }
@@ -112,7 +112,7 @@ mod cli_validation_tests {
         let cli = Cli::try_parse_from(vec!["pb", "--start", "", "--end", "12:00"]).unwrap();
         // We can't call validate() directly since it's private
         // But we can check that empty strings are present
-        assert_eq!(cli.start(), "");
+        assert_eq!(cli.start(), Some(""));
         assert_eq!(cli.end(), "12:00");
     }
 
@@ -183,16 +183,12 @@ mod comprehensive_cli_tests {
             if should_parse {
                 assert!(
                     result.is_ok(),
-                    "Parsing should succeed for {}: {:?}",
-                    description,
-                    args
+                    "Parsing should succeed for {description}: {args:?}"
                 );
             } else {
                 assert!(
                     result.is_err(),
-                    "Parsing should fail for {}: {:?}",
-                    description,
-                    args
+                    "Parsing should fail for {description}: {args:?}"
                 );
             }
         }
@@ -245,7 +241,7 @@ mod error_handling_tests {
 
         for args in test_cases {
             let result = Cli::try_parse_from(args.clone());
-            assert!(result.is_err(), "Should fail for invalid args: {:?}", args);
+            assert!(result.is_err(), "Should fail for invalid args: {args:?}");
         }
     }
 
@@ -259,11 +255,7 @@ mod error_handling_tests {
 
         for args in test_cases {
             let result = Cli::try_parse_from(args.clone());
-            assert!(
-                result.is_err(),
-                "Should fail for incomplete args: {:?}",
-                args
-            );
+            assert!(result.is_err(), "Should fail for incomplete args: {args:?}");
         }
     }
 }
@@ -285,7 +277,7 @@ mod cli_field_access_tests {
         ])
         .unwrap();
 
-        assert_eq!(cli.start(), "10:00");
+        assert_eq!(cli.start(), Some("10:00"));
         assert_eq!(cli.end(), "12:00");
         assert_eq!(cli.interval(), 30);
     }

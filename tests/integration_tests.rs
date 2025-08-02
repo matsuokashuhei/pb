@@ -37,7 +37,7 @@ fn test_missing_required_args() {
 #[test]
 fn test_invalid_start_time() {
     let mut cmd = Command::cargo_bin("pb").unwrap();
-    cmd.args(&["--start", "invalid", "--end", "2025-07-21 12:00:00"]);
+    cmd.args(["--start", "invalid", "--end", "2025-07-21 12:00:00"]);
 
     cmd.assert()
         .failure()
@@ -47,7 +47,7 @@ fn test_invalid_start_time() {
 #[test]
 fn test_invalid_end_time() {
     let mut cmd = Command::cargo_bin("pb").unwrap();
-    cmd.args(&["--start", "2025-07-21 10:00:00", "--end", "invalid"]);
+    cmd.args(["--start", "2025-07-21 10:00:00", "--end", "invalid"]);
 
     cmd.assert()
         .failure()
@@ -57,7 +57,7 @@ fn test_invalid_end_time() {
 #[test]
 fn test_start_after_end_time() {
     let mut cmd = Command::cargo_bin("pb").unwrap();
-    cmd.args(&[
+    cmd.args([
         "--start",
         "2025-07-21 12:00:00",
         "--end",
@@ -72,7 +72,7 @@ fn test_start_after_end_time() {
 #[test]
 fn test_completed_progress() {
     let mut cmd = Command::cargo_bin("pb").unwrap();
-    cmd.args(&[
+    cmd.args([
         "--start",
         "2025-07-21 10:00:00",
         "--end",
@@ -93,7 +93,7 @@ fn test_completed_progress() {
 #[test]
 fn test_date_format_parsing() {
     let mut cmd = Command::cargo_bin("pb").unwrap();
-    cmd.args(&[
+    cmd.args([
         "--start",
         "2025-07-20", // Yesterday
         "--end",
@@ -114,7 +114,7 @@ fn test_date_format_parsing() {
 #[test]
 fn test_relative_time_parsing() {
     let mut cmd = Command::cargo_bin("pb").unwrap();
-    cmd.args(&["--start", "+30m", "--end", "+60m", "--interval", "1"]);
+    cmd.args(["--start", "+30m", "--end", "+60m", "--interval", "1"]);
 
     // This should not complete immediately since it's a future time range
     let output = cmd.timeout(Duration::from_secs(3)).assert().failure(); // Will timeout, which is expected
@@ -127,7 +127,7 @@ fn test_relative_time_parsing() {
 #[test]
 fn test_custom_interval() {
     let mut cmd = Command::cargo_bin("pb").unwrap();
-    cmd.args(&[
+    cmd.args([
         "--start",
         "2025-07-21 10:00:00",
         "--end",
@@ -145,7 +145,7 @@ fn test_custom_interval() {
 #[test]
 fn test_progress_bar_overtime() {
     let mut cmd = Command::cargo_bin("pb").unwrap();
-    cmd.args(&[
+    cmd.args([
         "--start",
         "2025-07-21 09:00:00",
         "--end",
@@ -165,7 +165,7 @@ fn test_progress_bar_overtime() {
 #[test]
 fn test_zero_interval_error() {
     let mut cmd = Command::cargo_bin("pb").unwrap();
-    cmd.args(&[
+    cmd.args([
         "--start",
         "2025-07-21 10:00:00",
         "--end",
@@ -182,7 +182,7 @@ fn test_zero_interval_error() {
 #[test]
 fn test_equal_start_end_times() {
     let mut cmd = Command::cargo_bin("pb").unwrap();
-    cmd.args(&[
+    cmd.args([
         "--start",
         "2025-07-21 10:00:00",
         "--end",
@@ -223,7 +223,7 @@ mod comprehensive_cli_integration_tests {
 
         for (start, end) in format_combinations {
             let mut cmd = CliTestUtils::pb_command();
-            cmd.args(&["--start", start, "--end", end, "--interval", "1"]);
+            cmd.args(["--start", start, "--end", end, "--interval", "1"]);
 
             let output = cmd.timeout(Duration::from_secs(3)).assert();
 
@@ -235,17 +235,13 @@ mod comprehensive_cli_integration_tests {
             if !stderr.is_empty() {
                 assert!(
                     stderr.contains("Error"),
-                    "Should have error message for format combination: {} to {}",
-                    start,
-                    end
+                    "Should have error message for format combination: {start} to {end}"
                 );
             } else {
                 // If it succeeds, should show proper output
                 assert!(
                     stdout.contains("pb - Progress Bar Tool"),
-                    "Should show proper output for format combination: {} to {}",
-                    start,
-                    end
+                    "Should show proper output for format combination: {start} to {end}"
                 );
             }
         }
@@ -321,7 +317,7 @@ mod comprehensive_cli_integration_tests {
 
         for (interval, expected_display) in interval_tests {
             let mut cmd = CliTestUtils::pb_command();
-            cmd.args(&[
+            cmd.args([
                 "--start",
                 "2025-07-21 10:00:00",
                 "--end",
@@ -332,7 +328,7 @@ mod comprehensive_cli_integration_tests {
 
             let output = cmd.timeout(Duration::from_secs(3)).assert().success();
             let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
-            assert!(stdout.contains(&format!("Update interval: {}", expected_display)));
+            assert!(stdout.contains(&format!("Update interval: {expected_display}")));
         }
     }
 
@@ -343,7 +339,7 @@ mod comprehensive_cli_integration_tests {
         // as it requires actual signal handling. For now, we test basic functionality.
 
         let mut cmd = CliTestUtils::pb_command();
-        cmd.args(&[
+        cmd.args([
             "--start",
             "+1h", // Future time to ensure it doesn't complete immediately
             "--end",
@@ -364,7 +360,7 @@ mod comprehensive_cli_integration_tests {
     fn test_non_tty_mode() {
         // Test behavior when not in a TTY (non-interactive mode)
         let mut cmd = CliTestUtils::pb_command();
-        cmd.args(&[
+        cmd.args([
             "--start",
             "2025-07-21 10:00:00",
             "--end",
@@ -388,7 +384,7 @@ mod comprehensive_cli_integration_tests {
     fn test_progress_bar_visual_output() {
         // Test that progress bar visual elements are present
         let mut cmd = CliTestUtils::pb_command();
-        cmd.args(&[
+        cmd.args([
             "--start",
             "2025-07-21 10:00:00",
             "--end",
@@ -427,7 +423,7 @@ mod comprehensive_cli_integration_tests {
 
         for (start, end, description) in test_scenarios {
             let mut cmd = CliTestUtils::pb_command();
-            cmd.args(&["--start", start, "--end", end, "--interval", "1"]);
+            cmd.args(["--start", start, "--end", end, "--interval", "1"]);
 
             let output = cmd.timeout(Duration::from_secs(3)).assert().success();
             let stdout = String::from_utf8(output.get_output().stdout.clone()).unwrap();
@@ -435,23 +431,19 @@ mod comprehensive_cli_integration_tests {
             // Check consistent header format
             assert!(
                 stdout.contains("pb - Progress Bar Tool"),
-                "Missing header for {}",
-                description
+                "Missing header for {description}"
             );
             assert!(
                 stdout.contains("Start time:"),
-                "Missing start time display for {}",
-                description
+                "Missing start time display for {description}"
             );
             assert!(
                 stdout.contains("End time:"),
-                "Missing end time display for {}",
-                description
+                "Missing end time display for {description}"
             );
             assert!(
                 stdout.contains("Update interval:"),
-                "Missing interval display for {}",
-                description
+                "Missing interval display for {description}"
             );
         }
     }
@@ -488,7 +480,7 @@ mod comprehensive_cli_integration_tests {
 
         for (start, end, description) in edge_cases {
             let mut cmd = CliTestUtils::pb_command();
-            cmd.args(&["--start", start, "--end", end, "--interval", "1"]);
+            cmd.args(["--start", start, "--end", end, "--interval", "1"]);
 
             let result = cmd.timeout(Duration::from_secs(3)).assert();
 
@@ -502,16 +494,14 @@ mod comprehensive_cli_integration_tests {
                 if !stdout.is_empty() {
                     assert!(
                         stdout.contains("pb - Progress Bar Tool"),
-                        "Should show proper output for {}",
-                        description
+                        "Should show proper output for {description}"
                     );
                 }
             } else {
                 // If no valid output and not successful, should have error message
                 assert!(
                     !stderr.is_empty(),
-                    "Should have error message for {}",
-                    description
+                    "Should have error message for {description}"
                 );
             }
         }
@@ -555,10 +545,7 @@ mod error_message_quality_tests {
             for fragment in expected_fragments {
                 assert!(
                     stderr.contains(fragment),
-                    "Error message should contain '{}' for args {:?}\nActual stderr: {}",
-                    fragment,
-                    args,
-                    stderr
+                    "Error message should contain '{fragment}' for args {args:?}\nActual stderr: {stderr}"
                 );
             }
         }
@@ -568,7 +555,7 @@ mod error_message_quality_tests {
     fn test_error_message_formatting() {
         // Test that error messages are well-formatted
         let mut cmd = CliTestUtils::pb_command();
-        cmd.args(&["--start", "invalid", "--end", "12:00:00"]);
+        cmd.args(["--start", "invalid", "--end", "12:00:00"]);
 
         let output = cmd.assert().failure();
         let stderr = String::from_utf8_lossy(&output.get_output().stderr);
@@ -576,15 +563,13 @@ mod error_message_quality_tests {
         // Error message should start with "Error parsing"
         assert!(
             stderr.starts_with("Error parsing"),
-            "Error message should start with 'Error parsing'\nActual: {}",
-            stderr
+            "Error message should start with 'Error parsing'\nActual: {stderr}"
         );
 
         // Should end with newline
         assert!(
             stderr.ends_with('\n'),
-            "Error message should end with newline\nActual: {}",
-            stderr
+            "Error message should end with newline\nActual: {stderr}"
         );
 
         // Should not be empty
@@ -604,7 +589,7 @@ mod environment_compatibility_tests {
         // Test behavior with various environment variables
         let mut cmd = CliTestUtils::pb_command();
         cmd.env("NO_COLOR", "1"); // Disable colors
-        cmd.args(&[
+        cmd.args([
             "--start",
             "2025-07-21 10:00:00",
             "--end",
@@ -630,7 +615,7 @@ mod environment_compatibility_tests {
             let mut cmd = CliTestUtils::pb_command();
             cmd.env("LANG", lang);
             cmd.env("LC_ALL", lc_all);
-            cmd.args(&[
+            cmd.args([
                 "--start",
                 "2025-07-21 10:00:00",
                 "--end",
@@ -646,9 +631,7 @@ mod environment_compatibility_tests {
                 let stdout = String::from_utf8_lossy(&result.get_output().stdout);
                 assert!(
                     stdout.contains("pb - Progress Bar Tool"),
-                    "Should work with locale {}/{}",
-                    lang,
-                    lc_all
+                    "Should work with locale {lang}/{lc_all}"
                 );
             }
         }
@@ -658,7 +641,7 @@ mod environment_compatibility_tests {
     fn test_stdout_stderr_separation() {
         // Test that stdout and stderr are used appropriately
         let mut cmd = CliTestUtils::pb_command();
-        cmd.args(&[
+        cmd.args([
             "--start",
             "2025-07-21 10:00:00",
             "--end",
@@ -678,8 +661,7 @@ mod environment_compatibility_tests {
         // stderr should be empty for successful runs
         assert!(
             stderr.is_empty() || stderr.trim().is_empty(),
-            "stderr should be empty for successful runs, got: {}",
-            stderr
+            "stderr should be empty for successful runs, got: {stderr}"
         );
     }
 
@@ -689,7 +671,7 @@ mod environment_compatibility_tests {
 
         // Success case
         let mut cmd = CliTestUtils::pb_command();
-        cmd.args(&[
+        cmd.args([
             "--start",
             "2025-07-21 10:00:00",
             "--end",
@@ -701,17 +683,17 @@ mod environment_compatibility_tests {
 
         // Error case
         let mut cmd = CliTestUtils::pb_command();
-        cmd.args(&["--start", "invalid", "--end", "12:00:00"]);
+        cmd.args(["--start", "invalid", "--end", "12:00:00"]);
         cmd.assert().failure();
 
         // Help case (should succeed)
         let mut cmd = CliTestUtils::pb_command();
-        cmd.args(&["--help"]);
+        cmd.args(["--help"]);
         cmd.assert().success();
 
         // Version case (should succeed)
         let mut cmd = CliTestUtils::pb_command();
-        cmd.args(&["--version"]);
+        cmd.args(["--version"]);
         cmd.assert().success();
     }
 }
@@ -726,7 +708,7 @@ mod performance_integration_tests {
         let start_time = std::time::Instant::now();
 
         let mut cmd = CliTestUtils::pb_command();
-        cmd.args(&[
+        cmd.args([
             "--start",
             "2025-07-21 10:00:00",
             "--end",
@@ -740,8 +722,7 @@ mod performance_integration_tests {
         let startup_time = start_time.elapsed();
         assert!(
             startup_time < Duration::from_secs(2),
-            "Application startup took too long: {:?}",
-            startup_time
+            "Application startup took too long: {startup_time:?}"
         );
     }
 
@@ -752,7 +733,7 @@ mod performance_integration_tests {
         // would require platform-specific tools
 
         let mut cmd = CliTestUtils::pb_command();
-        cmd.args(&[
+        cmd.args([
             "--start",
             "+1h", // Future time
             "--end",
@@ -780,7 +761,7 @@ mod regression_tests {
 
         // Example: Ensure zero interval is properly handled
         let mut cmd = CliTestUtils::pb_command();
-        cmd.args(&[
+        cmd.args([
             "--start",
             "10:00:00",
             "--end",
@@ -794,7 +775,7 @@ mod regression_tests {
 
         // Example: Ensure equal start/end times work
         let mut cmd = CliTestUtils::pb_command();
-        cmd.args(&[
+        cmd.args([
             "--start",
             "2025-07-21 10:00:00",
             "--end",
@@ -816,7 +797,7 @@ mod regression_tests {
 
         for invalid_input in unicode_tests {
             let mut cmd = CliTestUtils::pb_command();
-            cmd.args(&["--start", invalid_input, "--end", "12:00:00"]);
+            cmd.args(["--start", invalid_input, "--end", "12:00:00"]);
 
             let output = cmd.assert().failure();
             let stderr = String::from_utf8_lossy(&output.get_output().stderr);
@@ -824,13 +805,11 @@ mod regression_tests {
             // Should handle unicode gracefully in error messages
             assert!(
                 stderr.contains("Error"),
-                "Should have error message for unicode input: {}",
-                invalid_input
+                "Should have error message for unicode input: {invalid_input}"
             );
             assert!(
                 !stderr.is_empty(),
-                "Error message should not be empty for unicode input: {}",
-                invalid_input
+                "Error message should not be empty for unicode input: {invalid_input}"
             );
         }
     }

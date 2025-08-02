@@ -26,15 +26,11 @@ mod parse_date_tests {
 
         for (input, expected) in valid_cases {
             let result = parse_date(input);
-            assert!(result.is_ok(), "Failed to parse valid date: {}", input);
+            assert!(result.is_ok(), "Failed to parse valid date: {input}");
 
             let parsed = result.unwrap();
             let expected_dt = NaiveDateTime::parse_from_str(expected, "%Y-%m-%d %H:%M:%S").unwrap();
-            assert_eq!(
-                parsed, expected_dt,
-                "Incorrect parsing result for: {}",
-                input
-            );
+            assert_eq!(parsed, expected_dt, "Incorrect parsing result for: {input}");
         }
     }
 
@@ -54,17 +50,13 @@ mod parse_date_tests {
 
         for input in invalid_cases {
             let result = parse_date(input);
-            assert!(
-                result.is_err(),
-                "Expected error for invalid date: {}",
-                input
-            );
+            assert!(result.is_err(), "Expected error for invalid date: {input}");
 
             match result.unwrap_err() {
                 PbError::InvalidTimeFormat { input: error_input } => {
                     assert_eq!(error_input, input);
                 }
-                _ => panic!("Expected InvalidTimeFormat error for: {}", input),
+                _ => panic!("Expected InvalidTimeFormat error for: {input}"),
             }
         }
     }
@@ -82,11 +74,7 @@ mod parse_date_tests {
 
         for input in invalid_dates {
             let result = parse_date(input);
-            assert!(
-                result.is_err(),
-                "Expected error for invalid date: {}",
-                input
-            );
+            assert!(result.is_err(), "Expected error for invalid date: {input}");
         }
     }
 
@@ -114,9 +102,9 @@ mod parse_date_tests {
         for (input, expected_valid) in TimeTestData::date_format_cases() {
             let result = parse_date(input);
             if expected_valid {
-                assert!(result.is_ok(), "Expected success for: {}", input);
+                assert!(result.is_ok(), "Expected success for: {input}");
             } else {
-                assert!(result.is_err(), "Expected error for: {}", input);
+                assert!(result.is_err(), "Expected error for: {input}");
             }
         }
     }
@@ -138,15 +126,11 @@ mod parse_datetime_tests {
 
         for (input, expected) in valid_cases {
             let result = parse_datetime(input);
-            assert!(result.is_ok(), "Failed to parse valid datetime: {}", input);
+            assert!(result.is_ok(), "Failed to parse valid datetime: {input}");
 
             let parsed = result.unwrap();
             let expected_dt = NaiveDateTime::parse_from_str(expected, "%Y-%m-%d %H:%M:%S").unwrap();
-            assert_eq!(
-                parsed, expected_dt,
-                "Incorrect parsing result for: {}",
-                input
-            );
+            assert_eq!(parsed, expected_dt, "Incorrect parsing result for: {input}");
         }
     }
 
@@ -166,8 +150,7 @@ mod parse_datetime_tests {
             let result = parse_datetime(input);
             assert!(
                 result.is_err(),
-                "Expected error for invalid datetime: {}",
-                input
+                "Expected error for invalid datetime: {input}"
             );
         }
     }
@@ -185,11 +168,7 @@ mod parse_datetime_tests {
 
         for input in invalid_times {
             let result = parse_datetime(input);
-            assert!(
-                result.is_err(),
-                "Expected error for invalid time: {}",
-                input
-            );
+            assert!(result.is_err(), "Expected error for invalid time: {input}");
         }
     }
 
@@ -199,9 +178,9 @@ mod parse_datetime_tests {
         for (input, expected_valid) in TimeTestData::datetime_format_cases() {
             let result = parse_datetime(input);
             if expected_valid {
-                assert!(result.is_ok(), "Expected success for: {}", input);
+                assert!(result.is_ok(), "Expected success for: {input}");
             } else {
-                assert!(result.is_err(), "Expected error for: {}", input);
+                assert!(result.is_err(), "Expected error for: {input}");
             }
         }
     }
@@ -231,9 +210,9 @@ mod parse_time_tests {
 
             if result.is_err() {
                 // If relative parsing fails, try as datetime with current date
-                let datetime_input = format!("2025-07-21 {}", input);
+                let datetime_input = format!("2025-07-21 {input}");
                 let result = parse_datetime(&datetime_input);
-                assert!(result.is_ok(), "Failed to parse valid time: {}", input);
+                assert!(result.is_ok(), "Failed to parse valid time: {input}");
 
                 let parsed = result.unwrap();
                 assert_eq!(parsed.time().hour(), expected_hour as u32);
@@ -257,11 +236,7 @@ mod parse_time_tests {
 
         for input in invalid_cases {
             let result = parse_time(input);
-            assert!(
-                result.is_err(),
-                "Expected error for invalid time: {}",
-                input
-            );
+            assert!(result.is_err(), "Expected error for invalid time: {input}");
         }
     }
 
@@ -278,12 +253,11 @@ mod parse_time_tests {
                     // Check if it's a reasonable limitation
                     assert!(
                         input.contains(':'),
-                        "Unexpected parse failure for time format: {}",
-                        input
+                        "Unexpected parse failure for time format: {input}"
                     );
                 }
             } else {
-                assert!(result.is_err(), "Expected error for: {}", input);
+                assert!(result.is_err(), "Expected error for: {input}");
             }
         }
     }
@@ -315,16 +289,11 @@ mod parse_relative_time_tests {
                 let diff = (parsed - expected).num_seconds().abs();
                 assert!(
                     diff <= 1,
-                    "Relative time parsing incorrect for: {} (diff: {}s)",
-                    input,
-                    diff
+                    "Relative time parsing incorrect for: {input} (diff: {diff}s)"
                 );
             } else {
                 // Some formats like seconds might not be supported - that's acceptable
-                println!(
-                    "Note: Format '{}' not supported, which is acceptable",
-                    input
-                );
+                println!("Note: Format '{input}' not supported, which is acceptable");
             }
         }
     }
@@ -338,8 +307,7 @@ mod parse_relative_time_tests {
             let result = parse_time(input);
             assert!(
                 result.is_ok(),
-                "Failed to parse relative time with +: {}",
-                input
+                "Failed to parse relative time with +: {input}"
             );
         }
     }
@@ -357,14 +325,12 @@ mod parse_relative_time_tests {
                 let now = chrono::Local::now().naive_local();
                 assert!(
                     parsed < now,
-                    "Negative relative time should be in the past: {}",
-                    input
+                    "Negative relative time should be in the past: {input}"
                 );
             } else {
                 // If negative times aren't supported, that's acceptable
                 println!(
-                    "Note: Negative relative time '{}' not supported, which is acceptable",
-                    input
+                    "Note: Negative relative time '{input}' not supported, which is acceptable"
                 );
             }
         }
@@ -385,8 +351,7 @@ mod parse_relative_time_tests {
             let result = parse_relative_time(input, now);
             assert!(
                 result.is_err(),
-                "Expected error for invalid relative time: {}",
-                input
+                "Expected error for invalid relative time: {input}"
             );
         }
     }
@@ -413,13 +378,12 @@ mod parse_relative_time_tests {
                     if !input.contains("h") || !input.contains("m") {
                         assert!(
                             result.is_ok(),
-                            "Expected success for simple relative time: {}",
-                            input
+                            "Expected success for simple relative time: {input}"
                         );
                     }
                 }
             } else {
-                assert!(result.is_err(), "Expected error for: {}", input);
+                assert!(result.is_err(), "Expected error for: {input}");
             }
         }
     }
@@ -490,7 +454,7 @@ mod parse_time_generic_tests {
 
         for input in invalid_cases {
             let result = parse_time(input);
-            assert!(result.is_err(), "Expected error for: {}", input);
+            assert!(result.is_err(), "Expected error for: {input}");
         }
     }
 }
@@ -515,9 +479,7 @@ mod validate_times_tests {
             let result = validate_times(start, end);
             assert!(
                 result.is_ok(),
-                "Expected valid time range: {} to {}",
-                start_str,
-                end_str
+                "Expected valid time range: {start_str} to {end_str}"
             );
         }
     }
@@ -537,19 +499,14 @@ mod validate_times_tests {
             let result = validate_times(start, end);
             assert!(
                 result.is_err(),
-                "Expected invalid time range: {} to {}",
-                start_str,
-                end_str
+                "Expected invalid time range: {start_str} to {end_str}"
             );
 
             match result.unwrap_err() {
                 PbError::StartAfterEnd => {
                     // Expected error type
                 }
-                _ => panic!(
-                    "Expected StartAfterEnd error for: {} to {}",
-                    start_str, end_str
-                ),
+                _ => panic!("Expected StartAfterEnd error for: {start_str} to {end_str}"),
             }
         }
     }
@@ -642,7 +599,7 @@ mod edge_case_tests {
 
         for case in dst_cases {
             let result = parse_datetime(case);
-            assert!(result.is_ok(), "DST time should parse: {}", case);
+            assert!(result.is_ok(), "DST time should parse: {case}");
         }
     }
 
@@ -674,8 +631,7 @@ mod edge_case_tests {
             let result = parse_datetime(case);
             assert!(
                 result.is_err(),
-                "Should reject unicode/special chars: {}",
-                case
+                "Should reject unicode/special chars: {case}"
             );
         }
     }
@@ -692,9 +648,9 @@ mod edge_case_tests {
         for (case, should_succeed) in extreme_cases {
             let result = parse_date(case);
             if should_succeed {
-                assert!(result.is_ok(), "Should parse extreme date: {}", case);
+                assert!(result.is_ok(), "Should parse extreme date: {case}");
             } else {
-                assert!(result.is_err(), "Should reject extreme date: {}", case);
+                assert!(result.is_err(), "Should reject extreme date: {case}");
             }
         }
     }

@@ -51,9 +51,9 @@ pub fn format_duration(duration: Duration) -> String {
     let minutes = total_minutes % 60;
 
     if hours > 0 {
-        format!("{}h {}m", hours, minutes)
+        format!("{hours}h {minutes}m")
     } else if minutes > 0 {
-        format!("{}m", minutes)
+        format!("{minutes}m")
     } else {
         "0m".to_string()
     }
@@ -310,10 +310,7 @@ pub fn render_progress_bar_with_time(
     let elapsed_str = format_duration(elapsed_duration);
     let remaining_str = format_duration(remaining_duration);
 
-    format!(
-        "{} ({} elapsed, {} remaining)",
-        base_bar, elapsed_str, remaining_str
-    )
+    format!("{base_bar} ({elapsed_str} elapsed, {remaining_str} remaining)")
 }
 
 /// Render a visual progress bar with color support and time information
@@ -426,6 +423,14 @@ mod render_with_time_tests {
 
     #[test]
     fn test_render_colored_progress_bar_with_time_normal() {
+        use colored::control;
+
+        // Save the current color state to restore later
+        let original_should_colorize = control::SHOULD_COLORIZE.should_colorize();
+
+        // Force consistent color behavior to prevent flaky CI tests
+        control::set_override(true);
+
         let start = create_test_datetime("2025-01-27 09:00:00");
         let end = create_test_datetime("2025-01-27 17:00:00");
         let current = create_test_datetime("2025-01-27 11:00:00"); // 25% progress
@@ -434,11 +439,29 @@ mod render_with_time_tests {
 
         // For normal progress, should be same as non-colored version
         let expected = render_progress_bar_with_time(25.0, start, end, current);
-        assert_eq!(result, expected);
+        assert_eq!(
+            result, expected,
+            "Normal progress colored bar with time should match non-colored version"
+        );
+
+        // Restore original color state
+        if original_should_colorize {
+            control::set_override(true);
+        } else {
+            control::unset_override();
+        }
     }
 
     #[test]
     fn test_render_colored_progress_bar_with_time_overtime() {
+        use colored::control;
+
+        // Save the current color state to restore later
+        let original_should_colorize = control::SHOULD_COLORIZE.should_colorize();
+
+        // Force consistent color behavior to prevent flaky CI tests
+        control::set_override(true);
+
         let start = create_test_datetime("2025-01-27 09:00:00");
         let end = create_test_datetime("2025-01-27 17:00:00");
         let current = create_test_datetime("2025-01-27 19:00:00"); // 2 hours past end
@@ -450,6 +473,24 @@ mod render_with_time_tests {
         // Should contain time information
         assert!(result.contains("10h 0m elapsed"));
         assert!(result.contains("0m remaining")); // Negative remaining shows as 0m
+
+        // When colors are forced on, overtime should potentially contain color codes
+        // In some CI environments, colors may still be disabled, so we check the function doesn't panic
+        // and returns expected content rather than strictly requiring ANSI codes
+        let _non_colored = render_progress_bar_with_time(125.0, start, end, current);
+
+        // The core content should be present regardless of coloring
+        assert!(
+            result.contains("125.0%") && result.contains("10h 0m elapsed"),
+            "Result should contain expected time and percentage information"
+        );
+
+        // Restore original color state
+        if original_should_colorize {
+            control::set_override(true);
+        } else {
+            control::unset_override();
+        }
     }
 
     #[test]
@@ -649,16 +690,13 @@ mod progress_calculation_tests {
             // Should complete 1000 iterations in less than 10ms total (increased from 1ms)
             assert!(
                 elapsed.as_millis() < 10,
-                "Performance test failed: {} iterations took {:?}",
-                iterations,
-                elapsed
+                "Performance test failed: {iterations} iterations took {elapsed:?}"
             );
 
             // Each call should take less than 10 microseconds on average (increased from 1μs)
             assert!(
                 avg_time.as_nanos() < 10000,
-                "Average call time too slow: {:?}",
-                avg_time
+                "Average call time too slow: {avg_time:?}"
             );
         }
     }
@@ -707,8 +745,7 @@ mod render_tests {
             let filled_count = bar.chars().filter(|&c| c == '█').count();
             assert_eq!(
                 filled_count, expected_filled,
-                "Percentage {}% should have {} filled chars, got {} in '{}'",
-                percentage, expected_filled, filled_count, result
+                "Percentage {percentage}% should have {expected_filled} filled chars, got {filled_count} in '{result}'"
             );
         }
     }
@@ -780,11 +817,7 @@ mod render_tests {
         let elapsed = start.elapsed();
 
         // Should complete 1000 iterations quickly
-        assert!(
-            elapsed.as_millis() < 100,
-            "Rendering too slow: {:?}",
-            elapsed
-        );
+        assert!(elapsed.as_millis() < 100, "Rendering too slow: {elapsed:?}");
     }
 }
 
@@ -806,8 +839,7 @@ mod color_tests {
             // (no color codes added)
             assert_eq!(
                 regular, colored,
-                "Normal progress {}% should not have color codes",
-                percentage
+                "Normal progress {percentage}% should not have color codes"
             );
         }
     }
@@ -815,36 +847,36 @@ mod color_tests {
     #[test]
     fn test_colored_overtime_progress() {
         // Test that overtime progress (>100%) gets color formatting
+        // Save the current color state to restore later
+        let original_should_colorize = control::SHOULD_COLORIZE.should_colorize();
+
+        // Force consistent color behavior to prevent flaky CI tests
+        control::set_override(true);
+
         let test_cases = vec![100.1, 110.0, 150.0, 200.0];
 
         for percentage in test_cases {
             let regular = render_progress_bar(percentage);
             let colored = render_colored_progress_bar(percentage);
 
-            // If colors are enabled, the colored version should be different
-            // If colors are disabled, they should be the same
-            if control::SHOULD_COLORIZE.should_colorize() {
-                assert_ne!(
-                    regular, colored,
-                    "Overtime progress {}% should have color codes when colors are enabled",
-                    percentage
-                );
+            // With colors forced on, the colored version should be different for overtime
+            assert_ne!(
+                regular, colored,
+                "Overtime progress {percentage}% should have color codes when colors are enabled"
+            );
 
-                // The colored version should contain the original text
-                assert!(
-                    colored.contains(&regular)
-                        || colored.ends_with(&format!("{}%", percentage as i32)),
-                    "Colored version should contain the original percentage: {}",
-                    percentage
-                );
-            } else {
-                // When colors are disabled, they should be identical
-                assert_eq!(
-                    regular, colored,
-                    "When colors disabled, {}% should be identical",
-                    percentage
-                );
-            }
+            // The colored version should contain ANSI color codes
+            assert!(
+                colored.contains('\x1b'),
+                "Overtime progress {percentage}% should contain ANSI escape codes"
+            );
+        }
+
+        // Restore original color state
+        if original_should_colorize {
+            control::set_override(true);
+        } else {
+            control::unset_override();
         }
     }
 
@@ -859,16 +891,13 @@ mod color_tests {
             // Should not panic and should return a valid string
             assert!(
                 !colored.is_empty(),
-                "Result should not be empty for {}%",
-                percentage
+                "Result should not be empty for {percentage}%"
             );
 
             // Check for the decimal percentage (since we use {:.1}% format)
             assert!(
-                colored.contains(&format!("{:.1}%", percentage)),
-                "Should contain decimal percentage {:.1}% for input {}%",
-                percentage,
-                percentage
+                colored.contains(&format!("{percentage:.1}%")),
+                "Should contain decimal percentage {percentage:.1}% for input {percentage}%"
             );
         }
     }
@@ -885,8 +914,7 @@ mod color_tests {
             // Negative progress should not trigger red color (it's treated as 0% display)
             assert_eq!(
                 regular, colored,
-                "Negative progress {}% should not have color codes",
-                percentage
+                "Negative progress {percentage}% should not have color codes"
             );
         }
     }
@@ -894,6 +922,9 @@ mod color_tests {
     #[test]
     fn test_color_formatting_structure() {
         // Test the structure of colored output when colors are enabled
+        // Save the current color state to restore later
+        let original_should_colorize = control::SHOULD_COLORIZE.should_colorize();
+
         control::set_override(true); // Force colors on for this test
 
         let overtime_result = render_colored_progress_bar(150.0);
@@ -913,7 +944,12 @@ mod color_tests {
             );
         }
 
-        control::unset_override(); // Reset override
+        // Restore original color state
+        if original_should_colorize {
+            control::set_override(true);
+        } else {
+            control::unset_override();
+        }
     }
 
     #[test]
@@ -930,23 +966,16 @@ mod color_tests {
             // Should not panic and should return valid result
             assert!(
                 !result.is_empty(),
-                "Should return non-empty result for {}%",
-                percentage
+                "Should return non-empty result for {percentage}%"
             );
 
             // The result should contain '[' somewhere (either at start for no color, or after color codes)
-            assert!(
-                result.contains('['),
-                "Should contain '[' for {}%",
-                percentage
-            );
+            assert!(result.contains('['), "Should contain '[' for {percentage}%");
 
             // Should contain the rounded percentage
             assert!(
-                result.contains(&format!("{:.1}%", percentage)),
-                "Should contain decimal percentage {:.1}% for input {}%",
-                percentage,
-                percentage
+                result.contains(&format!("{percentage:.1}%")),
+                "Should contain decimal percentage {percentage:.1}% for input {percentage}%"
             );
         }
     }
@@ -968,8 +997,7 @@ mod color_tests {
         // Should complete 1000 iterations quickly (same requirement as regular rendering)
         assert!(
             elapsed.as_millis() < 100,
-            "Color rendering too slow: {:?}",
-            elapsed
+            "Color rendering too slow: {elapsed:?}"
         );
     }
 
@@ -977,6 +1005,9 @@ mod color_tests {
     fn test_color_consistency() {
         // Test that the same percentage always produces the same output
         // (important for consistent display)
+
+        // Save the current color state to restore later
+        let original_should_colorize = control::SHOULD_COLORIZE.should_colorize();
 
         // Force consistent color behavior to prevent flaky CI tests
         control::set_override(true);
@@ -989,8 +1020,7 @@ mod color_tests {
 
             assert_eq!(
                 first_call, second_call,
-                "Consistent output required for {}%",
-                percentage
+                "Consistent output required for {percentage}%"
             );
         }
 
@@ -1015,8 +1045,12 @@ mod color_tests {
             "Overtime progress should be consistent across calls"
         );
 
-        // Reset color override after test
-        control::unset_override();
+        // Restore original color state
+        if original_should_colorize {
+            control::set_override(true);
+        } else {
+            control::unset_override();
+        }
     }
 
     #[test]
@@ -1039,16 +1073,13 @@ mod color_tests {
 
             assert!(
                 colored.len() >= regular_length,
-                "Colored version should not be shorter than regular for {}%",
-                percentage
+                "Colored version should not be shorter than regular for {percentage}%"
             );
 
             // Both should have the same percentage number at the end (decimal)
             assert!(
-                colored.contains(&format!("{:.1}%", percentage)),
-                "Colored version should contain correct decimal percentage {:.1}% for input {}%",
-                percentage,
-                percentage
+                colored.contains(&format!("{percentage:.1}%")),
+                "Colored version should contain correct decimal percentage {percentage:.1}% for input {percentage}%"
             );
         }
     }

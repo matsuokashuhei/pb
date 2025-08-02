@@ -27,8 +27,8 @@ pub enum PbError {
     #[error("Invalid relative time format: {input}")]
     InvalidRelativeTimeFormat { input: String },
 
-    /// Required CLI options are missing
-    #[error("--start and --end options are required")]
+    /// Required CLI options are missing (only --end is required now)
+    #[error("--end option is required")]
     MissingRequiredOptions,
 }
 
@@ -96,7 +96,7 @@ mod tests {
     #[test]
     fn test_missing_required_options_error_message() {
         let error = PbError::MissingRequiredOptions;
-        assert_eq!(error.to_string(), "--start and --end options are required");
+        assert_eq!(error.to_string(), "--end option is required");
     }
 
     #[test]

@@ -1,8 +1,8 @@
 use anyhow::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
 use pb::{
-    calculate_progress, get_current_time, parse_time, parse_time_with_base,
-    render_colored_progress_bar_with_time, validate_times, Cli,
+    calculate_progress, determine_start_time_for_end, get_current_time, parse_time,
+    parse_time_with_base, render_colored_progress_bar_with_time, validate_times, Cli,
 };
 use std::io::{self, Write};
 use std::time::Duration;
@@ -18,11 +18,20 @@ fn main() -> Result<()> {
     };
 
     // Parse start and end times
-    let start_time = match parse_time(cli.start()) {
-        Ok(time) => time,
-        Err(e) => {
-            eprintln!("Error parsing start time '{}': {e}", cli.start());
-            std::process::exit(1);
+    let start_time = match cli.start() {
+        Some(start_str) => {
+            // Start time provided - parse it normally
+            match parse_time(start_str) {
+                Ok(time) => time,
+                Err(e) => {
+                    eprintln!("Error parsing start time '{start_str}': {e}");
+                    std::process::exit(1);
+                }
+            }
+        }
+        None => {
+            // No start time provided - determine it based on end time format
+            determine_start_time_for_end(cli.end())
         }
     };
 
