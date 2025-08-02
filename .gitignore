@@ -82,3 +82,7 @@ test_render.exe
 
 ## Debug files
 debug_*
+
+## Coverage reports
+cobertura.xml
+tarpaulin-report.html
