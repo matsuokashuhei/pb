@@ -13,8 +13,9 @@ pub use anyhow::{Context, Result as AnyhowResult};
 pub use cli::Cli;
 pub use error::{PbError, PbResult};
 pub use progress_bar::{
-    calculate_progress, format_duration, render_colored_progress_bar,
-    render_colored_progress_bar_with_time, render_progress_bar, render_progress_bar_with_time,
+    calculate_progress, format_duration, format_duration_compact, format_minimal_only,
+    format_verbose_layout, render_colored_progress_bar, render_colored_progress_bar_with_time,
+    render_progress_bar, render_progress_bar_with_time, DisplayMode,
 };
 pub use time_parser::{
     determine_start_time_for_end, get_current_time, parse_date, parse_datetime,
