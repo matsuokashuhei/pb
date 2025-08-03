@@ -141,22 +141,22 @@ fn run_interactive_mode(
         }
 
         // Clear screen and render display
-        print!("\x1b[2J\x1b[1;1H"); // Clear screen and move cursor to top-left
+        print!("\r\x1b[2J\x1b[1;1H"); // Clear screen and move cursor to top-left
 
         match display_mode {
             DisplayMode::Minimal => {
                 let bar = format_minimal_only(progress);
-                print!("{}\n", bar);
+                println!("{}", bar);
 
                 if show_instructions {
-                    print!("Press 'v' for details, 'q' to quit\n");
+                    println!("Press 'v' for details, 'q' to quit");
                 }
             }
             DisplayMode::Verbose => {
                 let layout = format_verbose_layout(progress, start_time, end_time, current_time);
-                print!("{}\n", layout);
-                print!("\n");
-                print!("Press 'v' to toggle view, 'q' to quit\n");
+                println!("{}", layout);
+                println!();
+                println!("Press 'v' to toggle view, 'q' to quit");
             }
         }
 
